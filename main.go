@@ -22,7 +22,7 @@ import (
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	err := providerserver.Serve(context.Background(), provider.New, providerserver.ServeOpts{
-		Address: "freenow.com/terraform-provider/simplemdm",
+		Address: "registry.terraform.io/providers/DavidKrau/simplemdm/latest",
 	})
 	if err != nil {
 		log.Panic().Msgf("starting server failed")
