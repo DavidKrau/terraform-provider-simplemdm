@@ -1,7 +1,4 @@
 # Terraform Provider for SimpleMDM
-[![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/joemccann/dillinger)
-
-# Terraform Provider for SimpleMDM
 
 The Terraform SimpleMDM provider is a plugin for Terraform that allows for the full lifecycle management of SimpleMDM resources.
 
