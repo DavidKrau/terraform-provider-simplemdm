@@ -16,7 +16,8 @@ the [Terraform documentation on provider versioning](https://www.terraform.io/do
 ## Examples
 
 All the resources and data sources has [one or more examples](./examples) to give you an idea of how to use this
-provider to build your own SimpleMDM infrastructure. Provider's official documentation is located in the [here](./docs/) in form of raw markdown files.
+provider to build your own SimpleMDM infrastructure.Provider's official documentation is located in the
+[official terraform registry](https://registry.terraform.io/providers/DavidKrau/simplemdm/latest/docs), or [here](./docs/) in form of raw markdown files.
 
 ## Know issues
 
