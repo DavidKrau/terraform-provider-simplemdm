@@ -98,12 +98,15 @@ func (r *deviceGroupResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	resp.Diagnostics.AddWarning(
+	resp.Diagnostics.AddError(
 		"Resource can not be created!",
 		"Device groups currently do not support creation via API request, if you wish to create new group  "+
 			"go to website and create group there and use import. Name of the group also can not be managed via provider, "+
 			"same as deletion of the group can not be done via terraform. This will be implemented properly once API will have correct endpoints.",
 	)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	// // Generate API request body from plan
 	// deviceGroup, err := r.client.CreateDeviceGroup(plan.Name.ValueString())
 	// if err != nil {
