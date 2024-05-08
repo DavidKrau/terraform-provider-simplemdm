@@ -20,12 +20,21 @@ var (
 )
 
 // New is a helper function to simplify provider server and testing implementation.
-func New() provider.Provider {
-	return &simplemdmProvider{}
+func New(version string) func() provider.Provider {
+	return func() provider.Provider {
+		return &simplemdmProvider{
+			version: version,
+		}
+	}
 }
 
 // simplemdmProvider is the provider implementation.
-type simplemdmProvider struct{}
+type simplemdmProvider struct {
+	// version is set to the provider version on release, "dev" when the
+	// provider is built and ran locally, and "test" when running acceptance
+	// testing.
+	version string
+}
 
 // simplemdmProviderModel maps provider schema data to a Go type.
 type simplemdmProviderModel struct {

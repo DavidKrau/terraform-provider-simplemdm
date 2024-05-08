@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
+	"flag"
+	"log"
 
 	"github.com/DavidKrau/terraform-provider-simplemdm/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 )
 
 // Run "go generate" to format example terraform files and generate the docs for the registry/website
@@ -19,12 +19,34 @@ import (
 // can be customized.
 //go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate -provider-name simplemdm
 
+var (
+	// these will be set by the goreleaser configuration
+	// to appropriate values for the compiled binary.
+	version string = "dev"
+
+	// goreleaser can pass other information to the main package, such as the specific commit
+	// https://goreleaser.com/cookbooks/using-main.version/
+)
+
 func main() {
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	err := providerserver.Serve(context.Background(), provider.New, providerserver.ServeOpts{
-		Address: "registry.terraform.io/providers/DavidKrau/simplemdm/latest",
-	})
+	var debug bool
+
+	flag.BoolVar(&debug, "debug", false, "set to true to run the provider with support for debuggers like delve")
+	flag.Parse()
+
+	opts := providerserver.ServeOpts{
+		// NOTE: This is not a typical Terraform Registry provider address,
+		// such as registry.terraform.io/hashicorp/hashicups. This specific
+		// provider address is used in these tutorials in conjunction with a
+		// specific Terraform CLI configuration for manual development testing
+		// of this provider.
+		Address: "github.com/DavidKrau/terraform-provider-simplemdm",
+		Debug:   debug,
+	}
+
+	err := providerserver.Serve(context.Background(), provider.New(version), opts)
+
 	if err != nil {
-		log.Panic().Msgf("starting server failed")
+		log.Fatal(err.Error())
 	}
 }
