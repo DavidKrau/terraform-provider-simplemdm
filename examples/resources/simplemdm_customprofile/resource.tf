@@ -1,4 +1,4 @@
-resource "simplemdm_profile" "myprofile" {
+resource "simplemdm_customprofile" "myprofile" {
   //Custom Profile name (required)
   name = "My First profiles"
   //path to the file (required)
