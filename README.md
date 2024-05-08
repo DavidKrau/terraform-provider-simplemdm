@@ -1,5 +1,7 @@
 # Terraform Provider for SimpleMDM
 
+# This is beta release please dont use this in your live environment as of now.
+
 The Terraform SimpleMDM provider is a plugin for Terraform that allows for the full lifecycle management of SimpleMDM resources.
 
 Provider was written by David Kraushuber from FREENOW and was open sourced to the comunity.
