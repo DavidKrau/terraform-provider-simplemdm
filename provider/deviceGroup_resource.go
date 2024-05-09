@@ -56,6 +56,7 @@ func (r *deviceGroupResource) Metadata(_ context.Context, req resource.MetadataR
 // Schema defines the schema for the resource.
 func (r *deviceGroupResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Description: "Device Group resource can be used to manage Device Group. Can be used together with Custom Profile(s), Attribute(s), Assignment Group(s) or Device Group(s) and set addition details regarding Device Group.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Required:    true,
@@ -72,12 +73,12 @@ func (r *deviceGroupResource) Schema(_ context.Context, _ resource.SchemaRequest
 			"profiles": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
-				Description: "Optional. List of Custom Configuration Profiles assigned to this device group",
+				Description: "Optional. List of Custom Configuration Profiles assigned to this Device Group",
 			},
 			"attributes": schema.MapAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
-				Description: "Optional. Map of Custom Configuration Profiles and Values set for this device group",
+				Description: "Optional. Map of Custom Configuration Profiles and values set for this Device Group",
 			},
 		},
 	}

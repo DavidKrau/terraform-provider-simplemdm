@@ -3,12 +3,12 @@
 page_title: "simplemdm_devicegroup Data Source - simplemdm"
 subcategory: ""
 description: |-
-  
+  Device Group data source can be used together with Assignment Group(s) to assign group(s) to these objects.
 ---
 
 # simplemdm_devicegroup (Data Source)
 
-
+Device Group data source can be used together with Assignment Group(s) to assign group(s) to these objects.
 
 ## Example Usage
 
@@ -27,4 +27,4 @@ data "simplemdm_devicegroup" "devicegroup" {
 
 ### Read-Only
 
-- `name` (String) Device group name.
+- `name` (String) Device Group name.

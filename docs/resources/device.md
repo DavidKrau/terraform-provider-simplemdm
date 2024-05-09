@@ -3,12 +3,12 @@
 page_title: "simplemdm_device Resource - simplemdm"
 subcategory: ""
 description: |-
-  
+  Device resource can be used to manage Device. Can be used together with Custom Profile(s), Attribute(s), Assignment Group(s) or Device Group(s) and set addition details regarding Device.
 ---
 
 # simplemdm_device (Resource)
 
-
+Device resource can be used to manage Device. Can be used together with Custom Profile(s), Attribute(s), Assignment Group(s) or Device Group(s) and set addition details regarding Device.
 
 ## Example Usage
 
@@ -30,19 +30,19 @@ resource "simplemdm_device" "firstdevice" {
 
 ### Required
 
-- `devicegroup` (String)
-- `name` (String) Required. The name of the device.
+- `devicegroup` (String) The ID of Device Group where device will be assigned.
+- `name` (String) Required. The SimpleMDM name of the device.
 
 ### Optional
 
-- `attributes` (Map of String)
-- `devicename` (String)
-- `profiles` (Set of String) Optional. List of Custom Configuration Profiles assigned to this device
+- `attributes` (Map of String) The name of the Assignment Group.
+- `devicename` (String) The Device name (localhost name) of the device.
+- `profiles` (Set of String) Optional. List of Custom Configuration Profiles assigned to this Device
 
 ### Read-Only
 
-- `enrollmenturl` (String) SimpleMDM enrollment URL is genrated when new device is created via API.
-- `id` (String) ID of a Device in SimpleMDM
+- `enrollmenturl` (String) SimpleMDM enrollment URL is generated when new device is created via API.
+- `id` (String) The ID of the Device in SimpleMDM
 
 ## Import
 

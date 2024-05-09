@@ -41,12 +41,15 @@ func (d *appDataSource) Metadata(_ context.Context, req datasource.MetadataReque
 // Schema defines the schema for the data source.
 func (d *appDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Description: "App data source can be used together with Assignment Group(s) to assign App(s) to the group(s).",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The name of the attribute.",
 			},
 			"id": schema.StringAttribute{
-				Required: true,
+				Required:    true,
+				Description: "The ID of the attribute.",
 			},
 		},
 	}

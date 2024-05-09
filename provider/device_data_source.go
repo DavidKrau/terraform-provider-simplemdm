@@ -41,12 +41,15 @@ func (d *deviceDataSource) Metadata(_ context.Context, req datasource.MetadataRe
 // Schema defines the schema for the data source.
 func (d *deviceDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Description: "Device data source can be used together Assignment Group(s) to assign device to these objects.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The SimpleMDM name of the device.",
 			},
 			"id": schema.StringAttribute{
-				Required: true,
+				Required:    true,
+				Description: "The ID of the device.",
 			},
 		},
 	}

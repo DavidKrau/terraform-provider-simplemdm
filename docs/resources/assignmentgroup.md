@@ -3,12 +3,12 @@
 page_title: "simplemdm_assignmentgroup Resource - simplemdm"
 subcategory: ""
 description: |-
-  
+  Assignment Group resource is used to manage group, you can assign App(s), Custom Profile(s), Device(s), Device Group(s) and set addition details regarding Assignemtn Group.
 ---
 
 # simplemdm_assignmentgroup (Resource)
 
-
+Assignment Group resource is used to manage group, you can assign App(s), Custom Profile(s), Device(s), Device Group(s) and set addition details regarding Assignemtn Group.
 
 ## Example Usage
 
@@ -37,24 +37,24 @@ resource "simplemdm_assignment_group" "myfirstgroup" {
 
 ### Required
 
-- `name` (String) The name of the assignment group.
+- `name` (String) The name of the Assignment Group.
 
 ### Optional
 
 - `apps` (Set of String) Optional. List of Apps assigned to this assignment group
-- `apps_push` (Boolean) Optional. Set true if you would like to send push apps command after assignment group creation or changes. Defaults to false.
-- `apps_update` (Boolean) Optional. Set true if you would like to send update apps command after assignment group creation or changes. Defaults to false.
-- `auto_deploy` (Boolean) Optional. Whether the apps should be automatically pushed to devices when they join any of the related device groups. Defaults to true
-- `devices` (Set of String) Optional. List of Devices assigned to this assignment group
+- `apps_push` (Boolean) Optional. Set true if you would like to send push Apps command after assignment group creation or changes. Defaults to false.
+- `apps_update` (Boolean) Optional. Set true if you would like to send update Apps command after assignment group creation or changes. Defaults to false.
+- `auto_deploy` (Boolean) Optional. Whether the Apps should be automatically pushed to device(s) when they join this Assignment Group. Defaults to true
+- `devices` (Set of String) Optional. List of Devices assigned to this Assignment Group
 - `group_type` (String) Optional. Type of assignment group. Must be one of standard (for MDM app/media deployments) or munki for Munki app deployments. Defaults to standard.
-- `groups` (Set of String) Optional. List of Device Groups assigned to this assignment group
+- `groups` (Set of String) Optional. List of Device Groups assigned to this Assignment Group
 - `install_type` (String) Optional. The install type for munki assignment groups. Must be one of managed, self_serve, managed_updates or default_installs. This setting has no effect for non-munki (standard) assignment groups. Defaults to managed.
 - `profiles` (Set of String) Optional. List of Custom Configuration Profiles assigned to this assignment group
-- `profiles_sync` (Boolean) Optional. Set true if you would like to send sync profiles command after assignment group creation or changes. Defaults to false.
+- `profiles_sync` (Boolean) Optional. Set true if you would like to send Sync Profiles command after Assignment Group creation or changes. Defaults to false.
 
 ### Read-Only
 
-- `id` (String) ID of a Assignment Group in SimpleMDM
+- `id` (String) ID of the Assignment Group in SimpleMDM
 
 ## Import
 

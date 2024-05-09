@@ -60,42 +60,46 @@ func (r *deviceResource) Metadata(_ context.Context, req resource.MetadataReques
 // Schema defines the schema for the resource.
 func (r *deviceResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Description: "Device resource can be used to manage Device. Can be used together with Custom Profile(s), Attribute(s), Assignment Group(s) or Device Group(s) and set addition details regarding Device.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Required:    true,
 				Optional:    false,
-				Description: "Required. The name of the device.",
+				Description: "Required. The SimpleMDM name of the device.",
 			},
 			"id": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				Description: "ID of a Device in SimpleMDM",
+				Description: "The ID of the Device in SimpleMDM",
 			},
 			"profiles": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
-				Description: "Optional. List of Custom Configuration Profiles assigned to this device",
+				Description: "Optional. List of Custom Configuration Profiles assigned to this Device",
 			},
 			"attributes": schema.MapAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Description: "The name of the Assignment Group.",
 			},
 			"devicegroup": schema.StringAttribute{
-				Required: true,
-				Optional: false,
+				Required:    true,
+				Optional:    false,
+				Description: "The ID of Device Group where device will be assigned.",
 			},
 			"devicename": schema.StringAttribute{
-				Required: false,
-				Optional: true,
+				Required:    false,
+				Optional:    true,
+				Description: "The Device name (localhost name) of the device.",
 			},
 			"enrollmenturl": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				Description: "SimpleMDM enrollment URL is genrated when new device is created via API.",
+				Description: "SimpleMDM enrollment URL is generated when new device is created via API.",
 			},
 		},
 	}

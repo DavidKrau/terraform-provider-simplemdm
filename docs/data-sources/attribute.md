@@ -3,12 +3,12 @@
 page_title: "simplemdm_attribute Data Source - simplemdm"
 subcategory: ""
 description: |-
-  
+  Attribute data source can be used together with Device(s) or Device Group(s) to set values or in lifecycle management.
 ---
 
 # simplemdm_attribute (Data Source)
 
-
+Attribute data source can be used together with Device(s) or Device Group(s) to set values or in lifecycle management.
 
 ## Example Usage
 
@@ -23,8 +23,8 @@ data "simplemdm_attribute" "myattribute" {
 
 ### Required
 
-- `default_value` (String)
+- `default_value` (String) Default (global) value of the Attribute.
 
 ### Read-Only
 
-- `name` (String)
+- `name` (String) The name (and ID) of the Attribute.

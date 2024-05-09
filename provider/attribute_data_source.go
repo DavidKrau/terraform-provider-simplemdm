@@ -40,12 +40,15 @@ func (d *attributeDataSource) Metadata(_ context.Context, req datasource.Metadat
 // Schema defines the schema for the data source.
 func (d *attributeDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Description: "Attribute data source can be used together with Device(s) or Device Group(s) to set values or in lifecycle management.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The name (and ID) of the Attribute.",
 			},
 			"default_value": schema.StringAttribute{
-				Required: true,
+				Required:    true,
+				Description: "Default (global) value of the Attribute.",
 			},
 		},
 	}

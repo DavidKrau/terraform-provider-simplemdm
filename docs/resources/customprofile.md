@@ -3,12 +3,12 @@
 page_title: "simplemdm_customprofile Resource - simplemdm"
 subcategory: ""
 description: |-
-  Managing custom profiles in SimpleMDM.
+  Custom Profile resource can be used to manage Custom Profile. Can be used together with Device(s), Assignment Group(s) or Device Group(s) and set addition details regarding Custom Profile.
 ---
 
 # simplemdm_customprofile (Resource)
 
-Managing custom profiles in SimpleMDM.
+Custom Profile resource can be used to manage Custom Profile. Can be used together with Device(s), Assignment Group(s) or Device Group(s) and set addition details regarding Custom Profile.
 
 ## Example Usage
 

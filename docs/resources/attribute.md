@@ -3,12 +3,12 @@
 page_title: "simplemdm_attribute Resource - simplemdm"
 subcategory: ""
 description: |-
-  
+  Attribute resourse can be used to manage SimpleMDM Attribute. Can be used together with Device(s) or Device Group(s) to set values or in lifecycle management.
 ---
 
 # simplemdm_attribute (Resource)
 
-
+Attribute resourse can be used to manage SimpleMDM Attribute. Can be used together with Device(s) or Device Group(s) to set values or in lifecycle management.
 
 ## Example Usage
 
@@ -24,11 +24,11 @@ resource "simplemdm_attribute" "myattribute" {
 
 ### Required
 
-- `name` (String) Required. The name of the custom attribute. This name will be used when referencing the custom attribute throughout the app. Alphanumeric characters and underscores only. Case insensitive. Changing name after plan apply will result in replacement(Destroy and Create of new)
+- `name` (String) Required. The name of the Custom Attribute. This name will be used when referencing the Custom Attribute throughout the provider. Alphanumeric characters and underscores only. Case insensitive. Changing name after plan apply will result in replacement(Destroy and Create of new)
 
 ### Optional
 
-- `default_value` (String) Optional. The value that will be used if a attribute value is not provided on group or device level.
+- `default_value` (String) Optional. The value that will be used if the Attribute value is not provided on Group or Device level.
 
 ## Import
 

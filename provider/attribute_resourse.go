@@ -53,6 +53,7 @@ func (r *attributeResource) Metadata(_ context.Context, req resource.MetadataReq
 // Schema defines the schema for the resource.
 func (r *attributeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Description: "Attribute resourse can be used to manage SimpleMDM Attribute. Can be used together with Device(s) or Device Group(s) to set values or in lifecycle management.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Required: true,
@@ -60,11 +61,11 @@ func (r *attributeResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Description: "Required. The name of the custom attribute. This name will be used when referencing the custom attribute throughout the app. Alphanumeric characters and underscores only. Case insensitive. Changing name after plan apply will result in replacement(Destroy and Create of new)",
+				Description: "Required. The name of the Custom Attribute. This name will be used when referencing the Custom Attribute throughout the provider. Alphanumeric characters and underscores only. Case insensitive. Changing name after plan apply will result in replacement(Destroy and Create of new)",
 			},
 			"default_value": schema.StringAttribute{
 				Optional:    true,
-				Description: "Optional. The value that will be used if a attribute value is not provided on group or device level.",
+				Description: "Optional. The value that will be used if the Attribute value is not provided on Group or Device level.",
 			},
 		},
 	}

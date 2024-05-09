@@ -3,12 +3,12 @@
 page_title: "simplemdm_devicegroup Resource - simplemdm"
 subcategory: ""
 description: |-
-  
+  Device Group resource can be used to manage Device Group. Can be used together with Custom Profile(s), Attribute(s), Assignment Group(s) or Device Group(s) and set addition details regarding Device Group.
 ---
 
 # simplemdm_devicegroup (Resource)
 
-
+Device Group resource can be used to manage Device Group. Can be used together with Custom Profile(s), Attribute(s), Assignment Group(s) or Device Group(s) and set addition details regarding Device Group.
 
 ## Example Usage
 
@@ -31,8 +31,8 @@ resource "simplemdm_devicegroup" "testgroup" {
 
 ### Optional
 
-- `attributes` (Map of String) Optional. Map of Custom Configuration Profiles and Values set for this device group
-- `profiles` (Set of String) Optional. List of Custom Configuration Profiles assigned to this device group
+- `attributes` (Map of String) Optional. Map of Custom Configuration Profiles and values set for this Device Group
+- `profiles` (Set of String) Optional. List of Custom Configuration Profiles assigned to this Device Group
 
 ### Read-Only
 

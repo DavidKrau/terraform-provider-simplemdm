@@ -69,24 +69,25 @@ func (r *assignment_groupResource) Metadata(_ context.Context, req resource.Meta
 // Schema defines the schema for the resource.
 func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Description: "Assignment Group resource is used to manage group, you can assign App(s), Custom Profile(s), Device(s), Device Group(s) and set addition details regarding Assignemtn Group.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Required:    true,
 				Optional:    false,
-				Description: "The name of the assignment group.",
+				Description: "The name of the Assignment Group.",
 			},
 			"id": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				Description: "ID of a Assignment Group in SimpleMDM",
+				Description: "ID of the Assignment Group in SimpleMDM",
 			},
 			"auto_deploy": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
-				Description: "Optional. Whether the apps should be automatically pushed to devices when they join any of the related device groups. Defaults to true",
+				Description: "Optional. Whether the Apps should be automatically pushed to device(s) when they join this Assignment Group. Defaults to true",
 			},
 			"group_type": schema.StringAttribute{
 				Optional: true,
@@ -120,13 +121,13 @@ func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRe
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
-				Description: "Optional. Set true if you would like to send update apps command after assignment group creation or changes. Defaults to false.",
+				Description: "Optional. Set true if you would like to send update Apps command after assignment group creation or changes. Defaults to false.",
 			},
 			"apps_push": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
-				Description: "Optional. Set true if you would like to send push apps command after assignment group creation or changes. Defaults to false.",
+				Description: "Optional. Set true if you would like to send push Apps command after assignment group creation or changes. Defaults to false.",
 			},
 			"profiles": schema.SetAttribute{
 				ElementType: types.StringType,
@@ -137,17 +138,17 @@ func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRe
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
-				Description: "Optional. Set true if you would like to send sync profiles command after assignment group creation or changes. Defaults to false.",
+				Description: "Optional. Set true if you would like to send Sync Profiles command after Assignment Group creation or changes. Defaults to false.",
 			},
 			"groups": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
-				Description: "Optional. List of Device Groups assigned to this assignment group",
+				Description: "Optional. List of Device Groups assigned to this Assignment Group",
 			},
 			"devices": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
-				Description: "Optional. List of Devices assigned to this assignment group",
+				Description: "Optional. List of Devices assigned to this Assignment Group",
 			},
 		},
 	}
