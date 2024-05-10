@@ -18,7 +18,8 @@ resource "simplemdm_devicegroup" "testgroup" {
   attributes = {
     "myattribute" = "attributevalue"
   }
-  profiles = [123456, 654321]
+  profiles       = [123456, 654321]
+  customprofiles = [456123]
 }
 ```
 
@@ -32,7 +33,8 @@ resource "simplemdm_devicegroup" "testgroup" {
 ### Optional
 
 - `attributes` (Map of String) Optional. Map of Custom Configuration Profiles and values set for this Device Group
-- `profiles` (Set of String) Optional. List of Custom Configuration Profiles assigned to this Device Group
+- `customprofiles` (Set of String) Optional. List of Custom Configuration Profiles assigned to this Device Group
+- `profiles` (Set of String) Optional. List of Configuration Profiles assigned to this Device Group
 
 ### Read-Only
 

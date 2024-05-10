@@ -23,10 +23,11 @@ var (
 
 // deviceGroupResourceModel maps the resource schema data.
 type deviceGroupResourceModel struct {
-	Name       types.String `tfsdk:"name"`
-	ID         types.String `tfsdk:"id"`
-	Attributes types.Map    `tfsdk:"attributes"`
-	Profiles   types.Set    `tfsdk:"profiles"`
+	Name           types.String `tfsdk:"name"`
+	ID             types.String `tfsdk:"id"`
+	Attributes     types.Map    `tfsdk:"attributes"`
+	Profiles       types.Set    `tfsdk:"profiles"`
+	CustomProfiles types.Set    `tfsdk:"customprofiles"`
 }
 
 // deviceGroupResource is a helper function to simplify the provider implementation.
@@ -71,6 +72,11 @@ func (r *deviceGroupResource) Schema(_ context.Context, _ resource.SchemaRequest
 				Description: "ID of a Device Group in SimpleMDM",
 			},
 			"profiles": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Description: "Optional. List of Configuration Profiles assigned to this Device Group",
+			},
+			"customprofiles": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
 				Description: "Optional. List of Custom Configuration Profiles assigned to this Device Group",
@@ -163,7 +169,7 @@ func (r *deviceGroupResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	// Get device group value from SimpleMDM
-	devicegroup, err := r.client.GetDeviceGroup(state.ID.ValueString())
+	devicegroup, err := r.client.DeviceGet(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading SimpleMDM device group",
@@ -173,7 +179,7 @@ func (r *deviceGroupResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	//load attributes for given group
-	attributes, err := r.client.GetAttributesForDeviceGroupAttribute(state.ID.ValueString())
+	attributes, err := r.client.AttributeGetAttributesForDeviceGroup(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading SimpleMDM device group attributes",
@@ -245,7 +251,7 @@ func (r *deviceGroupResource) Update(ctx context.Context, req resource.UpdateReq
 			if planAttribute == stateAttribute {
 				found = true
 				if planValue != stateValue {
-					err := r.client.SetAttributeForDeviceGroupAttribute(plan.ID.ValueString(), planAttribute, strings.Replace(planValue.String(), "\"", "", 2))
+					err := r.client.AttributeSetAttributeForDeviceGroup(plan.ID.ValueString(), planAttribute, strings.Replace(planValue.String(), "\"", "", 2))
 					if err != nil {
 						resp.Diagnostics.AddError(
 							"Error updating SimpleMDM device group attributes value",
@@ -258,7 +264,7 @@ func (r *deviceGroupResource) Update(ctx context.Context, req resource.UpdateReq
 			}
 		}
 		if !found {
-			err := r.client.SetAttributeForDeviceGroupAttribute(plan.ID.ValueString(), planAttribute, strings.Replace(planValue.String(), "\"", "", 2))
+			err := r.client.AttributeSetAttributeForDeviceGroup(plan.ID.ValueString(), planAttribute, strings.Replace(planValue.String(), "\"", "", 2))
 			if err != nil {
 				resp.Diagnostics.AddError(
 					"Error updating SimpleMDM device group attributes value",
@@ -279,7 +285,7 @@ func (r *deviceGroupResource) Update(ctx context.Context, req resource.UpdateReq
 			}
 		}
 		if !found {
-			err := r.client.SetAttributeForDeviceGroupAttribute(plan.ID.ValueString(), stateAttribute, "")
+			err := r.client.AttributeSetAttributeForDeviceGroup(plan.ID.ValueString(), stateAttribute, "")
 			if err != nil {
 				resp.Diagnostics.AddError(
 					"Error updating SimpleMDM device group attributes value",
@@ -308,7 +314,7 @@ func (r *deviceGroupResource) Update(ctx context.Context, req resource.UpdateReq
 
 	// //adding profiles
 	for _, profileId := range profilesToAdd {
-		err := r.client.AssignToDeviceGroupProfile(profileId, plan.ID.ValueString())
+		err := r.client.ProfileAssignToGroup(profileId, plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating device group profile assignment",
@@ -320,7 +326,46 @@ func (r *deviceGroupResource) Update(ctx context.Context, req resource.UpdateReq
 
 	//removing profiles
 	for _, profileId := range profilesToRemove {
-		err := r.client.UnassignFromDeviceGroupProfile(profileId, plan.ID.ValueString())
+		err := r.client.ProfileUnAssignToGroup(profileId, plan.ID.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error updating device group profile assignment",
+				"Could not update device group profile assignment, unexpected error: "+err.Error(),
+			)
+			return
+		}
+	}
+
+	//Handling assigned custom profiles
+	stateCustomProfiles := []string{}
+	for _, profileId := range state.CustomProfiles.Elements() {
+		stateCustomProfiles = append(stateCustomProfiles, strings.Replace(profileId.String(), "\"", "", 2))
+	}
+
+	//reading configured profiles from TF file
+	planCustomProfiles := []string{}
+	for _, profileId := range plan.CustomProfiles.Elements() {
+		planCustomProfiles = append(planCustomProfiles, strings.Replace(profileId.String(), "\"", "", 2))
+	}
+
+	// // creating diff
+	customProfilesToAdd, customProfilesToRemove := diffFunction(stateCustomProfiles, planCustomProfiles)
+
+	// //adding profiles
+	for _, profileId := range customProfilesToAdd {
+		err := r.client.CustomProfileAssignToDeviceGroup(profileId, plan.ID.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error updating device group profile assignment",
+				"Could not update device group profile assignment, unexpected error: "+err.Error(),
+			)
+			return
+		}
+	}
+
+	//removing profiles
+	for _, profileId := range customProfilesToRemove {
+		err := r.client.CustomProfileAssignToDeviceGroup(profileId, plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating device group profile assignment",

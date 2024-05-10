@@ -128,7 +128,7 @@ func (r *profileResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	// Generate API request body from plan
-	Profile, err := r.client.CreateProfile(plan.Name.ValueString(), plan.MobileConfig.ValueString(), plan.UserScope.ValueBool(), plan.AttributeSupport.ValueBool(), plan.EscapeAttributes.ValueBool(), plan.ReinstallAfterOSUpdate.ValueBool())
+	Profile, err := r.client.CustomProfileCreate(plan.Name.ValueString(), plan.MobileConfig.ValueString(), plan.UserScope.ValueBool(), plan.AttributeSupport.ValueBool(), plan.EscapeAttributes.ValueBool(), plan.ReinstallAfterOSUpdate.ValueBool())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating profile",
@@ -159,7 +159,7 @@ func (r *profileResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	//retrive one needs to be implemented first
 	// Get refreshed profile values from SimpleMDM
-	profiles, err := r.client.GetAllProfiles(state.ID.ValueString())
+	profiles, err := r.client.CustomProfileGetAll()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading SimpleMDM custom profile",
@@ -189,7 +189,7 @@ func (r *profileResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	sha, _, err := r.client.GetProfileSHA(state.ID.ValueString())
+	sha, _, err := r.client.CustomProfileSHA(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading SimpleMDM custom profile",
@@ -225,7 +225,7 @@ func (r *profileResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	// Generate API request body from plan
-	_, err := r.client.UpdateProfile(plan.Name.ValueString(), plan.MobileConfig.ValueString(), plan.UserScope.ValueBool(), plan.AttributeSupport.ValueBool(), plan.EscapeAttributes.ValueBool(), plan.ReinstallAfterOSUpdate.ValueBool(), plan.FileSHA.ValueString(), plan.ID.ValueString())
+	_, err := r.client.CustomProfileUpdate(plan.Name.ValueString(), plan.MobileConfig.ValueString(), plan.UserScope.ValueBool(), plan.AttributeSupport.ValueBool(), plan.EscapeAttributes.ValueBool(), plan.ReinstallAfterOSUpdate.ValueBool(), plan.FileSHA.ValueString(), plan.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating profile",
@@ -250,7 +250,7 @@ func (r *profileResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	// Delete existing order
-	err := r.client.DeleteProfile(state.ID.ValueString())
+	err := r.client.CustomProfileDelete(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting SimpleMDM custom profile",

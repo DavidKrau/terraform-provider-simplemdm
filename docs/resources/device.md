@@ -15,10 +15,11 @@ Device resource can be used to manage Device. Can be used together with Custom P
 ```terraform
 resource "simplemdm_device" "firstdevice" {
   // Attribute name (required)
-  name        = "mydevice"
-  devicename  = "OSmydevice"
-  devicegroup = 123456
-  profiles    = [456123]
+  name           = "mydevice"
+  devicename     = "OSmydevice"
+  devicegroup    = 123456
+  profiles       = [456123]
+  customprofiles = [456123]
   attributes = {
     "myattribute" = "testvalue"
   }
@@ -36,8 +37,9 @@ resource "simplemdm_device" "firstdevice" {
 ### Optional
 
 - `attributes` (Map of String) The name of the Assignment Group.
+- `customprofiles` (Set of String) Optional. List of Custom Configuration Profiles assigned to this Device
 - `devicename` (String) The Device name (localhost name) of the device.
-- `profiles` (Set of String) Optional. List of Custom Configuration Profiles assigned to this Device
+- `profiles` (Set of String) Optional. List of Configuration Profiles assigned to this Device
 
 ### Read-Only
 

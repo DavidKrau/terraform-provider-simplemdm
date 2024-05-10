@@ -49,7 +49,7 @@ resource "simplemdm_assignment_group" "myfirstgroup" {
 - `group_type` (String) Optional. Type of assignment group. Must be one of standard (for MDM app/media deployments) or munki for Munki app deployments. Defaults to standard.
 - `groups` (Set of String) Optional. List of Device Groups assigned to this Assignment Group
 - `install_type` (String) Optional. The install type for munki assignment groups. Must be one of managed, self_serve, managed_updates or default_installs. This setting has no effect for non-munki (standard) assignment groups. Defaults to managed.
-- `profiles` (Set of String) Optional. List of Custom Configuration Profiles assigned to this assignment group
+- `profiles` (Set of String) Optional. List of Configuration Profiles (both Custom and predefined Profiles) assigned to this assignment group
 - `profiles_sync` (Boolean) Optional. Set true if you would like to send Sync Profiles command after Assignment Group creation or changes. Defaults to false.
 
 ### Read-Only

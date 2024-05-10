@@ -23,8 +23,8 @@ data "simplemdm_attribute" "myattribute" {
 
 ### Required
 
-- `default_value` (String) Default (global) value of the Attribute.
+- `name` (String) The name (and ID) of the Attribute.
 
 ### Read-Only
 
-- `name` (String) The name (and ID) of the Attribute.
+- `default_value` (String) Default (global) value of the Attribute.

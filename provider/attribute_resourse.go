@@ -87,7 +87,7 @@ func (r *attributeResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	// Generate API request body from plan
-	_, err := r.client.CreateAttribute(plan.Name.ValueString(), plan.DefaultValue.ValueString())
+	_, err := r.client.AttributeCreate(plan.Name.ValueString(), plan.DefaultValue.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating attribute",
@@ -122,7 +122,7 @@ func (r *attributeResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	// Get refreshed attribute value from SimpleMDM
-	attribute, err := r.client.GetAttribute(state.Name.ValueString())
+	attribute, err := r.client.AttributeGet(state.Name.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading SimpleMDM Attribute",
@@ -154,7 +154,7 @@ func (r *attributeResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	// Generate API request body from plan
-	err := r.client.UpdateAttribute(plan.Name.ValueString(), plan.DefaultValue.ValueString())
+	err := r.client.AttributeUpdate(plan.Name.ValueString(), plan.DefaultValue.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating attribute",
@@ -179,7 +179,7 @@ func (r *attributeResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	// Delete existing order
-	err := r.client.DeleteAttribute(state.Name.ValueString())
+	err := r.client.AttributeDelete(state.Name.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting SimpleMDM attribute",
