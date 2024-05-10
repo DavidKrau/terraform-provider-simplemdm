@@ -43,7 +43,7 @@ func (d *attributeDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 		Description: "Attribute data source can be used together with Device(s) or Device Group(s) to set values or in lifecycle management.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
-				Computed:    true,
+				Required:    true,
 				Description: "The name (and ID) of the Attribute.",
 			},
 			"default_value": schema.StringAttribute{

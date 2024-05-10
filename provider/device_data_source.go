@@ -61,7 +61,7 @@ func (d *deviceDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
-	app, err := d.client.DeviceGet(state.ID.ValueString())
+	device, err := d.client.DeviceGet(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read SimpleMDM device",
@@ -71,8 +71,8 @@ func (d *deviceDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	}
 
 	// Map response body to model
-	state.Name = types.StringValue(app.Data.Attributes.Name)
-	state.ID = types.StringValue(strconv.Itoa(app.Data.ID))
+	state.Name = types.StringValue(device.Data.Attributes.Name)
+	state.ID = types.StringValue(strconv.Itoa(device.Data.ID))
 
 	// Set state
 
