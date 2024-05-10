@@ -42,6 +42,7 @@ jobs:
         with:
           go-version-file: 'go.mod'
           cache: true
+      - run: go get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
       - run: go generate ./...
       - name: git diff
         run: |
