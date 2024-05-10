@@ -73,5 +73,6 @@ jobs:
       - run: go mod download
       - env:
           TF_ACC: "1"
+          SIMPLEMDM_APIKEY: ${{ secrets.SIMPLEMDM_APIKEY }}
         run: go test -v -cover ./provider/
         timeout-minutes: 10
