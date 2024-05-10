@@ -235,7 +235,7 @@ func (r *deviceGroupResource) Update(ctx context.Context, req resource.UpdateReq
 		"Name can not be changed via terraform",
 		"Device groups currently do not support change of the name via API request, in case you wish to change "+
 			"name of the device group please do it via website. Profiles assigned to the group are currently also limited"+
-			"as we are missing data from API which profiles are assigned to the group. This will be implemented later when API will provide data about profiles.",
+			" as we are missing data from API which profiles are assigned to the group. This will be implemented later when API will provide data about profiles.",
 	)
 
 	//comparing planed attributes and their values to attributes in SimpleMDM
@@ -308,11 +308,11 @@ func (r *deviceGroupResource) Update(ctx context.Context, req resource.UpdateReq
 
 	// //adding profiles
 	for _, profileId := range profilesToAdd {
-		_, err := r.client.AssignToDeviceGroupProfile(profileId, plan.ID.ValueString())
+		err := r.client.AssignToDeviceGroupProfile(profileId, plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
-				"Error updating assignment group app assignment",
-				"Could not update assignment group app assignment, unexpected error: "+err.Error(),
+				"Error updating device group profile assignment",
+				"Could not update device group profile assignment, unexpected error: "+err.Error(),
 			)
 			return
 		}
@@ -320,11 +320,11 @@ func (r *deviceGroupResource) Update(ctx context.Context, req resource.UpdateReq
 
 	//removing profiles
 	for _, profileId := range profilesToRemove {
-		_, err := r.client.UnassignFromDeviceGroupProfile(profileId, plan.ID.ValueString())
+		err := r.client.UnassignFromDeviceGroupProfile(profileId, plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
-				"Error updating assignment group app assignment",
-				"Could not update assignment group app assignment, unexpected error: "+err.Error(),
+				"Error updating device group profile assignment",
+				"Could not update device group profile assignment, unexpected error: "+err.Error(),
 			)
 			return
 		}
