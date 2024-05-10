@@ -308,7 +308,7 @@ func (r *deviceGroupResource) Update(ctx context.Context, req resource.UpdateReq
 
 	// //adding profiles
 	for _, profileId := range profilesToAdd {
-		err := r.client.AssignToAssignmentGroup(plan.ID.ValueString(), profileId, "profiles")
+		_, err := r.client.AssignToDeviceGroupProfile(profileId, plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group app assignment",
@@ -320,7 +320,7 @@ func (r *deviceGroupResource) Update(ctx context.Context, req resource.UpdateReq
 
 	//removing profiles
 	for _, profileId := range profilesToRemove {
-		err := r.client.UnAssignFromAssignmentGroup(plan.ID.ValueString(), profileId, "profiles")
+		_, err := r.client.UnassignFromDeviceGroupProfile(profileId, plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group app assignment",
