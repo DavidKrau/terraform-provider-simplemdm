@@ -132,7 +132,7 @@ func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRe
 			"profiles": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
-				Description: "Optional. List of Custom Configuration Profiles assigned to this assignment group",
+				Description: "Optional. List of Configuration Profiles (both Custom and predefined Profiles) assigned to this assignment group",
 			},
 			"profiles_sync": schema.BoolAttribute{
 				Optional:    true,
@@ -184,7 +184,7 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 
 	// Assign all apps in plan
 	for _, appId := range plan.Apps.Elements() {
-		err := r.client.AssignToAssignmentGroup(plan.ID.ValueString(), strings.Replace(appId.String(), "\"", "", 2), "apps")
+		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), strings.Replace(appId.String(), "\"", "", 2), "apps")
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group app assignment",
@@ -196,7 +196,7 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 
 	// Assign all profiles in plan
 	for _, profileId := range plan.Profiles.Elements() {
-		err := r.client.AssignToAssignmentGroup(plan.ID.ValueString(), strings.Replace(profileId.String(), "\"", "", 2), "profiles")
+		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), strings.Replace(profileId.String(), "\"", "", 2), "profiles")
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group profile assignment",
@@ -208,7 +208,7 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 
 	//assign all groups in plan
 	for _, groupId := range plan.Groups.Elements() {
-		err := r.client.AssignToAssignmentGroup(plan.ID.ValueString(), strings.Replace(groupId.String(), "\"", "", 2), "device_groups")
+		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), strings.Replace(groupId.String(), "\"", "", 2), "device_groups")
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group device group assignment",
@@ -220,7 +220,7 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 
 	//assign all devices in plan
 	for _, deviceId := range plan.Devices.Elements() {
-		err := r.client.AssignToAssignmentGroup(plan.ID.ValueString(), strings.Replace(deviceId.String(), "\"", "", 2), "devices")
+		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), strings.Replace(deviceId.String(), "\"", "", 2), "devices")
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group device group assignment",
@@ -231,13 +231,13 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 	}
 
 	if plan.AppsUpdate.ValueBool() {
-		err := r.client.UpdateInstalledAppsAssignmentGroup(plan.ID.ValueString())
+		err := r.client.AssignmentGroupUpdateInstalledApps(plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error when sending command to Update Apps, deleting group to prevent issus next run.",
 				"Could not send Apps Update command, unexpected error: "+err.Error(),
 			)
-			err := r.client.DeleteAssignmentGroup(plan.ID.ValueString())
+			err := r.client.AssignmentGroupDelete(plan.ID.ValueString())
 			if err != nil {
 				resp.Diagnostics.AddError(
 					"Error Deleting SimpleMDM assignment group",
@@ -250,13 +250,13 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 	}
 
 	if plan.AppsPush.ValueBool() {
-		err := r.client.PushAppsAssignmentGroup(plan.ID.ValueString())
+		err := r.client.AssignmentGroupPushApps(plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error when sending command to Push Apps, deleting group to prevent issus next run.",
 				"Could not send Push Apps command, unexpected error: "+err.Error(),
 			)
-			err := r.client.DeleteAssignmentGroup(plan.ID.ValueString())
+			err := r.client.AssignmentGroupDelete(plan.ID.ValueString())
 			if err != nil {
 				resp.Diagnostics.AddError(
 					"Error Deleting SimpleMDM assignment group",
@@ -269,13 +269,13 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 	}
 
 	if plan.ProfilesSync.ValueBool() {
-		err := r.client.SyncProfilesAssignmentGroup(plan.ID.ValueString())
+		err := r.client.AssignmentGroupSyncProfiles(plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error when sending command to Sync Profiles, deleting group to prevent issus next run.",
 				"Could not send Sync Profiles command, unexpected error: "+err.Error(),
 			)
-			err := r.client.DeleteAssignmentGroup(plan.ID.ValueString())
+			err := r.client.AssignmentGroupDelete(plan.ID.ValueString())
 			if err != nil {
 				resp.Diagnostics.AddError(
 					"Error Deleting SimpleMDM assignment group",
@@ -306,7 +306,7 @@ func (r *assignment_groupResource) Read(ctx context.Context, req resource.ReadRe
 	}
 
 	// Get refreshed assignment group values from SimpleMDM
-	assignmentGroup, err := r.client.GetAssignmentGroup(state.ID.ValueString())
+	assignmentGroup, err := r.client.AssignmentGroupGet(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading SimpleMDM assignment group",
@@ -367,7 +367,7 @@ func (r *assignment_groupResource) Read(ctx context.Context, req resource.ReadRe
 		"Notice about profiles:",
 		"API limitations is curretly not allowing terraform provider to get state of the profiles assigned to assigment group."+
 			" This is not issue as long as you are using only terraform provider to manage profiles for assigment group."+
-			"This will be implemented properly once API will have correct responses and we will be able to load profiles for assignment group via API.",
+			" This will be implemented properly once API will have correct responses and we will be able to load profiles for assignment group via API.",
 	)
 
 	// //read all profiles and put them to slice
@@ -414,7 +414,7 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 	}
 
 	// Generate API request body from plan
-	err := r.client.UpdateAssignmentGroup(plan.Name.ValueString(), plan.AutoDeploy.ValueBool(), plan.ID.ValueString(), plan.GroupType.ValueString(), plan.InstallType.ValueString())
+	err := r.client.AssignmentGroupUpdate(plan.Name.ValueString(), plan.AutoDeploy.ValueBool(), plan.ID.ValueString(), plan.GroupType.ValueString(), plan.InstallType.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating assignment group",
@@ -441,7 +441,7 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 
 	//adding apps
 	for _, appId := range appsToAdd {
-		err := r.client.AssignToAssignmentGroup(plan.ID.ValueString(), appId, "apps")
+		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), appId, "apps")
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group app assignment",
@@ -453,7 +453,7 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 
 	//removing apps
 	for _, appId := range appsToRemove {
-		err := r.client.UnAssignFromAssignmentGroup(plan.ID.ValueString(), appId, "apps")
+		err := r.client.AssignmentGroupUnAssignObject(plan.ID.ValueString(), appId, "apps")
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group app assignment",
@@ -481,7 +481,7 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 
 	//adding profiles
 	for _, profileId := range profilesToAdd {
-		err := r.client.AssignToAssignmentGroup(plan.ID.ValueString(), profileId, "profiles")
+		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), profileId, "profiles")
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group profile assignment",
@@ -493,7 +493,7 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 
 	//removing profiles
 	for _, profileId := range profilesToRemove {
-		err := r.client.UnAssignFromAssignmentGroup(plan.ID.ValueString(), profileId, "profiles")
+		err := r.client.AssignmentGroupUnAssignObject(plan.ID.ValueString(), profileId, "profiles")
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group app assignment",
@@ -519,7 +519,7 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 
 	//groups to add
 	for _, groupId := range groupsToAdd {
-		err := r.client.AssignToAssignmentGroup(plan.ID.ValueString(), groupId, "device_groups")
+		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), groupId, "device_groups")
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group device group assignment",
@@ -531,7 +531,7 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 
 	//groups to remove
 	for _, groupId := range groupsToRemove {
-		err := r.client.UnAssignFromAssignmentGroup(plan.ID.ValueString(), groupId, "device_groups")
+		err := r.client.AssignmentGroupUnAssignObject(plan.ID.ValueString(), groupId, "device_groups")
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group device group assignment",
@@ -557,7 +557,7 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 
 	//groups to add
 	for _, deviceId := range devicesToAdd {
-		err := r.client.AssignToAssignmentGroup(plan.ID.ValueString(), deviceId, "devices")
+		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), deviceId, "devices")
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group device group assignment",
@@ -569,7 +569,7 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 
 	//groups to remove
 	for _, deviceId := range devicesToRemove {
-		err := r.client.UnAssignFromAssignmentGroup(plan.ID.ValueString(), deviceId, "devices")
+		err := r.client.AssignmentGroupUnAssignObject(plan.ID.ValueString(), deviceId, "devices")
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group device group assignment",
@@ -580,7 +580,7 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 	}
 
 	if plan.AppsUpdate.ValueBool() {
-		err := r.client.UpdateInstalledAppsAssignmentGroup(plan.ID.ValueString())
+		err := r.client.AssignmentGroupUpdateInstalledApps(plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group profile assignment",
@@ -591,7 +591,7 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 	}
 
 	if plan.AppsPush.ValueBool() {
-		err := r.client.PushAppsAssignmentGroup(plan.ID.ValueString())
+		err := r.client.AssignmentGroupPushApps(plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group profile assignment",
@@ -602,7 +602,7 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 	}
 
 	if plan.ProfilesSync.ValueBool() {
-		err := r.client.SyncProfilesAssignmentGroup(plan.ID.ValueString())
+		err := r.client.AssignmentGroupSyncProfiles(plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group profile assignment",
@@ -629,7 +629,7 @@ func (r *assignment_groupResource) Delete(ctx context.Context, req resource.Dele
 	}
 
 	// Delete existing assignment group
-	err := r.client.DeleteAssignmentGroup(state.ID.ValueString())
+	err := r.client.AssignmentGroupDelete(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting SimpleMDM assignment group",

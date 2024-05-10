@@ -3,5 +3,6 @@ resource "simplemdm_devicegroup" "testgroup" {
   attributes = {
     "myattribute" = "attributevalue"
   }
-  profiles = [123456, 654321]
+  profiles       = [123456, 654321]
+  customprofiles = [456123]
 }

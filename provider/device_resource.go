@@ -24,13 +24,14 @@ var (
 
 // deviceGroupResourceModel maps the resource schema data.
 type deviceResourceModel struct {
-	Name          types.String `tfsdk:"name"`
-	ID            types.String `tfsdk:"id"`
-	Attributes    types.Map    `tfsdk:"attributes"`
-	Profiles      types.Set    `tfsdk:"profiles"`
-	DeviceGroup   types.String `tfsdk:"devicegroup"`
-	DeviceName    types.String `tfsdk:"devicename"`
-	EnrollmentURL types.String `tfsdk:"enrollmenturl"`
+	Name           types.String `tfsdk:"name"`
+	ID             types.String `tfsdk:"id"`
+	Attributes     types.Map    `tfsdk:"attributes"`
+	CustomProfiles types.Set    `tfsdk:"customprofiles"`
+	Profiles       types.Set    `tfsdk:"profiles"`
+	DeviceGroup    types.String `tfsdk:"devicegroup"`
+	DeviceName     types.String `tfsdk:"devicename"`
+	EnrollmentURL  types.String `tfsdk:"enrollmenturl"`
 }
 
 // deviceGroupResource is a helper function to simplify the provider implementation.
@@ -77,6 +78,11 @@ func (r *deviceResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"profiles": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Description: "Optional. List of Configuration Profiles assigned to this Device",
+			},
+			"customprofiles": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 				Description: "Optional. List of Custom Configuration Profiles assigned to this Device",
 			},
 			"attributes": schema.MapAttribute{
@@ -121,7 +127,7 @@ func (r *deviceResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	// Generate API request body from plan
-	device, err := r.client.CreateDevice(plan.Name.ValueString(), plan.DeviceGroup.ValueString())
+	device, err := r.client.DeviceCreate(plan.Name.ValueString(), plan.DeviceGroup.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating device",
@@ -135,7 +141,7 @@ func (r *deviceResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	//setting attributes
 	for attribute, value := range plan.Attributes.Elements() {
-		err := r.client.SetAttributeForDeviceAttribute(plan.ID.ValueString(), attribute, strings.Replace(value.String(), "\"", "", 2))
+		err := r.client.AttributeSetAttributeForDevice(plan.ID.ValueString(), attribute, strings.Replace(value.String(), "\"", "", 2))
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating device attribute",
@@ -145,9 +151,9 @@ func (r *deviceResource) Create(ctx context.Context, req resource.CreateRequest,
 		}
 	}
 
-	// Assign all profiles in plan
-	for _, profileId := range plan.Profiles.Elements() {
-		err := r.client.AssignToDeviceProfile(strings.Replace(profileId.String(), "\"", "", 2), plan.ID.ValueString())
+	// Assign all custom profiles in plan
+	for _, profileId := range plan.CustomProfiles.Elements() {
+		err := r.client.CustomProfileAssignToDevice(strings.Replace(profileId.String(), "\"", "", 2), plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating device profile assignment",
@@ -156,6 +162,19 @@ func (r *deviceResource) Create(ctx context.Context, req resource.CreateRequest,
 			return
 		}
 	}
+
+	// Assign all custom profiles in plan
+	for _, profileId := range plan.Profiles.Elements() {
+		err := r.client.ProfileAssignToDevice(strings.Replace(profileId.String(), "\"", "", 2), plan.ID.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error updating device profile assignment",
+				"Could not update device profile assignment, unexpected error: "+err.Error(),
+			)
+			return
+		}
+	}
+
 	// Map response body to schema and populate Computed attribute values
 	//mataDataLink := fmt.Sprintf("%s/%s/%s", r.client.HostName, "private", secret.MetadataKey)
 	//plan.MetaDataLink = types.StringValue(mataDataLink)
@@ -185,11 +204,11 @@ func (r *deviceResource) Read(ctx context.Context, req resource.ReadRequest, res
 		"Notice about profiles:",
 		"API limitations is curretly not allowing terraform provider to get state of the profiles assigned to device."+
 			" This is not issue as long as you are using only terraform provider to manage profiles on the device."+
-			"This will be implemented properly once API will have correct responses and we will be able to load profiles assigned to device via API.",
+			" This will be implemented properly once API will have correct responses and we will be able to load profiles assigned to device via API.",
 	)
 
 	// Get device group value from SimpleMDM
-	device, err := r.client.GetDevice(state.ID.ValueString())
+	device, err := r.client.DeviceGet(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading SimpleMDM device",
@@ -240,7 +259,7 @@ func (r *deviceResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	// Generate API request body from plan
-	_, err := r.client.UpdateDevice(plan.ID.ValueString(), plan.Name.ValueString(), plan.DeviceName.ValueString())
+	_, err := r.client.DeviceUpdate(plan.ID.ValueString(), plan.Name.ValueString(), plan.DeviceName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating device group",
@@ -256,7 +275,7 @@ func (r *deviceResource) Update(ctx context.Context, req resource.UpdateRequest,
 			if planAttribute == stateAttribute {
 				found = true
 				if planValue != stateValue {
-					err := r.client.SetAttributeForDeviceAttribute(plan.ID.ValueString(), planAttribute, strings.Replace(planValue.String(), "\"", "", 2))
+					err := r.client.AttributeSetAttributeForDevice(plan.ID.ValueString(), planAttribute, strings.Replace(planValue.String(), "\"", "", 2))
 					if err != nil {
 						resp.Diagnostics.AddError(
 							"Error updating SimpleMDM device attributes value",
@@ -269,7 +288,7 @@ func (r *deviceResource) Update(ctx context.Context, req resource.UpdateRequest,
 			}
 		}
 		if !found {
-			err := r.client.SetAttributeForDeviceAttribute(plan.ID.ValueString(), planAttribute, strings.Replace(planValue.String(), "\"", "", 2))
+			err := r.client.AttributeSetAttributeForDevice(plan.ID.ValueString(), planAttribute, strings.Replace(planValue.String(), "\"", "", 2))
 			if err != nil {
 				resp.Diagnostics.AddError(
 					"Error updating SimpleMDM device attributes value",
@@ -290,7 +309,7 @@ func (r *deviceResource) Update(ctx context.Context, req resource.UpdateRequest,
 			}
 		}
 		if !found {
-			err := r.client.SetAttributeForDeviceAttribute(plan.ID.ValueString(), stateAttribute, "")
+			err := r.client.AttributeSetAttributeForDevice(plan.ID.ValueString(), stateAttribute, "")
 			if err != nil {
 				resp.Diagnostics.AddError(
 					"Error updating SimpleMDM device attributes value",
@@ -319,7 +338,7 @@ func (r *deviceResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	// //adding profiles
 	for _, profileId := range profilesToAdd {
-		err := r.client.AssignToDeviceProfile(profileId, plan.ID.ValueString())
+		err := r.client.ProfileAssignToDevice(profileId, plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating device custom profile assignment",
@@ -331,7 +350,47 @@ func (r *deviceResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	//removing profiles
 	for _, profileId := range profilesToRemove {
-		err := r.client.UnAssignToDeviceProfile(profileId, plan.ID.ValueString())
+		err := r.client.ProfileUnAssignToDevice(profileId, plan.ID.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error updating device custom profile assignment",
+				"Could not update device custom profile assignment, unexpected error: "+err.Error(),
+			)
+			return
+		}
+	}
+
+	//Handling assigned custom prfiles profiles
+	//reading assigned profiles from simpleMDM
+	stateCustomProfiles := []string{}
+	for _, profileId := range state.CustomProfiles.Elements() {
+		stateCustomProfiles = append(stateCustomProfiles, strings.Replace(profileId.String(), "\"", "", 2))
+	}
+
+	//reading configured profiles from TF file
+	planCustomProfiles := []string{}
+	for _, profileId := range plan.CustomProfiles.Elements() {
+		planCustomProfiles = append(planCustomProfiles, strings.Replace(profileId.String(), "\"", "", 2))
+	}
+
+	// // creating diff
+	customProfilesToAdd, customProfilesToRemove := diffFunction(stateCustomProfiles, planCustomProfiles)
+
+	// //adding profiles
+	for _, profileId := range customProfilesToAdd {
+		err := r.client.CustomProfileAssignToDevice(profileId, plan.ID.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error updating device custom profile assignment",
+				"Could not update device custom profile assignment, unexpected error: "+err.Error(),
+			)
+			return
+		}
+	}
+
+	//removing profiles
+	for _, profileId := range customProfilesToRemove {
+		err := r.client.CustomProfileUnAssignToDevice(profileId, plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating device custom profile assignment",
@@ -357,7 +416,7 @@ func (r *deviceResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	// Delete existing group
-	err := r.client.DeleteDevice(state.ID.ValueString())
+	err := r.client.DeviceDelete(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting SimpleMDM device",

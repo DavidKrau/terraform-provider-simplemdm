@@ -61,7 +61,7 @@ func (d *appDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
-	app, err := d.client.GetApp(state.ID.ValueString())
+	app, err := d.client.AppGet(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read SimpleMDM app",

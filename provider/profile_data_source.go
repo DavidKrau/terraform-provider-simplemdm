@@ -13,51 +13,51 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ datasource.DataSource              = &customProfileDataSource{}
-	_ datasource.DataSourceWithConfigure = &customProfileDataSource{}
+	_ datasource.DataSource              = &profileDataSource{}
+	_ datasource.DataSourceWithConfigure = &profileDataSource{}
 )
 
 // ProfileDataSourceModel maps the data source schema data.
-type customProfileDataSourceModel struct {
+type profileDataSourceModel struct {
 	ID   types.String `tfsdk:"id"`
 	Name types.String `tfsdk:"name"`
 }
 
 // ProfileDataSource is a helper function to simplify the provider implementation.
-func CustomProfileDataSource() datasource.DataSource {
-	return &customProfileDataSource{}
+func ProfileDataSource() datasource.DataSource {
+	return &profileDataSource{}
 }
 
 // profileDataSource is the data source implementation.
-type customProfileDataSource struct {
+type profileDataSource struct {
 	client *simplemdm.Client
 }
 
 // Metadata returns the data source type name.
-func (d *customProfileDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_customprofile"
+func (d *profileDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_profile"
 }
 
 // Schema defines the schema for the data source.
-func (d *customProfileDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *profileDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Custom Profile data source can be used together with Device(s), Assignment Group(s) or Device Group(s) to assign profiles to these objects.",
+		Description: "Profile data source can be used together with Device(s), Assignment Group(s) or Device Group(s) to assign profiles to these objects.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Computed:    true,
-				Description: "The name of the custom profile.",
+				Description: "The name of the Profile.",
 			},
 			"id": schema.StringAttribute{
 				Required:    true,
-				Description: "The ID of the custom profile.",
+				Description: "The ID of the Profile.",
 			},
 		},
 	}
 }
 
 // Read refreshes the Terraform state with the latest data.
-func (d *customProfileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state customProfileDataSourceModel
+func (d *profileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var state profileDataSourceModel
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
@@ -81,8 +81,8 @@ func (d *customProfileDataSource) Read(ctx context.Context, req datasource.ReadR
 
 	if !profilefound {
 		resp.Diagnostics.AddError(
-			"Error Reading SimpleMDM custom profile",
-			"Could not read custom profles ID %s from array:"+state.ID.ValueString(),
+			"Error Reading SimpleMDM profile",
+			"Could not read profile ID %s from array:"+state.ID.ValueString(),
 		)
 		return
 	}
@@ -97,7 +97,7 @@ func (d *customProfileDataSource) Read(ctx context.Context, req datasource.ReadR
 }
 
 // Configure adds the provider configured client to the data source.
-func (d *customProfileDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *profileDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}

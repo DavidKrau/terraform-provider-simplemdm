@@ -61,7 +61,7 @@ func (d *deviceGroupDataSource) Read(ctx context.Context, req datasource.ReadReq
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
-	app, err := d.client.GetDeviceGroup(state.ID.ValueString())
+	app, err := d.client.DeviceGroupGet(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read SimpleMDM device group",
