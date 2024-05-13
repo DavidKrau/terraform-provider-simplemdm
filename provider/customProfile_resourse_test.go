@@ -42,7 +42,7 @@ func TestAccCustomProfileResource(t *testing.T) {
 				ResourceName:      "simplemdm_customprofile.test",
 				ImportState:       true,
 				ImportStateVerify: true,
-				// The last_updated attribute does not exist in the HashiCups
+				// The filesha and  mobileconfig attributes does not exist in SimpleMDM
 				// API, therefore there is no value for it during import.
 				ImportStateVerifyIgnore: []string{"filesha", "mobileconfig"},
 			},

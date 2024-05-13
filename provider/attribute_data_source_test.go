@@ -12,10 +12,10 @@ func TestAccAttributeDataSource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Read testing
 			{
-				Config: providerConfig + `data "simplemdm_attribute" "test" {name ="testattribute"}`,
+				Config: providerConfig + `data "simplemdm_attribute" "test" {name ="testattributereead"}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify returned values
-					resource.TestCheckResourceAttr("data.simplemdm_attribute.test", "name", "testattribute"),
+					resource.TestCheckResourceAttr("data.simplemdm_attribute.test", "name", "testattributereead"),
 					resource.TestCheckResourceAttr("data.simplemdm_attribute.test", "default_value", "this is testing attribute"),
 				),
 			},

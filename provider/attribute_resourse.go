@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -24,6 +23,7 @@ var (
 type attributeResourceModel struct {
 	DefaultValue types.String `tfsdk:"default_value"`
 	Name         types.String `tfsdk:"name"`
+	ID           types.String `tfsdk:"id"`
 }
 
 // AttributeResource is a helper function to simplify the provider implementation.
@@ -67,6 +67,13 @@ func (r *attributeResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				Optional:    true,
 				Description: "Optional. The value that will be used if the Attribute value is not provided on Group or Device level.",
 			},
+			"id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: "ID of a Attribute in SimpleMDM",
+			},
 		},
 	}
 }
@@ -104,6 +111,8 @@ func (r *attributeResource) Create(ctx context.Context, req resource.CreateReque
 	//secretLink := fmt.Sprintf("%s/%s/%s", r.client.HostName, "secret", secret.SecretKey)
 	//plan.SecretLink = types.StringValue(secretLink)
 
+	plan.ID = plan.Name
+
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -126,16 +135,15 @@ func (r *attributeResource) Read(ctx context.Context, req resource.ReadRequest, 
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading SimpleMDM Attribute",
-			"Could not read SimpleMDM Attribute order ID "+state.Name.ValueString()+": "+err.Error(),
+			"Could not read SimpleMDM Attribute ID "+state.Name.ValueString()+": "+err.Error(),
 		)
 		return
 	}
 
-	fmt.Print(attribute)
 	// Overwrite items with refreshed state
 	state.Name = types.StringValue(attribute.Data.Attributes.Name)
 	state.DefaultValue = types.StringValue(attribute.Data.Attributes.DefaultValue)
-
+	state.ID = types.StringValue(attribute.Data.Attributes.Name)
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
