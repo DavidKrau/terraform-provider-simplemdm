@@ -12,10 +12,10 @@ func TestAccDeviceDataSource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Read testing
 			{
-				Config: providerConfig + `data "simplemdm_device" "test" {id ="1579954"}`,
+				Config: providerConfig + `data "simplemdm_device" "test" {id ="1601809"}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify returned values
-					resource.TestCheckResourceAttr("data.simplemdm_device.test", "name", "David Kraushuber MacBook Pro"),
+					resource.TestCheckResourceAttr("data.simplemdm_device.test", "name", "Test device"),
 				),
 			},
 		},

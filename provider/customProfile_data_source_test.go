@@ -12,10 +12,10 @@ func TestAccCustomProfileDataSource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Read testing
 			{
-				Config: providerConfig + `data "simplemdm_customprofile" "test" {id ="161220"}`,
+				Config: providerConfig + `data "simplemdm_customprofile" "test" {id ="172804"}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify returned values
-					resource.TestCheckResourceAttr("data.simplemdm_customprofile.test", "name", "clone"),
+					resource.TestCheckResourceAttr("data.simplemdm_customprofile.test", "name", "Custom Profile 1"),
 				),
 			},
 		},

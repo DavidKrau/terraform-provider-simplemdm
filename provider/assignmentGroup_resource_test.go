@@ -18,10 +18,10 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 					auto_deploy = false
 					group_type   = "standard"
 					install_type = "managed"
-					apps= [550788]
-					groups = [140129]
-					profiles = [172500]
-					devices = [1597950]
+					apps= [553192]
+					groups = [140188]
+					profiles = [172801]
+					devices = [1601809]
 					profiles_sync = false
 					apps_push = false
 					apps_update = false
@@ -32,13 +32,13 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "name", "This assignment group"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "group_type", "standard"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "profiles.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "profiles.0", "172500"),
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "profiles.0", "172801"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices.0", "1597950"),
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices.0", "1601809"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "apps.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "apps.0", "550788"),
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "apps.0", "553192"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "groups.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "groups.0", "140129"),
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "groups.0", "140188"),
 					// Verify dynamic values have any value set in the state.
 					resource.TestCheckResourceAttrSet("simplemdm_assignmentgroup.testgroup2", "id"),
 				),
@@ -58,8 +58,8 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 					auto_deploy = false
 					group_type   = "munki"
 					install_type = "managed"
-					apps= [550788]
-					devices = [1597950]
+					apps= [577575]
+					devices = [1601810]
 					profiles_sync = false
 					apps_push = false
 					apps_update = false
@@ -71,9 +71,9 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "group_type", "munki"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "install_type", "managed"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices.0", "1597950"),
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices.0", "1601810"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "apps.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "apps.0", "550788"),
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "apps.0", "577575"),
 					// Verify dynamic values have any value set in the state.
 					resource.TestCheckResourceAttrSet("simplemdm_assignmentgroup.testgroup2", "id"),
 				),

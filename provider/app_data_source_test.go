@@ -12,9 +12,9 @@ func TestAccAppDataSource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Read testing
 			{
-				Config: providerConfig + `data "simplemdm_app" "test" {id ="550788"}`,
+				Config: providerConfig + `data "simplemdm_app" "test" {id ="577575"}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					// Verify number of coffees returned
+					// Verify name of the app
 					resource.TestCheckResourceAttr("data.simplemdm_app.test", "name", "SimpleMDM"),
 				),
 			},

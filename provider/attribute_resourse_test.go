@@ -14,15 +14,15 @@ func TestAccAttributeResource(t *testing.T) {
 			{
 				Config: providerConfig + `
 				resource "simplemdm_attribute" "testattribute" {
-					name= "testattribute"
+					name= "newAttribute"
 					default_value= "test value for test attribute"
 				  }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify attributes
-					resource.TestCheckResourceAttr("simplemdm_attribute.testattribute", "name", "testattribute"),
+					resource.TestCheckResourceAttr("simplemdm_attribute.testattribute", "name", "newAttribute"),
 					resource.TestCheckResourceAttr("simplemdm_attribute.testattribute", "default_value", "test value for test attribute"),
-					resource.TestCheckResourceAttr("simplemdm_attribute.testattribute", "id", "testattribute"),
+					resource.TestCheckResourceAttr("simplemdm_attribute.testattribute", "id", "newAttribute"),
 				),
 			},
 			// ImportState testing
@@ -36,15 +36,15 @@ func TestAccAttributeResource(t *testing.T) {
 			{
 				Config: providerConfig + `
 				resource "simplemdm_attribute" "testattribute" {
-					name= "testattribute2"
+					name= "newAttribute2"
 					default_value= "test value for test attribute2"
 				  }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify attributes
-					resource.TestCheckResourceAttr("simplemdm_attribute.testattribute", "name", "testattribute2"),
+					resource.TestCheckResourceAttr("simplemdm_attribute.testattribute", "name", "newAttribute2"),
 					resource.TestCheckResourceAttr("simplemdm_attribute.testattribute", "default_value", "test value for test attribute2"),
-					resource.TestCheckResourceAttr("simplemdm_attribute.testattribute", "id", "testattribute2"),
+					resource.TestCheckResourceAttr("simplemdm_attribute.testattribute", "id", "newAttribute2"),
 				),
 			},
 			// Delete testing automatically occurs in TestCase
