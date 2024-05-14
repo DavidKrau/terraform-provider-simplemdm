@@ -12,7 +12,6 @@ const (
 	// such as updating the Makefile and running the testing through that tool.
 	providerConfig = `
 provider "simplemdm" {
-	apikey = "0ddM8okdszeS9MS2Y1azozKjEft4EvzwL2jxKzAk51q1WurW53ZOYKVi99dhfTWY"
 }
 `
 )
