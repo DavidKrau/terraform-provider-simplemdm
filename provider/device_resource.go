@@ -262,12 +262,21 @@ func (r *deviceResource) Update(ctx context.Context, req resource.UpdateRequest,
 	_, err := r.client.DeviceUpdate(plan.ID.ValueString(), plan.Name.ValueString(), plan.DeviceName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error updating device group",
-			"Could not update device group, unexpected error: "+err.Error(),
+			"Error updating device",
+			"Could not update device, unexpected error: "+err.Error(),
 		)
 		return
 	}
 
+	//assign device to correct group
+	err2 := r.client.DeviceGroupAssignDevice(plan.ID.ValueString(), plan.DeviceGroup.ValueString())
+	if err2 != nil {
+		resp.Diagnostics.AddError(
+			"Error updating device",
+			"Could not update device, unexpected error: "+err.Error(),
+		)
+		return
+	}
 	//comparing planed attributes and their values to attributes in SimpleMDM
 	for planAttribute, planValue := range plan.Attributes.Elements() {
 		found := false
@@ -415,7 +424,7 @@ func (r *deviceResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	// Delete existing group
+	// Delete existing device
 	err := r.client.DeviceDelete(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(

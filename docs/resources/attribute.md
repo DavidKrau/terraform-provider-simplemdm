@@ -30,6 +30,10 @@ resource "simplemdm_attribute" "myattribute" {
 
 - `default_value` (String) Optional. The value that will be used if the Attribute value is not provided on Group or Device level.
 
+### Read-Only
+
+- `id` (String) ID of a Attribute in SimpleMDM
+
 ## Import
 
 Import is supported using the following syntax:

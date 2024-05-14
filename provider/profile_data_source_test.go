@@ -12,10 +12,10 @@ func TestAccProfileDataSource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Read testing
 			{
-				Config: providerConfig + `data "simplemdm_profile" "test" {id ="160638"}`,
+				Config: providerConfig + `data "simplemdm_profile" "test" {id ="172801"}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify returned values
-					resource.TestCheckResourceAttr("data.simplemdm_profile.test", "name", "Software updates DDM"),
+					resource.TestCheckResourceAttr("data.simplemdm_profile.test", "name", "Restriction test profiles"),
 				),
 			},
 		},

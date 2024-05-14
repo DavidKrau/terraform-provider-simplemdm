@@ -169,7 +169,7 @@ func (r *deviceGroupResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	// Get device group value from SimpleMDM
-	devicegroup, err := r.client.DeviceGet(state.ID.ValueString())
+	devicegroup, err := r.client.DeviceGroupGet(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading SimpleMDM device group",
