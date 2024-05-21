@@ -16,13 +16,13 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource                = &profileResource{}
-	_ resource.ResourceWithConfigure   = &profileResource{}
-	_ resource.ResourceWithImportState = &profileResource{}
+	_ resource.Resource                = &customProfileResource{}
+	_ resource.ResourceWithConfigure   = &customProfileResource{}
+	_ resource.ResourceWithImportState = &customProfileResource{}
 )
 
 // profileResourceModel maps the resource schema data.
-type profileResourceModel struct {
+type customProfileResourceModel struct {
 	Name                   types.String `tfsdk:"name"`
 	MobileConfig           types.String `tfsdk:"mobileconfig"`
 	FileSHA                types.String `tfsdk:"filesha"`
@@ -35,16 +35,16 @@ type profileResourceModel struct {
 
 // ProfileResource is a helper function to simplify the provider implementation.
 func CustomProfileResource() resource.Resource {
-	return &profileResource{}
+	return &customProfileResource{}
 }
 
 // profileResource is the resource implementation.
-type profileResource struct {
+type customProfileResource struct {
 	client *simplemdm.Client
 }
 
 // Configure adds the provider configured client to the resource.
-func (r *profileResource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
+func (r *customProfileResource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -53,12 +53,12 @@ func (r *profileResource) Configure(_ context.Context, req resource.ConfigureReq
 }
 
 // Metadata returns the resource type name.
-func (r *profileResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *customProfileResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_customprofile"
 }
 
 // Schema defines the schema for the resource.
-func (r *profileResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *customProfileResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Custom Profile resource can be used to manage Custom Profile. Can be used together with Device(s), Assignment Group(s) or Device Group(s) and set addition details regarding Custom Profile.",
 		Attributes: map[string]schema.Attribute{
@@ -112,15 +112,15 @@ func (r *profileResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 	}
 }
 
-func (r *profileResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *customProfileResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 // Create a new resource
-func (r *profileResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *customProfileResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	//Retrieve values from plan
-	var plan profileResourceModel
+	var plan customProfileResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -148,9 +148,9 @@ func (r *profileResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 }
 
-func (r *profileResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *customProfileResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	// Get current state
-	var state profileResourceModel
+	var state customProfileResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -215,9 +215,9 @@ func (r *profileResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 }
 
-func (r *profileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *customProfileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	//Retrieve values from plan
-	var plan profileResourceModel
+	var plan customProfileResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -241,8 +241,8 @@ func (r *profileResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 }
 
-func (r *profileResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state profileResourceModel
+func (r *customProfileResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state customProfileResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
