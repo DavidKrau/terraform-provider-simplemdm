@@ -22,3 +22,6 @@ Device Group:
 Device:
 1601809 - Test device
 1601810 - Test device2
+
+Scripts:
+5727 - Test script
