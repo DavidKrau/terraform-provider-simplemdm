@@ -25,3 +25,4 @@ Device:
 
 Scripts:
 5727 - Test script
+5728 - Test script 2
