@@ -17,18 +17,18 @@ var (
 	_ datasource.DataSourceWithConfigure = &scriptDataSource{}
 )
 
-// appDataSourceModel maps the data source schema data.
+// scriptDataSourceModel maps the data source schema data.
 type scriptDataSourceModel struct {
 	ID   types.String `tfsdk:"id"`
 	Name types.String `tfsdk:"name"`
 }
 
-// appDataSource is a helper function to simplify the provider implementation.
+// scriptDataSource is a helper function to simplify the provider implementation.
 func ScriptDataSource() datasource.DataSource {
 	return &scriptDataSource{}
 }
 
-// appDataSource is the data source implementation.
+// scriptDataSource is the data source implementation.
 type scriptDataSource struct {
 	client *simplemdm.Client
 }
@@ -61,7 +61,7 @@ func (d *scriptDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
-	app, err := d.client.ScriptGet(state.ID.ValueString())
+	script, err := d.client.ScriptGet(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read SimpleMDM Script",
@@ -71,8 +71,8 @@ func (d *scriptDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	}
 
 	// Map response body to model
-	state.Name = types.StringValue(app.Data.Attributes.Name)
-	state.ID = types.StringValue(strconv.Itoa(app.Data.ID))
+	state.Name = types.StringValue(script.Data.Attributes.Name)
+	state.ID = types.StringValue(strconv.Itoa(script.Data.ID))
 
 	// Set state
 

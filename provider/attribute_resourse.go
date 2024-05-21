@@ -186,7 +186,7 @@ func (r *attributeResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	// Delete existing order
+	// Delete existing attribute
 	err := r.client.AttributeDelete(state.Name.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(

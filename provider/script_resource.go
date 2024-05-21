@@ -21,7 +21,7 @@ var (
 	_ resource.ResourceWithImportState = &scriptResource{}
 )
 
-// profileResourceModel maps the resource schema data.
+// scriptResourceModel maps the resource schema data.
 type scriptResourceModel struct {
 	Name            types.String `tfsdk:"name"`
 	ScriptFile      types.String `tfsdk:"scriptfile"`
@@ -33,12 +33,12 @@ type scriptResourceModel struct {
 	UpdatedAt       types.String `tfsdk:"updated_at"`
 }
 
-// ProfileResource is a helper function to simplify the provider implementation.
+// scriptResource is a helper function to simplify the provider implementation.
 func ScriptResource() resource.Resource {
 	return &scriptResource{}
 }
 
-// profileResource is the resource implementation.
+// scriptResource is the resource implementation.
 type scriptResource struct {
 	client *simplemdm.Client
 }
@@ -60,12 +60,12 @@ func (r *scriptResource) Metadata(_ context.Context, req resource.MetadataReques
 // Schema defines the schema for the resource.
 func (r *scriptResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Custom Profile resource can be used to manage Custom Profile. Can be used together with Device(s), Assignment Group(s) or Device Group(s) and set addition details regarding Custom Profile.",
+		Description: "Script resource can be used to manage Scripts.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Required:    true,
 				Optional:    false,
-				Description: "Required. A name for the profile. Example \"My First profile by terraform\"",
+				Description: "Required. A name for the Script. Example \"My First Script managed by terraform\"",
 			},
 			"scriptfile": schema.StringAttribute{
 				Required:    true,
@@ -220,12 +220,12 @@ func (r *scriptResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	// Delete existing order
+	// Delete existing script
 	err := r.client.ScriptDelete(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Deleting SimpleMDM custom profile",
-			"Could not delete custom profile, unexpected error: "+err.Error(),
+			"Error Deleting SimpleMDM script",
+			"Could not delete script, unexpected error: "+err.Error(),
 		)
 		return
 	}

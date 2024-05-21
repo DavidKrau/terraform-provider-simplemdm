@@ -249,7 +249,7 @@ func (r *customProfileResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	// Delete existing order
+	// Delete existing custom profile
 	err := r.client.CustomProfileDelete(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
