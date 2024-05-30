@@ -17,18 +17,18 @@ var (
 	_ datasource.DataSourceWithConfigure = &deviceGroupDataSource{}
 )
 
-// coffeesDataSourceModel maps the data source schema data.
+// deviceGroupDataSourceModel maps the data source schema data.
 type deviceGroupDataSourceModel struct {
 	ID   types.String `tfsdk:"id"`
 	Name types.String `tfsdk:"name"`
 }
 
-// NewCoffeesDataSource is a helper function to simplify the provider implementation.
+// DeviceGroupDataSource is a helper function to simplify the provider implementation.
 func DeviceGroupDataSource() datasource.DataSource {
 	return &deviceGroupDataSource{}
 }
 
-// coffeesDataSource is the data source implementation.
+// deviceGroupDataSource is the data source implementation.
 type deviceGroupDataSource struct {
 	client *simplemdm.Client
 }

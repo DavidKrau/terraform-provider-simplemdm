@@ -273,7 +273,7 @@ func (r *deviceResource) Update(ctx context.Context, req resource.UpdateRequest,
 	if err2 != nil {
 		resp.Diagnostics.AddError(
 			"Error updating device",
-			"Could not update device, unexpected error: "+err.Error(),
+			"Could not update device, unexpected error: "+err2.Error(),
 		)
 		return
 	}
