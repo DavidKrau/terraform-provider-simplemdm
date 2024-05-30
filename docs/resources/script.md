@@ -3,12 +3,12 @@
 page_title: "simplemdm_script Resource - simplemdm"
 subcategory: ""
 description: |-
-  Custom Profile resource can be used to manage Custom Profile. Can be used together with Device(s), Assignment Group(s) or Device Group(s) and set addition details regarding Custom Profile.
+  Script resource can be used to manage Scripts.
 ---
 
 # simplemdm_script (Resource)
 
-Custom Profile resource can be used to manage Custom Profile. Can be used together with Device(s), Assignment Group(s) or Device Group(s) and set addition details regarding Custom Profile.
+Script resource can be used to manage Scripts.
 
 ## Example Usage
 
@@ -27,7 +27,7 @@ resource "simplemdm_script" "test" {
 ### Required
 
 - `filesha` (String) Required. The script file. Example: ${filesha256("./scripts/myscript.sh")}
-- `name` (String) Required. A name for the profile. Example "My First profile by terraform"
+- `name` (String) Required. A name for the Script. Example "My First Script managed by terraform"
 - `scriptfile` (String) Required. The script file. Example: "./scripts/myscript.sh"
 
 ### Optional
