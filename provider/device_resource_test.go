@@ -40,9 +40,9 @@ func TestAccDeviceResource(t *testing.T) {
 				ResourceName:      "simplemdm_device.test",
 				ImportState:       true,
 				ImportStateVerify: true,
-				// The profiles, enrollmenturl and  customprofiles attributes does not exist in SimpleMDM
+				// The profiles and  customprofiles attributes does not exist in SimpleMDM
 				// API, therefore there is no value for it during import.
-				ImportStateVerifyIgnore: []string{"profiles", "customprofiles", "enrollmenturl"},
+				ImportStateVerifyIgnore: []string{"profiles", "customprofiles"},
 			},
 			// Update and Read testing
 			{
