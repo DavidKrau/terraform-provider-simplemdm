@@ -238,6 +238,11 @@ func (r *deviceResource) Read(ctx context.Context, req resource.ReadRequest, res
 	state.Name = types.StringValue(device.Data.Attributes.Name)
 	state.DeviceName = types.StringValue(device.Data.Attributes.Name)
 	state.DeviceGroup = types.StringValue(strconv.Itoa(device.Data.Relationships.DeviceGroup.Data.ID))
+	if device.Data.Attributes.EnrollmentURL == "" {
+		state.EnrollmentURL = types.StringValue("nil")
+	} else {
+		state.EnrollmentURL = types.StringValue(device.Data.Attributes.EnrollmentURL)
+	}
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
