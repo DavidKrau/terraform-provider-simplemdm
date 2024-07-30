@@ -142,7 +142,9 @@ func (r *attributeResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	// Overwrite items with refreshed state
 	state.Name = types.StringValue(attribute.Data.Attributes.Name)
-	state.DefaultValue = types.StringValue(attribute.Data.Attributes.DefaultValue)
+	if attribute.Data.Attributes.DefaultValue != "" {
+		state.DefaultValue = types.StringValue(attribute.Data.Attributes.DefaultValue)
+	}
 	state.ID = types.StringValue(attribute.Data.Attributes.Name)
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
