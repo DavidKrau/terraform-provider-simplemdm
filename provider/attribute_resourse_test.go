@@ -37,13 +37,13 @@ func TestAccAttributeResource(t *testing.T) {
 				Config: providerConfig + `
 				resource "simplemdm_attribute" "testattribute" {
 					name= "newAttribute2"
-					default_value= "test value for test attribute2"
+					default_value= ""
 				  }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify attributes
 					resource.TestCheckResourceAttr("simplemdm_attribute.testattribute", "name", "newAttribute2"),
-					resource.TestCheckResourceAttr("simplemdm_attribute.testattribute", "default_value", "test value for test attribute2"),
+					resource.TestCheckResourceAttr("simplemdm_attribute.testattribute", "default_value", ""),
 					resource.TestCheckResourceAttr("simplemdm_attribute.testattribute", "id", "newAttribute2"),
 				),
 			},
