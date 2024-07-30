@@ -18,7 +18,7 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 					auto_deploy = false
 					group_type   = "standard"
 					install_type = "managed"
-					apps= [553192]
+					apps= [577575]
 					groups = [140188]
 					profiles = [172801]
 					devices = [1601809]
@@ -36,7 +36,7 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices.#", "1"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices.0", "1601809"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "apps.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "apps.0", "553192"),
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "apps.0", "577575"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "groups.#", "1"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "groups.0", "140188"),
 					// Verify dynamic values have any value set in the state.
@@ -58,7 +58,7 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 					auto_deploy = false
 					group_type   = "munki"
 					install_type = "managed"
-					apps= [577575]
+					apps= [553192]
 					devices = [1601810]
 					profiles_sync = false
 					apps_push = false
@@ -73,7 +73,7 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices.#", "1"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices.0", "1601810"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "apps.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "apps.0", "577575"),
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "apps.0", "553192"),
 					// Verify dynamic values have any value set in the state.
 					resource.TestCheckResourceAttrSet("simplemdm_assignmentgroup.testgroup2", "id"),
 				),
