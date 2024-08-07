@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"strconv"
+	"strings"
 
 	"github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -160,6 +161,10 @@ func (r *scriptResource) Read(ctx context.Context, req resource.ReadRequest, res
 	// Get script values from SimpleMDM
 	script, err := r.client.ScriptGet(state.ID.ValueString())
 	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error Reading SimpleMDM Script",
 			"Could not read SimpleMDM Script "+state.ID.ValueString()+": "+err.Error(),
