@@ -210,6 +210,10 @@ func (r *deviceResource) Read(ctx context.Context, req resource.ReadRequest, res
 	// Get device group value from SimpleMDM
 	device, err := r.client.DeviceGet(state.ID.ValueString())
 	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error Reading SimpleMDM device",
 			"Could not read SimpleMDM device "+state.ID.ValueString()+": "+err.Error(),

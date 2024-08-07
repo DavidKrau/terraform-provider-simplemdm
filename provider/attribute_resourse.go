@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"strings"
 
 	"github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -133,6 +134,10 @@ func (r *attributeResource) Read(ctx context.Context, req resource.ReadRequest, 
 	// Get refreshed attribute value from SimpleMDM
 	attribute, err := r.client.AttributeGet(state.Name.ValueString())
 	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error Reading SimpleMDM Attribute",
 			"Could not read SimpleMDM Attribute ID "+state.Name.ValueString()+": "+err.Error(),
