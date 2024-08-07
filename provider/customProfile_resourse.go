@@ -184,7 +184,7 @@ func (r *customProfileResource) Read(ctx context.Context, req resource.ReadReque
 	if !profilefound {
 		resp.Diagnostics.AddError(
 			"Error Reading SimpleMDM custom profile",
-			"Could not read custom profles ID  from array "+state.ID.ValueString(),
+			"Could not read custom profles ID from array "+state.ID.ValueString(),
 		)
 		return
 	}

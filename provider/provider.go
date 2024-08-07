@@ -88,9 +88,9 @@ func (p *simplemdmProvider) Configure(ctx context.Context, req provider.Configur
 
 	if config.APIKey.IsUnknown() {
 		resp.Diagnostics.AddAttributeError(
-			path.Root("host"),
-			"Unknown SimpleMDM Host",
-			"The provider cannot create the simplemdm API client as there is an unknown configuration value for the SimpleMDM host. "+
+			path.Root("apikey"),
+			"Unknown SimpleMDM API key",
+			"The provider cannot create the simplemdm API client as there is an unknown configuration value for the SimpleMDM API key. "+
 				"Either target apply the source of the value first, set the value statically in the configuration, or use the SIMPLEMDM_APIKEY environment variable.",
 		)
 	}
@@ -121,9 +121,9 @@ func (p *simplemdmProvider) Configure(ctx context.Context, req provider.Configur
 	if apikey == "" {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("apikey"),
-			"Missing SimpleMDM Host",
-			"The provider cannot create the SimpleMDM API client as there is a missing or empty value for the SimpleMDM host. "+
-				"Set the host value in the configuration or use the SIMPLEMDM_HOST environment variable. "+
+			"Missing SimpleMDM API key",
+			"The provider cannot create the SimpleMDM API client as there is a missing or empty value for the SimpleMDM API key. "+
+				"Set the apikey value in the configuration or use the SIMPLEMDM_APIKEY environment variable. "+
 				"If either is already set, ensure the value is not empty.",
 		)
 	}
