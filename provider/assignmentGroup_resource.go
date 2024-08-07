@@ -308,6 +308,10 @@ func (r *assignment_groupResource) Read(ctx context.Context, req resource.ReadRe
 	// Get refreshed assignment group values from SimpleMDM
 	assignmentGroup, err := r.client.AssignmentGroupGet(state.ID.ValueString())
 	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error Reading SimpleMDM assignment group",
 			"Could not read assignment group ID "+state.ID.ValueString()+": "+err.Error(),
