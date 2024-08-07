@@ -5,7 +5,6 @@ resource "simplemdm_assignment_group" "myfirstgroup" {
   auto_deploy = true
   //group type "standard" or "munki", defaults to standard. If this parameter is changed it will destroy/create whole group
   group_type = "standard"
-  //Option for "munki" groups, options are: "managed", "self_serve" or "munki, default is "managed"
   install_type  = "managed"
   apps          = [123456]
   profiles      = [123456, 987654]
