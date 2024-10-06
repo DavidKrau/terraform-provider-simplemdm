@@ -1,4 +1,4 @@
-resource "simplemdm_assignment_group" "myfirstgroup" {
+resource "simplemdm_assignmentgroup" "myfirstgroup" {
   // Group name required
   name = "My group name"
   //auto deploy true or false, default is true
