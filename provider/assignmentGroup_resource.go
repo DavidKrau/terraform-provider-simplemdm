@@ -369,7 +369,7 @@ func (r *assignment_groupResource) Read(ctx context.Context, req resource.ReadRe
 
 	resp.Diagnostics.AddWarning(
 		"Notice about profiles:",
-		"API limitations is curretly not allowing terraform provider to get state of the profiles assigned to assigment group."+
+		"API limitations is currently not allowing terraform provider to get state of the profiles assigned to assigment group."+
 			" This is not issue as long as you are using only terraform provider to manage profiles for assigment group."+
 			" This will be implemented properly once API will have correct responses and we will be able to load profiles for assignment group via API.",
 	)
