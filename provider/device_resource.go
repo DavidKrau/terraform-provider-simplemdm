@@ -202,7 +202,7 @@ func (r *deviceResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	resp.Diagnostics.AddWarning(
 		"Notice about profiles:",
-		"API limitations is curretly not allowing terraform provider to get state of the profiles assigned to device."+
+		"API limitations is currently not allowing terraform provider to get state of the profiles assigned to device."+
 			" This is not issue as long as you are using only terraform provider to manage profiles on the device."+
 			" This will be implemented properly once API will have correct responses and we will be able to load profiles assigned to device via API.",
 	)
