@@ -15,8 +15,7 @@ Script resource can be used to manage Scripts.
 ```terraform
 resource "simplemdm_script" "test" {
   name            = "This is test script"
-  scriptfile      = "./testfiles/testscript.sh"
-  filesha         = filesha256("./testfiles/testscript.sh")
+  scriptfile      = file("./testfiles/testscript.sh")
   variablesupport = true
 }
 ```
@@ -26,9 +25,11 @@ resource "simplemdm_script" "test" {
 
 ### Required
 
-- `filesha` (String) Required. The script file. Example: ${filesha256("./scripts/myscript.sh")}
-- `name` (String) Required. A name for the Script. Example "My First Script managed by terraform"
-- `scriptfile` (String) Required. The script file. Example: "./scripts/myscript.sh"
+- `name` (String) Required. A name for the Script. Example: "My First Script managed by terraform"
+- `scriptfile` (String) Required. Can be directly string or you can use function 'file' or 'templatefile' to load string from file. Emaple: scriptfile = file("./scripts/script.sh") or scriptfile = <<-EOT
+ #!/bin/bash
+ echo "Hello!!"
+ EOT
 
 ### Optional
 
@@ -36,7 +37,6 @@ resource "simplemdm_script" "test" {
 
 ### Read-Only
 
-- `content` (String) Content of a Script in SimpleMDM
 - `created_at` (String) Date when script was created in SimpleMDM
 - `id` (String) ID of a Script in SimpleMDM
 - `updated_at` (String) Date when script was updated in SimpleMDM

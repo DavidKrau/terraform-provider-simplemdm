@@ -26,10 +26,8 @@ var (
 type scriptResourceModel struct {
 	Name            types.String `tfsdk:"name"`
 	ScriptFile      types.String `tfsdk:"scriptfile"`
-	FileSHA         types.String `tfsdk:"filesha"`
 	ID              types.String `tfsdk:"id"`
 	VariableSupport types.Bool   `tfsdk:"variablesupport"`
-	Content         types.String `tfsdk:"content"`
 	CreatedAt       types.String `tfsdk:"created_at"`
 	UpdatedAt       types.String `tfsdk:"updated_at"`
 }
@@ -66,17 +64,12 @@ func (r *scriptResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"name": schema.StringAttribute{
 				Required:    true,
 				Optional:    false,
-				Description: "Required. A name for the Script. Example \"My First Script managed by terraform\"",
+				Description: "Required. A name for the Script. Example: \"My First Script managed by terraform\"",
 			},
 			"scriptfile": schema.StringAttribute{
 				Required:    true,
 				Optional:    false,
-				Description: "Required. The script file. Example: \"./scripts/myscript.sh\" ",
-			},
-			"filesha": schema.StringAttribute{
-				Optional:    false,
-				Required:    true,
-				Description: "Required. The script file. Example: ${filesha256(\"./scripts/myscript.sh\")}",
+				Description: "Required. Can be directly string or you can use function 'file' or 'templatefile' to load string from file. Emaple: scriptfile = file(\"./scripts/script.sh\") or scriptfile = <<-EOT\n #!/bin/bash\n echo \"Hello!!\"\n EOT ",
 			},
 			"id": schema.StringAttribute{
 				Computed: true,
@@ -90,10 +83,6 @@ func (r *scriptResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Default:     booldefault.StaticBool(true),
 				Computed:    true,
 				Description: "Optional. A boolean true or false. Whether or not to enable variable support in this script. Defaults to false",
-			},
-			"content": schema.StringAttribute{
-				Computed:    true,
-				Description: "Content of a Script in SimpleMDM",
 			},
 			"created_at": schema.StringAttribute{
 				Computed: true,
@@ -139,7 +128,7 @@ func (r *scriptResource) Create(ctx context.Context, req resource.CreateRequest,
 	plan.ID = types.StringValue(strconv.Itoa(script.Data.ID))
 	plan.CreatedAt = types.StringValue(script.Data.Attributes.CreatedAt)
 	plan.UpdatedAt = types.StringValue(script.Data.Attributes.UpdatedAt)
-	plan.Content = types.StringValue(script.Data.Attributes.Content)
+	plan.ScriptFile = types.StringValue(script.Data.Attributes.Content)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, plan)
@@ -174,7 +163,7 @@ func (r *scriptResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	// Overwrite items with refreshed state
 	state.Name = types.StringValue(script.Data.Attributes.Name)
-	state.Content = types.StringValue(script.Data.Attributes.Content)
+	state.ScriptFile = types.StringValue(script.Data.Attributes.Content)
 	state.CreatedAt = types.StringValue(script.Data.Attributes.CreatedAt)
 	state.UpdatedAt = types.StringValue(script.Data.Attributes.UpdatedAt)
 	state.VariableSupport = types.BoolValue(script.Data.Attributes.VariableSupport)
@@ -206,9 +195,7 @@ func (r *scriptResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	plan.CreatedAt = types.StringValue(script.Data.Attributes.CreatedAt)
 	plan.UpdatedAt = types.StringValue(script.Data.Attributes.UpdatedAt)
-	plan.Content = types.StringValue(script.Data.Attributes.Content)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)

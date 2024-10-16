@@ -15,8 +15,7 @@ Custom Profile resource can be used to manage Custom Profile. Can be used togeth
 ```terraform
 resource "simplemdm_customprofile" "myprofile" {
   name                   = "My First profiles"
-  mobileconfig           = "./profiles/profile.mobileconfig"
-  filesha                = filesha256("./profiles/profile.mobileconfig")
+  mobileconfig           = file("./profiles/profile.mobileconfig")
   userscope              = true
   attributesupport       = true
   escapeattributes       = true
@@ -29,9 +28,18 @@ resource "simplemdm_customprofile" "myprofile" {
 
 ### Required
 
-- `filesha` (String) Required. The mobileconfig file. Example: ${filesha256("./profiles/my_first_profile.mobileconfig")}
-- `mobileconfig` (String) Required. The mobileconfig file. Example: "./profiles/my_first_profile.mobileconfig"
-- `name` (String) Required. A name for the profile. Example "My First profile by terraform"
+- `mobileconfig` (String) Required. Can be directly string or you can use function 'file' or 'templatefile' to load string from file. Example: mobileconfig = file("./profiles/profile.mobileconfig") or mobileconfig = <<-EOT<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>PayloadContent</key>
+    <array>
+ ---redacted---
+    <key>PayloadVersion</key>
+    <integer>1</integer>
+</dict>
+</plist>EOT
+- `name` (String) Required. A name for the profile. Example: "My First profile by terraform"
 
 ### Optional
 

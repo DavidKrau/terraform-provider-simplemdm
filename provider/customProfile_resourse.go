@@ -25,7 +25,6 @@ var (
 type customProfileResourceModel struct {
 	Name                   types.String `tfsdk:"name"`
 	MobileConfig           types.String `tfsdk:"mobileconfig"`
-	FileSHA                types.String `tfsdk:"filesha"`
 	UserScope              types.Bool   `tfsdk:"userscope"`
 	AttributeSupport       types.Bool   `tfsdk:"attributesupport"`
 	EscapeAttributes       types.Bool   `tfsdk:"escapeattributes"`
@@ -65,17 +64,12 @@ func (r *customProfileResource) Schema(_ context.Context, _ resource.SchemaReque
 			"name": schema.StringAttribute{
 				Required:    true,
 				Optional:    false,
-				Description: "Required. A name for the profile. Example \"My First profile by terraform\"",
+				Description: "Required. A name for the profile. Example: \"My First profile by terraform\"",
 			},
 			"mobileconfig": schema.StringAttribute{
 				Required:    true,
 				Optional:    false,
-				Description: "Required. The mobileconfig file. Example: \"./profiles/my_first_profile.mobileconfig\" ",
-			},
-			"filesha": schema.StringAttribute{
-				Optional:    false,
-				Required:    true,
-				Description: "Required. The mobileconfig file. Example: ${filesha256(\"./profiles/my_first_profile.mobileconfig\")}",
+				Description: "Required. Can be directly string or you can use function 'file' or 'templatefile' to load string from file. Example: mobileconfig = file(\"./profiles/profile.mobileconfig\") or mobileconfig = <<-EOT<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\">\n<dict>\n    <key>PayloadContent</key>\n    <array>\n ---redacted---\n    <key>PayloadVersion</key>\n    <integer>1</integer>\n</dict>\n</plist>EOT",
 			},
 			"id": schema.StringAttribute{
 				Computed: true,
@@ -137,8 +131,13 @@ func (r *customProfileResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
+	// h := sha256.New()
+	// h.Write([]byte(plan.MobileConfig.ValueString()))
+	// sha256_hash := hex.EncodeToString(h.Sum(nil))[0:32]
+
 	// Map response body to schema and populate Computed attribute values
 	plan.ID = types.StringValue(strconv.Itoa(Profile.Data.ID))
+	//plan.FileSHA = types.StringValue(sha256_hash)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, plan)
@@ -186,7 +185,7 @@ func (r *customProfileResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	sha, _, err := r.client.CustomProfileSHA(state.ID.ValueString())
+	_, body, err := r.client.CustomProfileSHA(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading SimpleMDM custom profile",
@@ -195,14 +194,12 @@ func (r *customProfileResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	if state.FileSHA.ValueString() != "" {
-		if sha != state.FileSHA.ValueString()[0:32] {
-			//fmt.Println("SHA is same")
-			state.FileSHA = types.StringValue(sha)
-		}
-	} else {
-		state.FileSHA = types.StringValue(sha)
-	}
+	state.MobileConfig = types.StringValue(body)
+	//state.FileSHA = types.StringValue(sha)
+	// h := sha256.New()
+	// h.Write([]byte(plan.MobileConfig.ValueString()))
+	// sha256_hash := hex.EncodeToString(h.Sum(nil))[0:32]
+	// plan.FileSHA = types.StringValue(sha256_hash)
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
@@ -222,7 +219,7 @@ func (r *customProfileResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	// Generate API request body from plan
-	_, err := r.client.CustomProfileUpdate(plan.Name.ValueString(), plan.MobileConfig.ValueString(), plan.UserScope.ValueBool(), plan.AttributeSupport.ValueBool(), plan.EscapeAttributes.ValueBool(), plan.ReinstallAfterOSUpdate.ValueBool(), plan.FileSHA.ValueString(), plan.ID.ValueString())
+	_, err := r.client.CustomProfileUpdate(plan.Name.ValueString(), plan.MobileConfig.ValueString(), plan.UserScope.ValueBool(), plan.AttributeSupport.ValueBool(), plan.EscapeAttributes.ValueBool(), plan.ReinstallAfterOSUpdate.ValueBool(), "", plan.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating profile",
@@ -230,6 +227,12 @@ func (r *customProfileResource) Update(ctx context.Context, req resource.UpdateR
 		)
 		return
 	}
+
+	// h := sha256.New()
+	// h.Write([]byte(plan.MobileConfig.ValueString()))
+	// sha256_hash := hex.EncodeToString(h.Sum(nil))[0:32]
+
+	// plan.FileSHA = types.StringValue(sha256_hash)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
