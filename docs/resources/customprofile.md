@@ -28,17 +28,7 @@ resource "simplemdm_customprofile" "myprofile" {
 
 ### Required
 
-- `mobileconfig` (String) Required. Can be directly string or you can use function 'file' or 'templatefile' to load string from file. Example: mobileconfig = file("./profiles/profile.mobileconfig") or mobileconfig = <<-EOT<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>PayloadContent</key>
-    <array>
- ---redacted---
-    <key>PayloadVersion</key>
-    <integer>1</integer>
-</dict>
-</plist>EOT
+- `mobileconfig` (String) Required. Can be directly string or you can use function 'file' or 'templatefile' to load string from file. Example: mobileconfig = file("./profiles/profile.mobileconfig") or mobileconfig = <<-EOT PROFILE STRING EOT
 - `name` (String) Required. A name for the profile. Example: "My First profile by terraform"
 
 ### Optional
