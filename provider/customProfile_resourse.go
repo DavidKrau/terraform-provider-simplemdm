@@ -69,7 +69,7 @@ func (r *customProfileResource) Schema(_ context.Context, _ resource.SchemaReque
 			"mobileconfig": schema.StringAttribute{
 				Required:    true,
 				Optional:    false,
-				Description: "Required. Can be directly string or you can use function 'file' or 'templatefile' to load string from file. Example: mobileconfig = file(\"./profiles/profile.mobileconfig\") or mobileconfig = <<-EOT PROFILE STRING EOT",
+				Description: "Required. Can be string or you can use function 'file' or 'templatefile' to load string from file (see examples folder). Example: mobileconfig = file(\"./profiles/profile.mobileconfig\") or mobileconfig = <<-EOT PROFILE STRING EOT",
 			},
 			"id": schema.StringAttribute{
 				Computed: true,

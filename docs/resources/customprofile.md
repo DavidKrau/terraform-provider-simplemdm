@@ -28,7 +28,7 @@ resource "simplemdm_customprofile" "myprofile" {
 
 ### Required
 
-- `mobileconfig` (String) Required. Can be directly string or you can use function 'file' or 'templatefile' to load string from file. Example: mobileconfig = file("./profiles/profile.mobileconfig") or mobileconfig = <<-EOT PROFILE STRING EOT
+- `mobileconfig` (String) Required. Can be string or you can use function 'file' or 'templatefile' to load string from file (see examples folder). Example: mobileconfig = file("./profiles/profile.mobileconfig") or mobileconfig = <<-EOT PROFILE STRING EOT
 - `name` (String) Required. A name for the profile. Example: "My First profile by terraform"
 
 ### Optional
