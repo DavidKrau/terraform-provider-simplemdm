@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"strconv"
 	"strings"
 
 	"github.com/DavidKrau/simplemdm-go-client"
@@ -207,6 +208,53 @@ func (r *deviceGroupResource) Read(ctx context.Context, req resource.ReadRequest
 
 	// Overwrite items with refreshed state
 	state.Name = types.StringValue(devicegroup.Data.Attributes.Name)
+
+	// Load all profiles in SimpleMDM
+	profiles, err := r.client.ProfileGetAll()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading SimpleMDM profiles",
+			"Could not read SimpleMDM profiles: "+err.Error(),
+		)
+		return
+	}
+	// //read all profiles and put them to slice
+	profilesPresent := false
+	profilesElements := []attr.Value{}
+	customProfilesPresent := false
+	customProfilesElements := []attr.Value{}
+
+	for _, profile := range profiles.Data { //<<edit here
+		for _, group := range profile.Relationships.DeviceGroups.Data {
+			if strconv.Itoa(group.ID) == state.ID.ValueString() {
+				if profile.Type == "custom_configuration_profile" {
+					customProfilesElements = append(customProfilesElements, types.StringValue(strconv.Itoa(profile.ID)))
+					customProfilesPresent = true
+				} else {
+					profilesElements = append(profilesElements, types.StringValue(strconv.Itoa(profile.ID)))
+					profilesPresent = true
+				}
+			}
+		}
+
+	}
+
+	//if there are profile or custom profiles return them to state
+	if profilesPresent {
+		profilesSetValue, _ := types.SetValue(types.StringType, profilesElements)
+		state.Profiles = profilesSetValue
+	} else {
+		profilesSetValue := types.SetNull(types.StringType)
+		state.Profiles = profilesSetValue
+	}
+
+	if customProfilesPresent {
+		customProfilesSetValue, _ := types.SetValue(types.StringType, customProfilesElements)
+		state.CustomProfiles = customProfilesSetValue
+	} else {
+		customProfilesSetValue := types.SetNull(types.StringType)
+		state.CustomProfiles = customProfilesSetValue
+	}
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
