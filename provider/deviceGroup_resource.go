@@ -109,7 +109,7 @@ func (r *deviceGroupResource) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.AddError(
 		"Resource can not be created!",
 		"Device groups currently do not support creation via API request, if you wish to create new group  "+
-			"go to website and create group there and use import. Name of the group also can not be managed via provider, "+
+			"go to website and create group and use import. Name of the group also can not be managed via provider, "+
 			"same as deletion of the group can not be done via terraform. This will be implemented properly once API will have correct endpoints.",
 	)
 	if resp.Diagnostics.HasError() {
@@ -288,8 +288,7 @@ func (r *deviceGroupResource) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.AddWarning(
 		"Name can not be changed via terraform",
 		"Device groups currently do not support change of the name via API request, in case you wish to change "+
-			"name of the device group please do it via website. Profiles assigned to the group are currently also limited"+
-			" as we are missing data from API which profiles are assigned to the group. This will be implemented later when API will provide data about profiles.",
+			"name of the device group please do it via website.",
 	)
 
 	//comparing planed attributes and their values to attributes in SimpleMDM
@@ -413,7 +412,7 @@ func (r *deviceGroupResource) Update(ctx context.Context, req resource.UpdateReq
 
 	//removing profiles
 	for _, profileId := range customProfilesToRemove {
-		err := r.client.CustomProfileAssignToDeviceGroup(profileId, plan.ID.ValueString())
+		err := r.client.CustomProfileUnassignFromDeviceGroup(profileId, plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating device group profile assignment",
