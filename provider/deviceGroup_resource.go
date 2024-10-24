@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"strconv"
 	"strings"
 
 	"github.com/DavidKrau/simplemdm-go-client"
@@ -108,7 +109,7 @@ func (r *deviceGroupResource) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.AddError(
 		"Resource can not be created!",
 		"Device groups currently do not support creation via API request, if you wish to create new group  "+
-			"go to website and create group there and use import. Name of the group also can not be managed via provider, "+
+			"go to website and create group and use import. Name of the group also can not be managed via provider, "+
 			"same as deletion of the group can not be done via terraform. This will be implemented properly once API will have correct endpoints.",
 	)
 	if resp.Diagnostics.HasError() {
@@ -208,6 +209,53 @@ func (r *deviceGroupResource) Read(ctx context.Context, req resource.ReadRequest
 	// Overwrite items with refreshed state
 	state.Name = types.StringValue(devicegroup.Data.Attributes.Name)
 
+	// Load all profiles in SimpleMDM
+	profiles, err := r.client.ProfileGetAll()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading SimpleMDM profiles",
+			"Could not read SimpleMDM profiles: "+err.Error(),
+		)
+		return
+	}
+	// //read all profiles and put them to slice
+	profilesPresent := false
+	profilesElements := []attr.Value{}
+	customProfilesPresent := false
+	customProfilesElements := []attr.Value{}
+
+	for _, profile := range profiles.Data { //<<edit here
+		for _, group := range profile.Relationships.DeviceGroups.Data {
+			if strconv.Itoa(group.ID) == state.ID.ValueString() {
+				if profile.Type == "custom_configuration_profile" {
+					customProfilesElements = append(customProfilesElements, types.StringValue(strconv.Itoa(profile.ID)))
+					customProfilesPresent = true
+				} else {
+					profilesElements = append(profilesElements, types.StringValue(strconv.Itoa(profile.ID)))
+					profilesPresent = true
+				}
+			}
+		}
+
+	}
+
+	//if there are profile or custom profiles return them to state
+	if profilesPresent {
+		profilesSetValue, _ := types.SetValue(types.StringType, profilesElements)
+		state.Profiles = profilesSetValue
+	} else {
+		profilesSetValue := types.SetNull(types.StringType)
+		state.Profiles = profilesSetValue
+	}
+
+	if customProfilesPresent {
+		customProfilesSetValue, _ := types.SetValue(types.StringType, customProfilesElements)
+		state.CustomProfiles = customProfilesSetValue
+	} else {
+		customProfilesSetValue := types.SetNull(types.StringType)
+		state.CustomProfiles = customProfilesSetValue
+	}
+
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -240,8 +288,7 @@ func (r *deviceGroupResource) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.AddWarning(
 		"Name can not be changed via terraform",
 		"Device groups currently do not support change of the name via API request, in case you wish to change "+
-			"name of the device group please do it via website. Profiles assigned to the group are currently also limited"+
-			" as we are missing data from API which profiles are assigned to the group. This will be implemented later when API will provide data about profiles.",
+			"name of the device group please do it via website.",
 	)
 
 	//comparing planed attributes and their values to attributes in SimpleMDM
@@ -365,7 +412,7 @@ func (r *deviceGroupResource) Update(ctx context.Context, req resource.UpdateReq
 
 	//removing profiles
 	for _, profileId := range customProfilesToRemove {
-		err := r.client.CustomProfileAssignToDeviceGroup(profileId, plan.ID.ValueString())
+		err := r.client.CustomProfileUnassignFromDeviceGroup(profileId, plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating device group profile assignment",
