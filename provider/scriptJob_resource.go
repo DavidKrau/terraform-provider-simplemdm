@@ -183,7 +183,10 @@ func (r *scriptJobResource) Create(ctx context.Context, req resource.CreateReque
 func (r *scriptJobResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Delete doesn't have sense here, beause a job could be canceled but not deleted.
 	// For now, the schedule of a job is not perimted by the API so do nothing here.
-	return
+	resp.Diagnostics.AddError(
+		"Delete Not Supported",
+		"Deleting this resource is not supported.",
+	)
 }
 
 func (r *scriptJobResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
