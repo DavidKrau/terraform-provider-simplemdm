@@ -76,7 +76,7 @@ func (r *scriptJobResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			"device_ids": schema.SetAttribute{
 				Required:    true,
 				ElementType: types.StringType,
-				Description: "A comma separated list of device IDs to run the script on",
+				Description: "A comma separated list of device IDs to run the script on. At least one of `device_ids`, `group_ids`, or `assignment_group_ids` must be provided.",
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.RequiresReplace(),
 				},
@@ -84,7 +84,7 @@ func (r *scriptJobResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			"group_ids": schema.SetAttribute{
 				Required:    true,
 				ElementType: types.StringType,
-				Description: "A comma separated list of group IDs to run the script on. All macOS devices from these groups will be included.",
+				Description: "A comma separated list of group IDs to run the script on. All macOS devices from these groups will be included. At least one of `device_ids`, `group_ids`, or `assignment_group_ids` must be provided.",
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.RequiresReplace(),
 				},
@@ -92,7 +92,7 @@ func (r *scriptJobResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			"assignment_group_ids": schema.SetAttribute{
 				Required:    true,
 				ElementType: types.StringType,
-				Description: "A comma separated list of assignment group IDs to run the script on. All macOS devices from these assignment groups will be included.",
+				Description: "A comma separated list of assignment group IDs to run the script on. All macOS devices from these assignment groups will be included At least one of `device_ids`, `group_ids`, or `assignment_group_ids` must be provided.",
 			},
 			"custom_attribute": schema.StringAttribute{
 				Optional:    true,
