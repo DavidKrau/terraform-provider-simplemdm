@@ -13,51 +13,36 @@ func TestAccScriptJobResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: providerConfig + `
-		resource "simplemdm_script" "test" {
-			name= "This is test script"
-			scriptfile = file("./testfiles/testscript.sh")
-			variablesupport = true
-		}
-
-		resource "simplemdm_device" "test" {
-			name= "Created test device"
-			devicename  = "Created test device"
-			devicegroup = 152757
-  			profiles = []
-  			customprofiles = []
-		}
-		
+				Config: providerConfig + `		
 		resource "simplemdm_scriptjob" "test_job" {
-			script_id              = simplemdm_script.test.id
+			script_id              = 5727
 			device_ids             = []
-			group_ids              = [152757]
+			group_ids              = [140188]
 			assignment_group_ids   = []
 		}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Check the script job attributes
 					resource.TestCheckResourceAttrSet("simplemdm_scriptjob.test_job", "id"),
-					resource.TestCheckResourceAttrPair(
-						"simplemdm_scriptjob.test_job", "script_id",
-						"simplemdm_script.test", "id",
-					),
+					resource.TestCheckResourceAttr("simplemdm_scriptjob.test_job", "script_id", "5727"),
+					resource.TestCheckResourceAttr("simplemdm_scriptjob.test_job", "group_ids.#", "1"),
+					resource.TestCheckResourceAttr("simplemdm_scriptjob.test_job", "group_ids.0", "140188"),
 				),
 			},
-			// ImportState testing
-			{
-				ResourceName:      "simplemdm_script.test",
-				ImportState:       true,
-				ImportStateVerify: true,
-				// The filesha and  scriptfile attributes does not exist in SimpleMDM
-				// API, therefore there is no value for it during import.
-			},
+			// // ImportState testing
+			// {
+			// 	ResourceName:      "simplemdm_scriptjob.test_job",
+			// 	ImportState:       true,
+			// 	ImportStateVerify: true,
+			// 	// The filesha and  scriptfile attributes does not exist in SimpleMDM
+			// 	// API, therefore there is no value for it during import.
+			// },
 			// Update and Read testing
 			{
 				Config: providerConfig + `
 		resource "simplemdm_scriptjob" "test_job" {
-			script_id              = simplemdm_script.test.id
-			device_ids             = [1903896]
+			script_id              = 5727
+			device_ids             = [1905524]
 			group_ids              = []
 			assignment_group_ids   = []
 			custom_attribute       = "updated_attribute"
@@ -69,7 +54,7 @@ func TestAccScriptJobResource(t *testing.T) {
 					resource.TestCheckResourceAttrSet("simplemdm_scriptjob.test_job", "id"),
 					resource.TestCheckResourceAttr("simplemdm_scriptjob.test_job", "custom_attribute", "updated_attribute"),
 					resource.TestCheckResourceAttr("simplemdm_scriptjob.test_job", "custom_attribute_regex", "\\r"),
-					resource.TestCheckResourceAttr("simplemdm_scriptjob.test_job", "script_id", "simplemdm_script.test.id"),
+					resource.TestCheckResourceAttr("simplemdm_scriptjob.test_job", "script_id", "5727"),
 				),
 			},
 			// Delete testing automatically occurs in TestCase

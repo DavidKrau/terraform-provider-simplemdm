@@ -7,7 +7,6 @@ import (
 
 	"github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -63,7 +62,10 @@ func (r *scriptJobResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 		Description: "Script resource can be used to manage Scripts Jobs.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "ID of a Script Job in SimpleMDM",
 			},
 			"script_id": schema.StringAttribute{
@@ -93,23 +95,32 @@ func (r *scriptJobResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				Required:    true,
 				ElementType: types.StringType,
 				Description: "A comma separated list of assignment group IDs to run the script on. All macOS devices from these assignment groups will be included At least one of `device_ids`, `group_ids`, or `assignment_group_ids` must be provided.",
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.RequiresReplace(),
+				},
 			},
 			"custom_attribute": schema.StringAttribute{
 				Optional:    true,
 				Description: "Optional. If provided the output from the script will be stored in this custom attribute on each device.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"custom_attribute_regex": schema.StringAttribute{
 				Optional:    true,
 				Description: "Optional. Used to sanitize the output from the script before storing it in the custom attribute. Can be left empty but \n is recommended.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 		},
 	}
 }
 
-func (r *scriptJobResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Retrieve import ID and save to id attribute
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
+// func (r *scriptJobResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+// 	// Retrieve import ID and save to id attribute
+// 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+// }
 
 // Create a new resource
 func (r *scriptJobResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -183,10 +194,18 @@ func (r *scriptJobResource) Create(ctx context.Context, req resource.CreateReque
 func (r *scriptJobResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Delete doesn't have sense here, beause a job could be canceled but not deleted.
 	// For now, the schedule of a job is not perimted by the API so do nothing here.
-	resp.Diagnostics.AddError(
+	var state scriptJobResourceModel
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.AddWarning(
 		"Delete Not Supported",
 		"Deleting this resource is not supported.",
 	)
+
 }
 
 func (r *scriptJobResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -211,11 +230,19 @@ func (r *scriptJobResource) Read(ctx context.Context, req resource.ReadRequest, 
 		)
 		return
 	}
-
+	// resp.Diagnostics.AddError(
+	// 	"Error Reading SimpleMDM Script Job",
+	// 	"Could not read SimpleMDM Script Job "+state.ID.ValueString(),
+	// )
 	// Update fields returned by the API
-	state.ScriptId = types.StringValue(scriptJob.Data.Attributes.ScriptName)
-	state.CustomAttribute = types.StringValue(scriptJob.Data.Relationships.CustomAttribute.Data.ID)
-	state.CustomAttributeRegex = types.StringValue(scriptJob.Data.Attributes.CustomAttributeRegex)
+	//state.ScriptId = types.StringValue(scriptJob.Data.Attributes.ScriptName)
+	state.ID = types.StringValue(strconv.Itoa(scriptJob.Data.ID))
+	if scriptJob.Data.Attributes.CustomAttributeRegex != "" {
+		state.CustomAttribute = types.StringValue(scriptJob.Data.Relationships.CustomAttribute.Data.ID)
+	}
+	if scriptJob.Data.Attributes.CustomAttributeRegex != "" {
+		state.CustomAttributeRegex = types.StringValue(scriptJob.Data.Attributes.CustomAttributeRegex)
+	}
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
