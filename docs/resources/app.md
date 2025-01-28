@@ -32,3 +32,12 @@ resource "simplemdm_app" "app" {
 
 - `id` (String) The ID of this resource.
 - `name` (String) The name that SimpleMDM will use to reference this app. If left blank, SimpleMDM will automatically set this to the app name specified by the binary.
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+# App can be imported by specifying the app ID.
+terraform import simplemdm_app.example 123456
+```
