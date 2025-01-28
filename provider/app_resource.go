@@ -138,11 +138,6 @@ func (r *appResource) Create(ctx context.Context, req resource.CreateRequest, re
 		name = plan.Name.ValueString()
 	}
 
-	// Définir la valeur par défaut pour deploy_to
-	if plan.DeployTo.IsNull() {
-		plan.DeployTo = types.StringValue("none")
-	}
-
 	// Generate API request body from plan
 	app, err := r.client.AppCreate(
 		appStoreId,
@@ -159,7 +154,6 @@ func (r *appResource) Create(ctx context.Context, req resource.CreateRequest, re
 
 	plan.ID = types.StringValue(strconv.Itoa(app.Data.ID))
 
-	// Mettre à jour les attributs computés
 	if app.Data.Attributes.AppStoreId != 0 {
 		plan.AppStoreId = types.StringValue(strconv.Itoa(app.Data.Attributes.AppStoreId))
 	}
@@ -218,16 +212,11 @@ func (r *appResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	state.ID = types.StringValue(strconv.Itoa(app.Data.ID))
 	state.Name = types.StringValue(app.Data.Attributes.Name)
 
-	// Les attributs computés sont mis à jour automatiquement
 	if app.Data.Attributes.AppStoreId != 0 {
 		state.AppStoreId = types.StringValue(strconv.Itoa(app.Data.Attributes.AppStoreId))
 	}
 	if app.Data.Attributes.BundleId != "" {
 		state.BundleId = types.StringValue(app.Data.Attributes.BundleId)
-	}
-
-	if state.DeployTo.IsNull() {
-		state.DeployTo = types.StringValue("none")
 	}
 
 	diags = resp.State.Set(ctx, &state)
@@ -248,15 +237,10 @@ func (r *appResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	deployTo := plan.DeployTo
-	if deployTo.IsNull() {
-		deployTo = types.StringValue("none")
-	}
-
 	_, err := r.client.AppUpdate(
 		plan.ID.ValueString(),
 		plan.Name.ValueString(),
-		deployTo.ValueString(),
+		plan.DeployTo.ValueString(),
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(

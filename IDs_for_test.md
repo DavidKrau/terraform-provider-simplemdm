@@ -3,6 +3,12 @@ Apps:
 577575 - SimpleMDM
 553192 - 1Password 7
 
+Apps app_store_ids
+586447913 - Microsoft Word
+
+Apps bundle_ids:
+com.microsoft.Office.Excel - Microsoft Excel
+
 Profiles:
 172801 - Restriction test profiles
 172802 - Log in screen
