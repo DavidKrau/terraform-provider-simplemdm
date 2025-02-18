@@ -131,19 +131,19 @@ func (r *scriptJobResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	deviceIDs, err := convertSetToSlice(plan.DeviceIds)
+	deviceIDs, err := convertSetToSlice(ctx, plan.DeviceIds)
 	if err != nil {
 		resp.Diagnostics.AddError("Device IDs Conversion Error", "Failed to convert device IDs: "+err.Error())
 		return
 	}
 
-	groupIDs, err := convertSetToSlice(plan.GroupIds)
+	groupIDs, err := convertSetToSlice(ctx, plan.GroupIds)
 	if err != nil {
 		resp.Diagnostics.AddError("Group IDs Conversion Error", "Failed to convert group IDs: "+err.Error())
 		return
 	}
 
-	assignmentGroupIDs, err := convertSetToSlice(plan.AssignmentGroupIds)
+	assignmentGroupIDs, err := convertSetToSlice(ctx, plan.AssignmentGroupIds)
 	if err != nil {
 		resp.Diagnostics.AddError("Assignment Group IDs Conversion Error", "Failed to convert assignment group IDs: "+err.Error())
 		return
@@ -260,13 +260,13 @@ func (r *scriptJobResource) Update(ctx context.Context, req resource.UpdateReque
 	)
 }
 
-func convertSetToSlice(set types.Set) ([]string, error) {
+func convertSetToSlice(ctx context.Context, set types.Set) ([]string, error) {
 	if set.IsNull() || set.IsUnknown() {
 		return nil, nil
 	}
 
 	var result []string
-	set.ElementsAs(context.Background(), &result, false)
+	set.ElementsAs(ctx, &result, false)
 	return result, nil
 }
 
