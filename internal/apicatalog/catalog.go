@@ -27,8 +27,8 @@ var Catalog = []EndpointCoverage{
 		DocsURL:        "https://api.simplemdm.com/v1/#tag/Assignment-Groups",
 	},
 	{
-		Name:           "Attributes",
-		Endpoint:       "/api/v1/attributes",
+		Name:           "Custom Attributes",
+		Endpoint:       "/api/v1/custom_attributes",
 		ResourceType:   "simplemdm_attribute",
 		DataSourceType: "simplemdm_attribute",
 		DocsURL:        "https://api.simplemdm.com/v1/#tag/Custom-Attributes",
