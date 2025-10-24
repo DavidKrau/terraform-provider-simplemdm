@@ -7,6 +7,8 @@ import (
 )
 
 func TestAccAppResourceWithAppStoreIdAttr(t *testing.T) {
+	testAccPreCheck(t)
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -56,6 +58,8 @@ func TestAccAppResourceWithAppStoreIdAttr(t *testing.T) {
 }
 
 func TestAccAppResourceWithBundleIdAttr(t *testing.T) {
+	testAccPreCheck(t)
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

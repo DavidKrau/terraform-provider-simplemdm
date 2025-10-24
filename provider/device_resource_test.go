@@ -7,6 +7,8 @@ import (
 )
 
 func TestAccDeviceResource(t *testing.T) {
+	testAccPreCheck(t)
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
