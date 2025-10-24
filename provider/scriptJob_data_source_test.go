@@ -23,6 +23,10 @@ func TestAccScriptJobDataSource(t *testing.T) {
                 `, scriptJobID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.simplemdm_scriptjob.test", "id", scriptJobID),
+					resource.TestCheckResourceAttrSet("data.simplemdm_scriptjob.test", "job_identifier"),
+					resource.TestCheckResourceAttrSet("data.simplemdm_scriptjob.test", "status"),
+					resource.TestCheckResourceAttrSet("data.simplemdm_scriptjob.test", "created_by"),
+					resource.TestCheckResourceAttrSet("data.simplemdm_scriptjob.test", "variable_support"),
 				),
 			},
 		},

@@ -27,9 +27,12 @@ data "simplemdm_scriptjob" "example" {
 
 ### Read-Only
 
+- `content` (String) Script contents that were executed by the job.
 - `created_at` (String) Creation timestamp returned by the API.
+- `created_by` (String) User or API key that created the job.
 - `custom_attribute` (String) Custom attribute that stores the job output, when configured.
 - `custom_attribute_regex` (String) Regular expression used to filter the custom attribute output.
+- `devices` (Attributes List) Execution results for each targeted device. (see [below for nested schema](#nestedatt--devices))
 - `errored_count` (Number) Number of devices that failed to execute the script.
 - `job_identifier` (String) Identifier reported by the SimpleMDM API for the job.
 - `job_name` (String) Human friendly name of the job.
@@ -38,3 +41,14 @@ data "simplemdm_scriptjob" "example" {
 - `status` (String) Current execution status of the job.
 - `success_count` (Number) Number of devices that completed successfully.
 - `updated_at` (String) Last update timestamp returned by the API.
+- `variable_support` (Boolean) Indicates whether the script supports variables.
+
+<a id="nestedatt--devices"></a>
+### Nested Schema for `devices`
+
+Read-Only:
+
+- `id` (String) Device identifier.
+- `response` (String) Output returned by the device, when available.
+- `status` (String) Execution status reported for the device.
+- `status_code` (String) Optional status code returned by the device.

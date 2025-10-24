@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -29,6 +28,10 @@ type scriptJobDataSourceModel struct {
 	CustomAttributeRegex types.String `tfsdk:"custom_attribute_regex"`
 	CreatedAt            types.String `tfsdk:"created_at"`
 	UpdatedAt            types.String `tfsdk:"updated_at"`
+	CreatedBy            types.String `tfsdk:"created_by"`
+	VariableSupport      types.Bool   `tfsdk:"variable_support"`
+	Content              types.String `tfsdk:"content"`
+	Devices              types.List   `tfsdk:"devices"`
 }
 
 func ScriptJobDataSource() datasource.DataSource {
@@ -95,6 +98,42 @@ func (d *scriptJobDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 				Computed:    true,
 				Description: "Last update timestamp returned by the API.",
 			},
+			"created_by": schema.StringAttribute{
+				Computed:    true,
+				Description: "User or API key that created the job.",
+			},
+			"variable_support": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Indicates whether the script supports variables.",
+			},
+			"content": schema.StringAttribute{
+				Computed:    true,
+				Description: "Script contents that were executed by the job.",
+			},
+			"devices": schema.ListNestedAttribute{
+				Computed:    true,
+				Description: "Execution results for each targeted device.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.StringAttribute{
+							Computed:    true,
+							Description: "Device identifier.",
+						},
+						"status": schema.StringAttribute{
+							Computed:    true,
+							Description: "Execution status reported for the device.",
+						},
+						"status_code": schema.StringAttribute{
+							Computed:    true,
+							Description: "Optional status code returned by the device.",
+						},
+						"response": schema.StringAttribute{
+							Computed:    true,
+							Description: "Output returned by the device, when available.",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -124,47 +163,52 @@ func (d *scriptJobDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	scriptJob, err := d.client.ScriptJobGet(state.ID.ValueString())
+	details, err := fetchScriptJobDetails(ctx, d.client, state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Read SimpleMDM script job",
-			err.Error(),
-		)
+		if isNotFoundError(err) {
+			resp.Diagnostics.AddError(
+				"Unable to Read SimpleMDM script job",
+				fmt.Sprintf("Script job %s was not found", state.ID.ValueString()),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to Read SimpleMDM script job",
+				err.Error(),
+			)
+		}
 		return
 	}
 
-	state.ID = types.StringValue(strconv.Itoa(scriptJob.Data.ID))
-	state.JobName = types.StringValue(scriptJob.Data.Attributes.JobName)
-	state.JobIdentifier = types.StringValue(scriptJob.Data.Attributes.JobId)
-	state.Status = types.StringValue(scriptJob.Data.Attributes.Status)
-	state.PendingCount = types.Int64Value(int64(scriptJob.Data.Attributes.PendingCount))
-	state.SuccessCount = types.Int64Value(int64(scriptJob.Data.Attributes.SuccessCount))
-	state.ErroredCount = types.Int64Value(int64(scriptJob.Data.Attributes.ErroredCount))
-	state.ScriptName = types.StringValue(scriptJob.Data.Attributes.ScriptName)
+	state.ID = types.StringValue(details.ID)
+	state.JobName = stringValueOrNull(details.JobName)
+	state.JobIdentifier = stringValueOrNull(details.JobIdentifier)
+	state.Status = stringValueOrNull(details.Status)
+	state.PendingCount = types.Int64Value(details.PendingCount)
+	state.SuccessCount = types.Int64Value(details.SuccessCount)
+	state.ErroredCount = types.Int64Value(details.ErroredCount)
+	state.ScriptName = stringValueOrNull(details.ScriptName)
 
-	if scriptJob.Data.Relationships.CustomAttribute.Data.ID != "" {
-		state.CustomAttribute = types.StringValue(scriptJob.Data.Relationships.CustomAttribute.Data.ID)
+	if details.CustomAttribute != "" {
+		state.CustomAttribute = types.StringValue(details.CustomAttribute)
 	} else {
 		state.CustomAttribute = types.StringNull()
 	}
 
-	if scriptJob.Data.Attributes.CustomAttributeRegex != "" {
-		state.CustomAttributeRegex = types.StringValue(scriptJob.Data.Attributes.CustomAttributeRegex)
+	if details.CustomAttributeRegex != "" {
+		state.CustomAttributeRegex = types.StringValue(details.CustomAttributeRegex)
 	} else {
 		state.CustomAttributeRegex = types.StringNull()
 	}
 
-	if scriptJob.Data.Attributes.CreatedAt != "" {
-		state.CreatedAt = types.StringValue(scriptJob.Data.Attributes.CreatedAt)
-	} else {
-		state.CreatedAt = types.StringNull()
-	}
+	state.CreatedAt = stringValueOrNull(details.CreatedAt)
+	state.UpdatedAt = stringValueOrNull(details.UpdatedAt)
+	state.CreatedBy = stringValueOrNull(details.CreatedBy)
+	state.VariableSupport = types.BoolValue(details.VariableSupport)
+	state.Content = stringValueOrNull(details.Content)
 
-	if scriptJob.Data.Attributes.UpdatedAt != "" {
-		state.UpdatedAt = types.StringValue(scriptJob.Data.Attributes.UpdatedAt)
-	} else {
-		state.UpdatedAt = types.StringNull()
-	}
+	devices, diags := scriptJobDevicesListValue(ctx, details.Devices)
+	resp.Diagnostics.Append(diags...)
+	state.Devices = devices
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)

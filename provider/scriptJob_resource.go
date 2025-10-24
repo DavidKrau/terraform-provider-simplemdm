@@ -3,11 +3,10 @@ package provider
 import (
 	"context"
 	"strconv"
-	"strings"
 
 	"github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -32,6 +31,19 @@ type scriptJobResourceModel struct {
 	CustomAttribute      types.String `tfsdk:"custom_attribute"`
 	CustomAttributeRegex types.String `tfsdk:"custom_attribute_regex"`
 	ID                   types.String `tfsdk:"id"`
+	JobName              types.String `tfsdk:"job_name"`
+	JobIdentifier        types.String `tfsdk:"job_identifier"`
+	Status               types.String `tfsdk:"status"`
+	PendingCount         types.Int64  `tfsdk:"pending_count"`
+	SuccessCount         types.Int64  `tfsdk:"success_count"`
+	ErroredCount         types.Int64  `tfsdk:"errored_count"`
+	ScriptName           types.String `tfsdk:"script_name"`
+	CreatedAt            types.String `tfsdk:"created_at"`
+	UpdatedAt            types.String `tfsdk:"updated_at"`
+	CreatedBy            types.String `tfsdk:"created_by"`
+	VariableSupport      types.Bool   `tfsdk:"variable_support"`
+	Content              types.String `tfsdk:"content"`
+	Devices              types.List   `tfsdk:"devices"`
 }
 
 // scriptJobResource is a helper function to simplify the provider implementation.
@@ -131,9 +143,81 @@ func (r *scriptJobResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			},
 			"custom_attribute_regex": schema.StringAttribute{
 				Optional:    true,
-				Description: "Optional. Used to sanitize the output from the script before storing it in the custom attribute. Can be left empty but \n is recommended.",
+				Description: "Optional. Used to sanitize the output from the script before storing it in the custom attribute. Can be left empty but \\n is recommended.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"job_name": schema.StringAttribute{
+				Computed:    true,
+				Description: "Human friendly name of the job.",
+			},
+			"job_identifier": schema.StringAttribute{
+				Computed:    true,
+				Description: "Identifier reported by the SimpleMDM API for the job.",
+			},
+			"status": schema.StringAttribute{
+				Computed:    true,
+				Description: "Current execution status of the job.",
+			},
+			"pending_count": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of devices that have not yet reported a result.",
+			},
+			"success_count": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of devices that completed successfully.",
+			},
+			"errored_count": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of devices that failed to execute the script.",
+			},
+			"script_name": schema.StringAttribute{
+				Computed:    true,
+				Description: "Name of the script that was executed.",
+			},
+			"created_at": schema.StringAttribute{
+				Computed:    true,
+				Description: "Creation timestamp returned by the API.",
+			},
+			"updated_at": schema.StringAttribute{
+				Computed:    true,
+				Description: "Last update timestamp returned by the API.",
+			},
+			"created_by": schema.StringAttribute{
+				Computed:    true,
+				Description: "User or API key that created the job.",
+			},
+			"variable_support": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Indicates whether the script supports variables.",
+			},
+			"content": schema.StringAttribute{
+				Computed:    true,
+				Description: "Script contents that were executed by the job.",
+			},
+			"devices": schema.ListNestedAttribute{
+				Computed:    true,
+				Description: "Execution results for each targeted device.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.StringAttribute{
+							Computed:    true,
+							Description: "Device identifier.",
+						},
+						"status": schema.StringAttribute{
+							Computed:    true,
+							Description: "Execution status reported for the device.",
+						},
+						"status_code": schema.StringAttribute{
+							Computed:    true,
+							Description: "Optional status code returned by the device.",
+						},
+						"response": schema.StringAttribute{
+							Computed:    true,
+							Description: "Output returned by the device, when available.",
+						},
+					},
 				},
 			},
 		},
@@ -190,7 +274,6 @@ func (r *scriptJobResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	// Generate API request body from plan
 	scriptJob, err := r.client.ScriptJobCreate(
 		plan.ScriptId.ValueString(),
 		deviceIDs,
@@ -209,22 +292,43 @@ func (r *scriptJobResource) Create(ctx context.Context, req resource.CreateReque
 
 	plan.ID = types.StringValue(strconv.Itoa(scriptJob.Data.ID))
 
-	// Preserve input fields in state (since they are not returned by the API)
-	plan.DeviceIds = types.SetValueMust(types.StringType, stringSliceToAttrValues(deviceIDs))
-	plan.GroupIds = types.SetValueMust(types.StringType, stringSliceToAttrValues(groupIDs))
-	plan.AssignmentGroupIds = types.SetValueMust(types.StringType, stringSliceToAttrValues(assignmentGroupIDs))
-
-	// Set state to fully populated data
-	diags = resp.State.Set(ctx, plan)
+	plan.DeviceIds, diags = types.SetValueFrom(ctx, types.StringType, deviceIDs)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	plan.GroupIds, diags = types.SetValueFrom(ctx, types.StringType, groupIDs)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	plan.AssignmentGroupIds, diags = types.SetValueFrom(ctx, types.StringType, assignmentGroupIDs)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	details, err := fetchScriptJobDetails(ctx, r.client, plan.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error retrieving created script job",
+			"Could not retrieve script job details: "+err.Error(),
+		)
+		return
+	}
+
+	applyScriptJobDetailsToResourceModel(ctx, details, &plan, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
 }
 
 func (r *scriptJobResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// Delete doesn't have sense here, beause a job could be canceled but not deleted.
-	// For now, the schedule of a job is not perimted by the API so do nothing here.
 	var state scriptJobResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -232,15 +336,26 @@ func (r *scriptJobResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	resp.Diagnostics.AddWarning(
-		"Delete Not Supported",
-		"Deleting this resource is not supported.",
-	)
+	if r.client == nil {
+		resp.Diagnostics.AddError(
+			"Client not configured",
+			"The SimpleMDM client was not configured.",
+		)
+		return
+	}
 
+	if err := r.client.ScriptCancelJob(state.ID.ValueString()); err != nil && !isNotFoundError(err) {
+		resp.Diagnostics.AddError(
+			"Error cancelling script job",
+			"Could not cancel SimpleMDM Script Job "+state.ID.ValueString()+": "+err.Error(),
+		)
+		return
+	}
+
+	resp.State.RemoveResource(ctx)
 }
 
 func (r *scriptJobResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// Get current state
 	var state scriptJobResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -248,10 +363,9 @@ func (r *scriptJobResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	// Call API to get the script job
-	scriptJob, err := r.client.ScriptJobGet(state.ID.ValueString())
+	details, err := fetchScriptJobDetails(ctx, r.client, state.ID.ValueString())
 	if err != nil {
-		if strings.Contains(err.Error(), "404") {
+		if isNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -261,30 +375,14 @@ func (r *scriptJobResource) Read(ctx context.Context, req resource.ReadRequest, 
 		)
 		return
 	}
-	// resp.Diagnostics.AddError(
-	// 	"Error Reading SimpleMDM Script Job",
-	// 	"Could not read SimpleMDM Script Job "+state.ID.ValueString(),
-	// )
-	// Update fields returned by the API
-	//state.ScriptId = types.StringValue(scriptJob.Data.Attributes.ScriptName)
-	state.ID = types.StringValue(strconv.Itoa(scriptJob.Data.ID))
-	if customAttributeID := scriptJobCustomAttributeID(scriptJob); customAttributeID != "" {
-		state.CustomAttribute = types.StringValue(customAttributeID)
-	} else {
-		state.CustomAttribute = types.StringNull()
-	}
-	if regex := scriptJob.Data.Attributes.CustomAttributeRegex; regex != "" {
-		state.CustomAttributeRegex = types.StringValue(regex)
-	} else {
-		state.CustomAttributeRegex = types.StringNull()
-	}
 
-	// Set refreshed state
-	diags = resp.State.Set(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+	applyScriptJobDetailsToResourceModel(ctx, details, &state, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	diags = resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(diags...)
 }
 
 func (r *scriptJobResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -295,50 +393,42 @@ func (r *scriptJobResource) Update(ctx context.Context, req resource.UpdateReque
 	)
 }
 
-func scriptJobCustomAttributeID(scriptJob *simplemdm.SimplemdmDefaultStruct) string {
-	if scriptJob == nil {
-		return ""
+func applyScriptJobDetailsToResourceModel(ctx context.Context, details *scriptJobDetailsData, model *scriptJobResourceModel, diagnostics *diag.Diagnostics) {
+	if details == nil || model == nil {
+		return
 	}
 
-	switch relationships := any(scriptJob.Data.Relationships).(type) {
-	case simplemdm.Relations:
-		return customAttributeRelationshipID(relationships.CustomAttribute)
-	case *simplemdm.Relations:
-		if relationships == nil {
-			return ""
-		}
-		return customAttributeRelationshipID(relationships.CustomAttribute)
-	default:
-		return ""
-	}
-}
+	model.ID = types.StringValue(details.ID)
+	model.JobName = stringValueOrNull(details.JobName)
+	model.JobIdentifier = stringValueOrNull(details.JobIdentifier)
+	model.Status = stringValueOrNull(details.Status)
+	model.PendingCount = types.Int64Value(details.PendingCount)
+	model.SuccessCount = types.Int64Value(details.SuccessCount)
+	model.ErroredCount = types.Int64Value(details.ErroredCount)
+	model.ScriptName = stringValueOrNull(details.ScriptName)
+	model.CreatedAt = stringValueOrNull(details.CreatedAt)
+	model.UpdatedAt = stringValueOrNull(details.UpdatedAt)
+	model.CreatedBy = stringValueOrNull(details.CreatedBy)
+	model.VariableSupport = types.BoolValue(details.VariableSupport)
+	model.Content = stringValueOrNull(details.Content)
 
-func customAttributeRelationshipID(customAttribute any) string {
-	switch ca := customAttribute.(type) {
-	case simplemdm.CustomAttribute:
-		return customAttributeDataID(ca.Data)
-	case *simplemdm.CustomAttribute:
-		if ca == nil {
-			return ""
-		}
-		return customAttributeDataID(ca.Data)
-	default:
-		return ""
+	if details.CustomAttribute != "" {
+		model.CustomAttribute = types.StringValue(details.CustomAttribute)
+	} else {
+		model.CustomAttribute = types.StringNull()
 	}
-}
 
-func customAttributeDataID(data any) string {
-	switch d := data.(type) {
-	case simplemdm.DataCustomAttributes:
-		return d.ID
-	case *simplemdm.DataCustomAttributes:
-		if d == nil {
-			return ""
-		}
-		return d.ID
-	default:
-		return ""
+	if details.CustomAttributeRegex != "" {
+		model.CustomAttributeRegex = types.StringValue(details.CustomAttributeRegex)
+	} else {
+		model.CustomAttributeRegex = types.StringNull()
 	}
+
+	devices, diags := scriptJobDevicesListValue(ctx, details.Devices)
+	if diagnostics != nil {
+		diagnostics.Append(diags...)
+	}
+	model.Devices = devices
 }
 
 func convertSetToSlice(ctx context.Context, set types.Set) ([]string, error) {
@@ -349,12 +439,4 @@ func convertSetToSlice(ctx context.Context, set types.Set) ([]string, error) {
 	var result []string
 	set.ElementsAs(ctx, &result, false)
 	return result, nil
-}
-
-func stringSliceToAttrValues(slice []string) []attr.Value {
-	values := make([]attr.Value, len(slice))
-	for i, s := range slice {
-		values[i] = types.StringValue(s)
-	}
-	return values
 }

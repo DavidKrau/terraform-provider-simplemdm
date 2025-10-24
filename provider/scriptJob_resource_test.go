@@ -29,6 +29,11 @@ func TestAccScriptJobResource(t *testing.T) {
 					resource.TestCheckResourceAttr("simplemdm_scriptjob.test_job", "script_id", "5727"),
 					resource.TestCheckResourceAttr("simplemdm_scriptjob.test_job", "group_ids.#", "1"),
 					resource.TestCheckResourceAttr("simplemdm_scriptjob.test_job", "group_ids.0", "140188"),
+					resource.TestCheckResourceAttrSet("simplemdm_scriptjob.test_job", "job_identifier"),
+					resource.TestCheckResourceAttrSet("simplemdm_scriptjob.test_job", "status"),
+					resource.TestCheckResourceAttrSet("simplemdm_scriptjob.test_job", "pending_count"),
+					resource.TestCheckResourceAttrSet("simplemdm_scriptjob.test_job", "created_at"),
+					resource.TestCheckResourceAttrSet("simplemdm_scriptjob.test_job", "variable_support"),
 				),
 			},
 			// // ImportState testing
@@ -57,6 +62,9 @@ func TestAccScriptJobResource(t *testing.T) {
 					resource.TestCheckResourceAttr("simplemdm_scriptjob.test_job", "custom_attribute", "updated_attribute"),
 					resource.TestCheckResourceAttr("simplemdm_scriptjob.test_job", "custom_attribute_regex", "\\r"),
 					resource.TestCheckResourceAttr("simplemdm_scriptjob.test_job", "script_id", "5727"),
+					resource.TestCheckResourceAttrSet("simplemdm_scriptjob.test_job", "status"),
+					resource.TestCheckResourceAttrSet("simplemdm_scriptjob.test_job", "job_identifier"),
+					resource.TestCheckResourceAttrSet("simplemdm_scriptjob.test_job", "success_count"),
 				),
 			},
 			// Delete testing automatically occurs in TestCase
