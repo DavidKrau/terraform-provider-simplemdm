@@ -16,24 +16,30 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 			// Create and Read testing
 			{
 				Config: providerConfig + `
-				resource "simplemdm_assignmentgroup" "testgroup2" {
-					name= "This assignment group"
-					auto_deploy = false
-					group_type   = "standard"
-					install_type = "managed"
-					apps= [577575]
-					groups = [140188]
-					profiles = [172801]
-					devices = [1601809]
-					profiles_sync = false
-					apps_push = false
-					apps_update = false
-				  }
+                                resource "simplemdm_assignmentgroup" "testgroup2" {
+                                        name= "This assignment group"
+                                        auto_deploy = false
+                                        group_type   = "standard"
+                                        install_type = "managed"
+                                        priority     = 3
+                                        app_track_location = false
+                                        apps= [577575]
+                                        groups = [140188]
+                                        profiles = [172801]
+                                        devices = [1601809]
+                                        devices_remove_others = true
+                                        profiles_sync = false
+                                        apps_push = false
+                                        apps_update = false
+                                  }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify attributes
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "name", "This assignment group"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "group_type", "standard"),
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "priority", "3"),
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "app_track_location", "false"),
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices_remove_others", "true"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "profiles.#", "1"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "profiles.0", "172801"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices.#", "1"),
@@ -58,23 +64,29 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 			//Update and Read testing
 			{
 				Config: providerConfig + `
-				resource "simplemdm_assignmentgroup" "testgroup2" {
-					name= "renamed assignemnt group"
-					auto_deploy = false
-					group_type   = "munki"
-					install_type = "managed"
-					apps= [553192]
-					devices = [1601810]
-					profiles_sync = false
-					apps_push = false
-					apps_update = false
-				  }
+                                resource "simplemdm_assignmentgroup" "testgroup2" {
+                                        name= "renamed assignemnt group"
+                                        auto_deploy = false
+                                        group_type   = "munki"
+                                        install_type = "managed"
+                                        priority     = 7
+                                        app_track_location = true
+                                        apps= [553192]
+                                        devices = [1601810]
+                                        devices_remove_others = false
+                                        profiles_sync = false
+                                        apps_push = false
+                                        apps_update = false
+                                  }
 			`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify attributes
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "name", "renamed assignemnt group"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "group_type", "munki"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "install_type", "managed"),
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "priority", "7"),
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "app_track_location", "true"),
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices_remove_others", "false"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices.#", "1"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices.0", "1601810"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "apps.#", "1"),
