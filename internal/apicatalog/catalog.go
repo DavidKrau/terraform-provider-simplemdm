@@ -34,11 +34,11 @@ var Catalog = []EndpointCoverage{
 		DocsURL:        "https://api.simplemdm.com/v1/#tag/Custom-Attributes",
 	},
 	{
-		Name:           "Custom Profiles",
-		Endpoint:       "/api/v1/custom_profiles",
+		Name:           "Custom Configuration Profiles",
+		Endpoint:       "/api/v1/custom_configuration_profiles",
 		ResourceType:   "simplemdm_customprofile",
 		DataSourceType: "simplemdm_customprofile",
-		DocsURL:        "https://api.simplemdm.com/v1/#tag/Custom-Profiles",
+		DocsURL:        "https://api.simplemdm.com/v1/#tag/Custom-Configuration-Profiles",
 	},
 	{
 		Name:           "Custom Declarations",
