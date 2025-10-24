@@ -13,7 +13,7 @@ The SimpleMDM API documentation is published at https://api.simplemdm.com/v1. Th
 | Account | `/api/v1/account` | - | - | Not covered |
 | Apps | `/api/v1/apps` | `simplemdm_app` | `simplemdm_app` | Covered (resource supports App Store, bundle identifier, and binary uploads; data source exposes catalog metadata) |
 | Assignment Groups | `/api/v1/assignment_groups` | `simplemdm_assignmentgroup` | `simplemdm_assignmentgroup` | Covered |
-| Custom Attributes | `/api/v1/custom_attributes` | `simplemdm_attribute` | `simplemdm_attribute` | Covered |
+| Custom Attributes | `/api/v1/custom_attributes` | `simplemdm_attribute` | `simplemdm_attribute` | Covered (resource and data source manage attribute definitions; device, assignment group, and device group resources integrate with the corresponding `custom_attribute_values` endpoints) |
 | Custom Configuration Profiles | `/api/v1/custom_configuration_profiles` | `simplemdm_customprofile` | `simplemdm_customprofile` | Covered |
 | Custom Declarations | `/api/v1/custom_declarations` | `simplemdm_customdeclaration` | `simplemdm_customdeclaration` | Covered |
 | DEP Servers | `/api/v1/dep_servers` | - | - | Not covered |
