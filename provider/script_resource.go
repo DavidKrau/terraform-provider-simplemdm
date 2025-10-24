@@ -28,6 +28,7 @@ type scriptResourceModel struct {
 	ScriptFile      types.String `tfsdk:"scriptfile"`
 	ID              types.String `tfsdk:"id"`
 	VariableSupport types.Bool   `tfsdk:"variablesupport"`
+	CreatedBy       types.String `tfsdk:"created_by"`
 	CreatedAt       types.String `tfsdk:"created_at"`
 	UpdatedAt       types.String `tfsdk:"updated_at"`
 }
@@ -80,9 +81,16 @@ func (r *scriptResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"variablesupport": schema.BoolAttribute{
 				Optional:    true,
-				Default:     booldefault.StaticBool(true),
+				Default:     booldefault.StaticBool(false),
 				Computed:    true,
 				Description: "Optional. A boolean true or false. Whether or not to enable variable support in this script. Defaults to false",
+			},
+			"created_by": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: "User that created the Script in SimpleMDM",
 			},
 			"created_at": schema.StringAttribute{
 				Computed: true,
@@ -128,7 +136,9 @@ func (r *scriptResource) Create(ctx context.Context, req resource.CreateRequest,
 	plan.ID = types.StringValue(strconv.Itoa(script.Data.ID))
 	plan.CreatedAt = types.StringValue(script.Data.Attributes.CreatedAt)
 	plan.UpdatedAt = types.StringValue(script.Data.Attributes.UpdatedAt)
+	plan.CreatedBy = types.StringValue(script.Data.Attributes.CreateBy)
 	plan.ScriptFile = types.StringValue(script.Data.Attributes.Content)
+	plan.VariableSupport = types.BoolValue(script.Data.Attributes.VariableSupport)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, plan)
@@ -167,6 +177,7 @@ func (r *scriptResource) Read(ctx context.Context, req resource.ReadRequest, res
 	state.CreatedAt = types.StringValue(script.Data.Attributes.CreatedAt)
 	state.UpdatedAt = types.StringValue(script.Data.Attributes.UpdatedAt)
 	state.VariableSupport = types.BoolValue(script.Data.Attributes.VariableSupport)
+	state.CreatedBy = types.StringValue(script.Data.Attributes.CreateBy)
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
@@ -195,7 +206,11 @@ func (r *scriptResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
+	plan.ScriptFile = types.StringValue(script.Data.Attributes.Content)
 	plan.UpdatedAt = types.StringValue(script.Data.Attributes.UpdatedAt)
+	plan.CreatedAt = types.StringValue(script.Data.Attributes.CreatedAt)
+	plan.CreatedBy = types.StringValue(script.Data.Attributes.CreateBy)
+	plan.VariableSupport = types.BoolValue(script.Data.Attributes.VariableSupport)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)

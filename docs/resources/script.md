@@ -38,6 +38,7 @@ resource "simplemdm_script" "test" {
 ### Read-Only
 
 - `created_at` (String) Date when script was created in SimpleMDM
+- `created_by` (String) User that created the Script in SimpleMDM
 - `id` (String) ID of a Script in SimpleMDM
 - `updated_at` (String) Date when script was updated in SimpleMDM
 

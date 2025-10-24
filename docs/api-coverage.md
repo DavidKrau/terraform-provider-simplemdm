@@ -26,7 +26,7 @@ The SimpleMDM API documentation is published at https://api.simplemdm.com/v1. Th
 | Managed App Configs | `/api/v1/apps/{APP_ID}/managed_configs` | - | - | Not covered |
 | Profiles | `/api/v1/profiles` | `simplemdm_profile` | `simplemdm_profile` | Covered |
 | Push Certificate | `/api/v1/push_certificate` | - | - | Not covered |
-| Scripts | `/api/v1/scripts` | `simplemdm_script` | `simplemdm_script` | Covered |
+| Scripts | `/api/v1/scripts` | `simplemdm_script` | `simplemdm_script` | Covered (resource & data source expose script content, variable support flag, creator, and creation/update timestamps) |
 | Script Jobs | `/api/v1/script_jobs` | `simplemdm_scriptjob` | `simplemdm_scriptjob` | Covered |
 | Webhooks | (Event delivery) | - | - | Not covered |
 
