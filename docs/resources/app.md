@@ -27,6 +27,7 @@ resource "simplemdm_app" "app" {
 
 - `app_store_id` (String) Required. The Apple App Store ID of the app to be added. Example: 1090161858.
 - `bundle_id` (String) Required. The bundle identifier of the Apple App Store app to be added. Example: com.myCompany.MyApp1
+- `binary_file` (String) Optional. Absolute or relative path to an app binary (ipa or pkg) to upload. Required when managing enterprise, custom B2B, or macOS package apps. Exactly one of `app_store_id`, `bundle_id`, or `binary_file` must be provided.
 - `deploy_to` (String) Optional. Deploy the app to associated devices immediately after the app has been uploaded and processed. Possible values are none, outdated or all. Defaults to none.
 - `name` (String) The name that SimpleMDM will use to reference this app. If left blank, SimpleMDM will automatically set this to the app name specified by the binary.
 
@@ -34,6 +35,13 @@ resource "simplemdm_app" "app" {
 
 - `id` (String) The ID of this resource.
 - `status` (String) The current deployment status of the app.
+- `app_type` (String) The catalog classification of the app, for example app store, enterprise, or custom b2b.
+- `version` (String) The latest version reported by SimpleMDM for the app.
+- `platform_support` (String) The platform supported by the app, such as iOS or macOS.
+- `processing_status` (String) The current processing status of the app binary within SimpleMDM.
+- `installation_channels` (List of String) The deployment channels supported by the app.
+- `created_at` (String) Timestamp when the app was added to SimpleMDM.
+- `updated_at` (String) Timestamp when the app was last updated in SimpleMDM.
 
 ## Import
 
