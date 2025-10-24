@@ -41,6 +41,13 @@ var Catalog = []EndpointCoverage{
 		DocsURL:        "https://api.simplemdm.com/v1/#tag/Custom-Profiles",
 	},
 	{
+		Name:           "Custom Declarations",
+		Endpoint:       "/api/v1/custom_declarations",
+		ResourceType:   "simplemdm_customdeclaration",
+		DataSourceType: "simplemdm_customdeclaration",
+		DocsURL:        "https://api.simplemdm.com/v1/#tag/Custom-Declarations",
+	},
+	{
 		Name:           "Devices",
 		Endpoint:       "/api/v1/devices",
 		ResourceType:   "simplemdm_device",
