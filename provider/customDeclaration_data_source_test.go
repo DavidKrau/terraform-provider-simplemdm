@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -14,7 +13,7 @@ func TestAccCustomDeclarationDataSource(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: providerConfig + `
                                 resource "simplemdm_customdeclaration" "test" {
                                         name             = "Terraform Custom Declaration"
                                         identifier       = "com.example.terraform.ds"
@@ -33,7 +32,7 @@ func TestAccCustomDeclarationDataSource(t *testing.T) {
                                 data "simplemdm_customdeclaration" "test" {
                                         id = simplemdm_customdeclaration.test.id
                                 }
-                                `),
+                                `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair("data.simplemdm_customdeclaration.test", "name", "simplemdm_customdeclaration.test", "name"),
 					resource.TestCheckResourceAttrPair("data.simplemdm_customdeclaration.test", "identifier", "simplemdm_customdeclaration.test", "identifier"),

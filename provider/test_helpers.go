@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"fmt"
 	"os"
 	"testing"
 )
@@ -24,7 +23,7 @@ func testAccPreCheck(t *testing.T) {
 func testAccRequireEnv(t *testing.T, name string) string {
 	value := os.Getenv(name)
 	if value == "" {
-		t.Skip(fmt.Sprintf("Acceptance test requires %s to be set", name))
+		t.Skipf("Acceptance test requires %s to be set", name)
 	}
 
 	return value

@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -14,7 +13,7 @@ func TestAccCustomDeclarationResource(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: providerConfig + `
                                 resource "simplemdm_customdeclaration" "test" {
                                         name             = "Terraform Custom Declaration"
                                         identifier       = "com.example.terraform"
@@ -30,7 +29,7 @@ func TestAccCustomDeclarationResource(t *testing.T) {
                                                 }
                                         })
                                 }
-                                `),
+                                `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("simplemdm_customdeclaration.test", "id"),
 					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "name", "Terraform Custom Declaration"),
@@ -44,7 +43,7 @@ func TestAccCustomDeclarationResource(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: providerConfig + `
                                 resource "simplemdm_customdeclaration" "test" {
                                         name             = "Terraform Custom Declaration Updated"
                                         identifier       = "com.example.terraform"
@@ -61,7 +60,7 @@ func TestAccCustomDeclarationResource(t *testing.T) {
                                                 }
                                         })
                                 }
-                                `),
+                                `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "name", "Terraform Custom Declaration Updated"),
 					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "declaration_type", "com.apple.configuration.management.updated"),
