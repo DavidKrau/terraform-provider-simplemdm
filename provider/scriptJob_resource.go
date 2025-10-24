@@ -6,19 +6,21 @@ import (
 	"strings"
 
 	"github.com/DavidKrau/simplemdm-go-client"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var (
-	_ resource.Resource                = &attributeResource{}
-	_ resource.ResourceWithConfigure   = &attributeResource{}
-	_ resource.ResourceWithImportState = &attributeResource{}
+	_ resource.Resource              = &scriptJobResource{}
+	_ resource.ResourceWithConfigure = &scriptJobResource{}
 )
 
 // scriptJobsResourceModel maps the resource schema data.
@@ -76,27 +78,48 @@ func (r *scriptJobResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				},
 			},
 			"device_ids": schema.SetAttribute{
-				Required:    true,
+				Optional:    true,
 				ElementType: types.StringType,
 				Description: "A comma separated list of device IDs to run the script on. At least one of `device_ids`, `group_ids`, or `assignment_group_ids` must be provided.",
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.RequiresReplace(),
 				},
+				Validators: []validator.Set{
+					setvalidator.AtLeastOneOf(
+						path.MatchRoot("device_ids"),
+						path.MatchRoot("group_ids"),
+						path.MatchRoot("assignment_group_ids"),
+					),
+				},
 			},
 			"group_ids": schema.SetAttribute{
-				Required:    true,
+				Optional:    true,
 				ElementType: types.StringType,
 				Description: "A comma separated list of group IDs to run the script on. All macOS devices from these groups will be included. At least one of `device_ids`, `group_ids`, or `assignment_group_ids` must be provided.",
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.RequiresReplace(),
 				},
+				Validators: []validator.Set{
+					setvalidator.AtLeastOneOf(
+						path.MatchRoot("device_ids"),
+						path.MatchRoot("group_ids"),
+						path.MatchRoot("assignment_group_ids"),
+					),
+				},
 			},
 			"assignment_group_ids": schema.SetAttribute{
-				Required:    true,
+				Optional:    true,
 				ElementType: types.StringType,
 				Description: "A comma separated list of assignment group IDs to run the script on. All macOS devices from these assignment groups will be included At least one of `device_ids`, `group_ids`, or `assignment_group_ids` must be provided.",
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.Set{
+					setvalidator.AtLeastOneOf(
+						path.MatchRoot("device_ids"),
+						path.MatchRoot("group_ids"),
+						path.MatchRoot("assignment_group_ids"),
+					),
 				},
 			},
 			"custom_attribute": schema.StringAttribute{
@@ -150,13 +173,21 @@ func (r *scriptJobResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	var customAttribute string
-	if !plan.CustomAttribute.IsNull() {
-		customAttribute = plan.CustomAttribute.String()
+	if !plan.CustomAttribute.IsNull() && !plan.CustomAttribute.IsUnknown() {
+		customAttribute = plan.CustomAttribute.ValueString()
 	}
 
 	customAttributeRegex := ""
-	if !plan.CustomAttributeRegex.IsNull() {
+	if !plan.CustomAttributeRegex.IsNull() && !plan.CustomAttributeRegex.IsUnknown() {
 		customAttributeRegex = plan.CustomAttributeRegex.ValueString()
+	}
+
+	if len(deviceIDs) == 0 && len(groupIDs) == 0 && len(assignmentGroupIDs) == 0 {
+		resp.Diagnostics.AddError(
+			"Missing Script Job Targets",
+			"At least one of device_ids, group_ids, or assignment_group_ids must contain a value.",
+		)
+		return
 	}
 
 	// Generate API request body from plan
@@ -237,11 +268,15 @@ func (r *scriptJobResource) Read(ctx context.Context, req resource.ReadRequest, 
 	// Update fields returned by the API
 	//state.ScriptId = types.StringValue(scriptJob.Data.Attributes.ScriptName)
 	state.ID = types.StringValue(strconv.Itoa(scriptJob.Data.ID))
-	if scriptJob.Data.Attributes.CustomAttributeRegex != "" {
-		state.CustomAttribute = types.StringValue(scriptJob.Data.Relationships.CustomAttribute.Data.ID)
+	if customAttributeID := scriptJob.Data.Relationships.CustomAttribute.Data.ID; customAttributeID != "" {
+		state.CustomAttribute = types.StringValue(customAttributeID)
+	} else {
+		state.CustomAttribute = types.StringNull()
 	}
-	if scriptJob.Data.Attributes.CustomAttributeRegex != "" {
-		state.CustomAttributeRegex = types.StringValue(scriptJob.Data.Attributes.CustomAttributeRegex)
+	if regex := scriptJob.Data.Attributes.CustomAttributeRegex; regex != "" {
+		state.CustomAttributeRegex = types.StringValue(regex)
+	} else {
+		state.CustomAttributeRegex = types.StringNull()
 	}
 
 	// Set refreshed state
