@@ -17,12 +17,11 @@ The SimpleMDM API documentation is published at https://api.simplemdm.com/v1. Th
 | Custom Declarations | `/api/v1/custom_declarations` | `simplemdm_customdeclaration` | `simplemdm_customdeclaration` | Covered |
 | Devices | `/api/v1/devices` | `simplemdm_device` | `simplemdm_device` | Covered |
 | Device Groups | `/api/v1/device_groups` | `simplemdm_devicegroup` | `simplemdm_devicegroup` | Covered |
-| Profiles | `/api/v1/profiles` | _Not implemented_ | `simplemdm_profile` | ❗ Resource missing |
+| Profiles | `/api/v1/profiles` | `simplemdm_profile` | `simplemdm_profile` | Covered |
 | Scripts | `/api/v1/scripts` | `simplemdm_script` | `simplemdm_script` | Covered |
 | Script Jobs | `/api/v1/script_jobs` | `simplemdm_scriptjob` | `simplemdm_scriptjob` | Covered |
 
 ## TODOs
 
-- [ ] Implement a `simplemdm_profile` resource to cover the `/api/v1/profiles` endpoint.
 - [ ] Re-run the coverage review after the SimpleMDM OpenAPI specification can be downloaded from https://api.simplemdm.com/v1/openapi.json.
 

@@ -19,8 +19,21 @@ var (
 
 // ProfileDataSourceModel maps the data source schema data.
 type profileDataSourceModel struct {
-	ID   types.String `tfsdk:"id"`
-	Name types.String `tfsdk:"name"`
+	ID                     types.String `tfsdk:"id"`
+	Name                   types.String `tfsdk:"name"`
+	AutoDeploy             types.Bool   `tfsdk:"auto_deploy"`
+	InstallType            types.String `tfsdk:"install_type"`
+	ReinstallAfterOSUpdate types.Bool   `tfsdk:"reinstall_after_os_update"`
+	ProfileIdentifier      types.String `tfsdk:"profile_identifier"`
+	UserScope              types.Bool   `tfsdk:"user_scope"`
+	AttributeSupport       types.Bool   `tfsdk:"attribute_support"`
+	EscapeAttributes       types.Bool   `tfsdk:"escape_attributes"`
+	GroupCount             types.Int64  `tfsdk:"group_count"`
+	DeviceCount            types.Int64  `tfsdk:"device_count"`
+	ProfileSHA             types.String `tfsdk:"profile_sha"`
+	Source                 types.String `tfsdk:"source"`
+	CreatedAt              types.String `tfsdk:"created_at"`
+	UpdatedAt              types.String `tfsdk:"updated_at"`
 }
 
 // ProfileDataSource is a helper function to simplify the provider implementation.
@@ -43,13 +56,65 @@ func (d *profileDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 	resp.Schema = schema.Schema{
 		Description: "Profile data source can be used together with Device(s), Assignment Group(s) or Device Group(s) to assign profiles to these objects.",
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Required:    true,
+				Description: "The ID of the Profile.",
+			},
 			"name": schema.StringAttribute{
 				Computed:    true,
 				Description: "The name of the Profile.",
 			},
-			"id": schema.StringAttribute{
-				Required:    true,
-				Description: "The ID of the Profile.",
+			"auto_deploy": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Whether the profile is auto-deployed when assigned.",
+			},
+			"install_type": schema.StringAttribute{
+				Computed:    true,
+				Description: "The install type configured for the profile.",
+			},
+			"reinstall_after_os_update": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Whether the profile reinstalls automatically after macOS updates.",
+			},
+			"profile_identifier": schema.StringAttribute{
+				Computed:    true,
+				Description: "The identifier contained within the profile payload.",
+			},
+			"user_scope": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Indicates if the profile is installed in the user scope.",
+			},
+			"attribute_support": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Whether the profile supports attribute substitution.",
+			},
+			"escape_attributes": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Whether attribute values are escaped during installation.",
+			},
+			"group_count": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of device groups currently assigned to the profile.",
+			},
+			"device_count": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of devices currently assigned to the profile.",
+			},
+			"profile_sha": schema.StringAttribute{
+				Computed:    true,
+				Description: "SHA hash reported by SimpleMDM for the profile contents.",
+			},
+			"source": schema.StringAttribute{
+				Computed:    true,
+				Description: "Origin of the profile within SimpleMDM.",
+			},
+			"created_at": schema.StringAttribute{
+				Computed:    true,
+				Description: "Timestamp when the profile was created.",
+			},
+			"updated_at": schema.StringAttribute{
+				Computed:    true,
+				Description: "Timestamp when the profile was last updated.",
 			},
 		},
 	}
@@ -71,8 +136,21 @@ func (d *profileDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	}
 
 	// Map response body to model
-	state.Name = types.StringValue(profile.Data.Attributes.Name)
 	state.ID = types.StringValue(strconv.Itoa(profile.Data.ID))
+	state.Name = types.StringValue(profile.Data.Attributes.Name)
+	state.AutoDeploy = types.BoolValue(profile.Data.Attributes.AutoDeploy)
+	state.InstallType = types.StringValue(profile.Data.Attributes.InstallType)
+	state.ReinstallAfterOSUpdate = types.BoolValue(profile.Data.Attributes.ReinstallAfterOsUpdate)
+	state.ProfileIdentifier = types.StringValue(profile.Data.Attributes.ProfileIdentifier)
+	state.UserScope = types.BoolValue(profile.Data.Attributes.UserScope)
+	state.AttributeSupport = types.BoolValue(profile.Data.Attributes.AttributeSupport)
+	state.EscapeAttributes = types.BoolValue(profile.Data.Attributes.EscapeAttributes)
+	state.GroupCount = types.Int64Value(int64(profile.Data.Attributes.GroupCount))
+	state.DeviceCount = types.Int64Value(int64(profile.Data.Attributes.DeviceCount))
+	state.ProfileSHA = types.StringValue(profile.Data.Attributes.ProfileSHA)
+	state.Source = types.StringValue(profile.Data.Attributes.Source)
+	state.CreatedAt = types.StringValue(profile.Data.Attributes.CreatedAt)
+	state.UpdatedAt = types.StringValue(profile.Data.Attributes.UpdatedAt)
 
 	// Set state
 
