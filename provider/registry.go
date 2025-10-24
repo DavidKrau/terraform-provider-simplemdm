@@ -64,8 +64,8 @@ var resourceDefinitions = []ResourceDefinition{
 		ExampleDirs:  []string{"examples/resources/simplemdm_profile"},
 		TestFiles:    []string{"provider/profile_resource_test.go"},
 		APIEndpoints: []string{"/api/v1/profiles"},
-  },
-  {
+	},
+	{
 		TypeName:     "simplemdm_customdeclaration",
 		Factory:      CustomDeclarationResource,
 		DocsPath:     "docs/resources/customdeclaration.md",
@@ -82,13 +82,12 @@ var resourceDefinitions = []ResourceDefinition{
 		APIEndpoints: []string{"/api/v1/devices"},
 	},
 	{
-		TypeName:      "simplemdm_devicegroup",
-		Factory:       DeviceGroupResource,
-		DocsPath:      "docs/resources/devicegroup.md",
-		ExampleDirs:   []string{"examples/resources/simplemdm_devicegroup"},
-		TestFiles:     []string{},
-		APIEndpoints:  []string{"/api/v1/device_groups"},
-		TestsOptional: true,
+		TypeName:     "simplemdm_devicegroup",
+		Factory:      DeviceGroupResource,
+		DocsPath:     "docs/resources/devicegroup.md",
+		ExampleDirs:  []string{"examples/resources/simplemdm_devicegroup"},
+		TestFiles:    []string{"provider/deviceGroup_resource_test.go"},
+		APIEndpoints: []string{"/api/v1/device_groups"},
 	},
 	{
 		TypeName:     "simplemdm_script",
