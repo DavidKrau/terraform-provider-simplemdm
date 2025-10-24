@@ -4,14 +4,14 @@ This document captures the results of comparing the Terraform provider resources
 
 ## Source documentation
 
-The SimpleMDM API documentation is published at https://api.simplemdm.com/v1. The reference HTML was retrieved with `curl https://api.simplemdm.com/v1` on 2025-10-24 to assemble the coverage summary below.
+The SimpleMDM API documentation is published at https://api.simplemdm.com/v1. The reference HTML was retrieved with `curl https://api.simplemdm.com/v1` on 2025-10-24 and refreshed on 2025-02-14 while preparing the coverage summary below.
 
 ## Endpoint coverage summary
 
 | API Section | Representative Endpoint(s) | Terraform Resource | Terraform Data Source | Coverage Notes |
 |-------------|----------------------------|--------------------|-----------------------|----------------|
 | Account | `/api/v1/account` | - | - | Not covered |
-| Apps | `/api/v1/apps` | `simplemdm_app` | `simplemdm_app` | Covered (resource supports App Store, bundle identifier, and binary uploads; data source exposes catalog metadata) |
+| Apps | `/api/v1/apps` | `simplemdm_app` | `simplemdm_app` | Covered (resource supports App Store, bundle identifier, and binary uploads; state reflects deploy status, processing status, install channels, timestamps, and store metadata) |
 | Assignment Groups | `/api/v1/assignment_groups` | `simplemdm_assignmentgroup` | `simplemdm_assignmentgroup` | Covered |
 | Custom Attributes | `/api/v1/custom_attributes` | `simplemdm_attribute` | `simplemdm_attribute` | Covered |
 | Custom Configuration Profiles | `/api/v1/custom_configuration_profiles` | `simplemdm_customprofile` | `simplemdm_customprofile` | Covered |
