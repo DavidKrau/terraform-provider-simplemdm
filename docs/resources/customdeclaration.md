@@ -25,14 +25,22 @@ Custom Declaration resource manages Declarative Device Management custom declara
 
 ### Optional
 
+- `activation_predicate` (String) Predicate that controls when the declaration activates on a device.
 - `active` (Boolean) Whether the declaration is active.
+- `attribute_support` (Boolean) Enable variable expansion when processing the declaration payload.
 - `description` (String) Optional description of the declaration.
+- `escape_attributes` (Boolean) Escape the values of custom variables within the payload before delivery.
 - `priority` (Number) Optional priority value used for ordering declarations.
 - `topic` (String) Optional topic used for declarative management payloads.
 - `transport` (String) Optional transport mechanism for the declaration.
+- `user_scope` (Boolean) Whether the declaration is scoped to users (true) or devices (false). Defaults to true.
 
 ### Read-Only
 
 - `created_at` (String) Timestamp when the declaration was created in SimpleMDM.
+- `device_count` (Number) Number of devices currently assigned to the declaration.
+- `group_count` (Number) Number of device groups currently assigned to the declaration.
 - `id` (String) The ID of this resource.
+- `payload` (String) Alias that mirrors the JSON payload returned by the SimpleMDM download endpoint.
+- `profile_identifier` (String) Identifier assigned by SimpleMDM for tracking the declaration profile.
 - `updated_at` (String) Timestamp when the declaration was last updated in SimpleMDM.

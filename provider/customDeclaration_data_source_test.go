@@ -19,6 +19,9 @@ func TestAccCustomDeclarationDataSource(t *testing.T) {
                                         name             = "Terraform Custom Declaration"
                                         identifier       = "com.example.terraform.ds"
                                         declaration_type = "com.apple.configuration.management.test"
+                                        user_scope       = false
+                                        attribute_support = true
+                                        escape_attributes = true
                                         platforms        = ["macos"]
                                         data             = jsonencode({
                                                 declaration_identifier = "com.example.terraform.ds"
@@ -38,6 +41,10 @@ func TestAccCustomDeclarationDataSource(t *testing.T) {
 					resource.TestCheckResourceAttrPair("data.simplemdm_customdeclaration.test", "name", "simplemdm_customdeclaration.test", "name"),
 					resource.TestCheckResourceAttrPair("data.simplemdm_customdeclaration.test", "identifier", "simplemdm_customdeclaration.test", "identifier"),
 					resource.TestCheckResourceAttrPair("data.simplemdm_customdeclaration.test", "data", "simplemdm_customdeclaration.test", "data"),
+					resource.TestCheckResourceAttrPair("data.simplemdm_customdeclaration.test", "payload", "simplemdm_customdeclaration.test", "data"),
+					resource.TestCheckResourceAttrPair("data.simplemdm_customdeclaration.test", "user_scope", "simplemdm_customdeclaration.test", "user_scope"),
+					resource.TestCheckResourceAttrPair("data.simplemdm_customdeclaration.test", "attribute_support", "simplemdm_customdeclaration.test", "attribute_support"),
+					resource.TestCheckResourceAttrPair("data.simplemdm_customdeclaration.test", "escape_attributes", "simplemdm_customdeclaration.test", "escape_attributes"),
 				),
 			},
 		},

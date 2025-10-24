@@ -74,6 +74,15 @@ var resourceDefinitions = []ResourceDefinition{
 		APIEndpoints: []string{"/api/v1/custom_declarations"},
 	},
 	{
+		TypeName:      "simplemdm_customdeclaration_device_assignment",
+		Factory:       CustomDeclarationDeviceAssignmentResource,
+		DocsPath:      "docs/resources/customdeclaration_device_assignment.md",
+		ExampleDirs:   []string{"examples/resources/simplemdm_customdeclaration_device_assignment"},
+		TestFiles:     []string{"provider/customDeclaration_device_assignment_resource_test.go"},
+		APIEndpoints:  []string{"/api/v1/custom_declarations/{custom_declaration_id}/devices/{device_id}"},
+		TestsOptional: true,
+	},
+	{
 		TypeName:     "simplemdm_device",
 		Factory:      DeviceResource,
 		DocsPath:     "docs/resources/device.md",

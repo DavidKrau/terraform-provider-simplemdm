@@ -28,34 +28,50 @@ type customDeclarationResource struct {
 }
 
 type customDeclarationResourceModel struct {
-	ID              types.String `tfsdk:"id"`
-	Name            types.String `tfsdk:"name"`
-	Identifier      types.String `tfsdk:"identifier"`
-	DeclarationType types.String `tfsdk:"declaration_type"`
-	Topic           types.String `tfsdk:"topic"`
-	Transport       types.String `tfsdk:"transport"`
-	Description     types.String `tfsdk:"description"`
-	Platforms       types.Set    `tfsdk:"platforms"`
-	Data            types.String `tfsdk:"data"`
-	Active          types.Bool   `tfsdk:"active"`
-	Priority        types.Int64  `tfsdk:"priority"`
-	CreatedAt       types.String `tfsdk:"created_at"`
-	UpdatedAt       types.String `tfsdk:"updated_at"`
+	ID                  types.String `tfsdk:"id"`
+	Name                types.String `tfsdk:"name"`
+	Identifier          types.String `tfsdk:"identifier"`
+	DeclarationType     types.String `tfsdk:"declaration_type"`
+	Topic               types.String `tfsdk:"topic"`
+	Transport           types.String `tfsdk:"transport"`
+	Description         types.String `tfsdk:"description"`
+	Platforms           types.Set    `tfsdk:"platforms"`
+	Data                types.String `tfsdk:"data"`
+	Payload             types.String `tfsdk:"payload"`
+	Active              types.Bool   `tfsdk:"active"`
+	Priority            types.Int64  `tfsdk:"priority"`
+	UserScope           types.Bool   `tfsdk:"user_scope"`
+	AttributeSupport    types.Bool   `tfsdk:"attribute_support"`
+	EscapeAttributes    types.Bool   `tfsdk:"escape_attributes"`
+	ActivationPredicate types.String `tfsdk:"activation_predicate"`
+	ProfileIdentifier   types.String `tfsdk:"profile_identifier"`
+	GroupCount          types.Int64  `tfsdk:"group_count"`
+	DeviceCount         types.Int64  `tfsdk:"device_count"`
+	CreatedAt           types.String `tfsdk:"created_at"`
+	UpdatedAt           types.String `tfsdk:"updated_at"`
 }
 
 type customDeclarationAttributes struct {
-	Name            string          `json:"name"`
-	Identifier      string          `json:"identifier"`
-	DeclarationType string          `json:"declaration_type"`
-	Topic           string          `json:"topic"`
-	Transport       string          `json:"transport"`
-	Description     string          `json:"description"`
-	Platforms       []string        `json:"platforms"`
-	Data            json.RawMessage `json:"data"`
-	Active          *bool           `json:"active"`
-	Priority        *int64          `json:"priority"`
-	CreatedAt       string          `json:"created_at"`
-	UpdatedAt       string          `json:"updated_at"`
+	Name                string          `json:"name"`
+	Identifier          string          `json:"identifier"`
+	DeclarationType     string          `json:"declaration_type"`
+	Topic               string          `json:"topic"`
+	Transport           string          `json:"transport"`
+	Description         string          `json:"description"`
+	Platforms           []string        `json:"platforms"`
+	Data                json.RawMessage `json:"data"`
+	Payload             json.RawMessage `json:"payload"`
+	Active              *bool           `json:"active"`
+	Priority            *int64          `json:"priority"`
+	UserScope           *bool           `json:"user_scope"`
+	AttributeSupport    *bool           `json:"attribute_support"`
+	EscapeAttributes    *bool           `json:"escape_attributes"`
+	ActivationPredicate string          `json:"activation_predicate"`
+	ProfileIdentifier   string          `json:"profile_identifier"`
+	GroupCount          *int64          `json:"group_count"`
+	DeviceCount         *int64          `json:"device_count"`
+	CreatedAt           string          `json:"created_at"`
+	UpdatedAt           string          `json:"updated_at"`
 }
 
 type customDeclarationResponse struct {
@@ -73,16 +89,21 @@ type customDeclarationRequest struct {
 }
 
 type customDeclarationPayload struct {
-	Name            string          `json:"name"`
-	Identifier      string          `json:"identifier"`
-	DeclarationType string          `json:"declaration_type"`
-	Topic           *string         `json:"topic,omitempty"`
-	Transport       *string         `json:"transport,omitempty"`
-	Description     *string         `json:"description,omitempty"`
-	Platforms       []string        `json:"platforms"`
-	Data            json.RawMessage `json:"data"`
-	Active          *bool           `json:"active,omitempty"`
-	Priority        *int64          `json:"priority,omitempty"`
+	Name                string          `json:"name"`
+	Identifier          string          `json:"identifier"`
+	DeclarationType     string          `json:"declaration_type"`
+	Topic               *string         `json:"topic,omitempty"`
+	Transport           *string         `json:"transport,omitempty"`
+	Description         *string         `json:"description,omitempty"`
+	Platforms           []string        `json:"platforms"`
+	Data                json.RawMessage `json:"data,omitempty"`
+	Payload             json.RawMessage `json:"payload,omitempty"`
+	Active              *bool           `json:"active,omitempty"`
+	Priority            *int64          `json:"priority,omitempty"`
+	UserScope           *bool           `json:"user_scope,omitempty"`
+	AttributeSupport    *bool           `json:"attribute_support,omitempty"`
+	EscapeAttributes    *bool           `json:"escape_attributes,omitempty"`
+	ActivationPredicate *string         `json:"activation_predicate,omitempty"`
 }
 
 func CustomDeclarationResource() resource.Resource {
@@ -150,6 +171,10 @@ func (r *customDeclarationResource) Schema(_ context.Context, _ resource.SchemaR
 				Required:    true,
 				Description: "JSON payload of the declaration data.",
 			},
+			"payload": schema.StringAttribute{
+				Computed:    true,
+				Description: "Alias that mirrors the JSON payload returned by the SimpleMDM download endpoint.",
+			},
 			"active": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -159,6 +184,40 @@ func (r *customDeclarationResource) Schema(_ context.Context, _ resource.SchemaR
 			"priority": schema.Int64Attribute{
 				Optional:    true,
 				Description: "Optional priority value used for ordering declarations.",
+			},
+			"user_scope": schema.BoolAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Whether the declaration is scoped to users (true) or devices (false). Defaults to true.",
+				Default:     booldefault.StaticBool(true),
+			},
+			"attribute_support": schema.BoolAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable variable expansion when processing the declaration payload.",
+				Default:     booldefault.StaticBool(false),
+			},
+			"escape_attributes": schema.BoolAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Escape the values of custom variables within the payload before delivery.",
+				Default:     booldefault.StaticBool(false),
+			},
+			"activation_predicate": schema.StringAttribute{
+				Optional:    true,
+				Description: "Predicate that controls when the declaration activates on a device.",
+			},
+			"profile_identifier": schema.StringAttribute{
+				Computed:    true,
+				Description: "Identifier assigned by SimpleMDM for tracking the declaration profile.",
+			},
+			"group_count": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of device groups currently assigned to the declaration.",
+			},
+			"device_count": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of devices currently assigned to the declaration.",
 			},
 			"created_at": schema.StringAttribute{
 				Computed:    true,
@@ -224,6 +283,16 @@ func (r *customDeclarationResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
+	if len(declaration.Data.Attributes.Data) == 0 && len(declaration.Data.Attributes.Payload) == 0 {
+		raw, err := downloadCustomDeclarationPayload(ctx, r.client, declaration.Data.ID)
+		if err != nil {
+			resp.Diagnostics.AddError("Error downloading SimpleMDM custom declaration payload", err.Error())
+			return
+		}
+
+		declaration.Data.Attributes.Data = raw
+	}
+
 	if diags := plan.refreshFromResponse(ctx, &declaration); diags.HasError() {
 		resp.Diagnostics.Append(diags...)
 		return
@@ -263,6 +332,16 @@ func (r *customDeclarationResource) Read(ctx context.Context, req resource.ReadR
 	if err := json.Unmarshal(responseBody, &declaration); err != nil {
 		resp.Diagnostics.AddError("Error parsing SimpleMDM custom declaration response", err.Error())
 		return
+	}
+
+	if len(declaration.Data.Attributes.Data) == 0 && len(declaration.Data.Attributes.Payload) == 0 {
+		raw, err := downloadCustomDeclarationPayload(ctx, r.client, state.ID.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError("Error downloading SimpleMDM custom declaration payload", err.Error())
+			return
+		}
+
+		declaration.Data.Attributes.Data = raw
 	}
 
 	if diags := state.refreshFromResponse(ctx, &declaration); diags.HasError() {
@@ -316,6 +395,16 @@ func (r *customDeclarationResource) Update(ctx context.Context, req resource.Upd
 	if err := json.Unmarshal(responseBody, &declaration); err != nil {
 		resp.Diagnostics.AddError("Error parsing SimpleMDM custom declaration response", err.Error())
 		return
+	}
+
+	if len(declaration.Data.Attributes.Data) == 0 && len(declaration.Data.Attributes.Payload) == 0 {
+		raw, err := downloadCustomDeclarationPayload(ctx, r.client, plan.ID.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError("Error downloading SimpleMDM custom declaration payload", err.Error())
+			return
+		}
+
+		declaration.Data.Attributes.Data = raw
 	}
 
 	if diags := plan.refreshFromResponse(ctx, &declaration); diags.HasError() {
@@ -383,7 +472,13 @@ func buildCustomDeclarationPayload(ctx context.Context, model *customDeclaration
 		Identifier:      model.Identifier.ValueString(),
 		DeclarationType: model.DeclarationType.ValueString(),
 		Platforms:       platforms,
-		Data:            json.RawMessage(normalizedData),
+	}
+
+	// Prefer the JSON API attribute but also populate the payload alias for compatibility with
+	// multipart endpoints that expect a payload file body.
+	if normalizedData != "" {
+		payload.Data = json.RawMessage(normalizedData)
+		payload.Payload = json.RawMessage(normalizedData)
 	}
 
 	if !model.Topic.IsNull() {
@@ -409,6 +504,26 @@ func buildCustomDeclarationPayload(ctx context.Context, model *customDeclaration
 	if !model.Priority.IsNull() {
 		priority := model.Priority.ValueInt64()
 		payload.Priority = &priority
+	}
+
+	if !model.UserScope.IsNull() {
+		userScope := model.UserScope.ValueBool()
+		payload.UserScope = &userScope
+	}
+
+	if !model.AttributeSupport.IsNull() {
+		attributeSupport := model.AttributeSupport.ValueBool()
+		payload.AttributeSupport = &attributeSupport
+	}
+
+	if !model.EscapeAttributes.IsNull() {
+		escapeAttributes := model.EscapeAttributes.ValueBool()
+		payload.EscapeAttributes = &escapeAttributes
+	}
+
+	if !model.ActivationPredicate.IsNull() {
+		predicate := model.ActivationPredicate.ValueString()
+		payload.ActivationPredicate = &predicate
 	}
 
 	return payload, diags
@@ -454,6 +569,48 @@ func (m *customDeclarationResourceModel) refreshFromResponse(ctx context.Context
 		m.Priority = types.Int64Null()
 	}
 
+	if attributes.UserScope != nil {
+		m.UserScope = types.BoolValue(*attributes.UserScope)
+	} else {
+		m.UserScope = types.BoolNull()
+	}
+
+	if attributes.AttributeSupport != nil {
+		m.AttributeSupport = types.BoolValue(*attributes.AttributeSupport)
+	} else {
+		m.AttributeSupport = types.BoolNull()
+	}
+
+	if attributes.EscapeAttributes != nil {
+		m.EscapeAttributes = types.BoolValue(*attributes.EscapeAttributes)
+	} else {
+		m.EscapeAttributes = types.BoolNull()
+	}
+
+	if attributes.ActivationPredicate != "" {
+		m.ActivationPredicate = types.StringValue(attributes.ActivationPredicate)
+	} else {
+		m.ActivationPredicate = types.StringNull()
+	}
+
+	if attributes.ProfileIdentifier != "" {
+		m.ProfileIdentifier = types.StringValue(attributes.ProfileIdentifier)
+	} else {
+		m.ProfileIdentifier = types.StringNull()
+	}
+
+	if attributes.GroupCount != nil {
+		m.GroupCount = types.Int64Value(*attributes.GroupCount)
+	} else {
+		m.GroupCount = types.Int64Null()
+	}
+
+	if attributes.DeviceCount != nil {
+		m.DeviceCount = types.Int64Value(*attributes.DeviceCount)
+	} else {
+		m.DeviceCount = types.Int64Null()
+	}
+
 	if len(attributes.Platforms) > 0 {
 		sort.Strings(attributes.Platforms)
 		platforms, d := types.SetValueFrom(ctx, types.StringType, attributes.Platforms)
@@ -463,16 +620,23 @@ func (m *customDeclarationResourceModel) refreshFromResponse(ctx context.Context
 		m.Platforms = types.SetNull(types.StringType)
 	}
 
-	if len(attributes.Data) > 0 {
-		normalized, err := normalizeJSON(string(attributes.Data))
+	rawPayload := attributes.Data
+	if len(rawPayload) == 0 {
+		rawPayload = attributes.Payload
+	}
+
+	if len(rawPayload) > 0 {
+		normalized, err := normalizeJSON(string(rawPayload))
 		if err != nil {
 			diags.AddError("Invalid JSON data", fmt.Sprintf("Unable to normalize declaration data: %s", err))
 			return diags
 		}
 
 		m.Data = types.StringValue(normalized)
+		m.Payload = types.StringValue(normalized)
 	} else {
 		m.Data = types.StringNull()
+		m.Payload = types.StringNull()
 	}
 
 	if attributes.CreatedAt != "" {
@@ -488,6 +652,26 @@ func (m *customDeclarationResourceModel) refreshFromResponse(ctx context.Context
 	}
 
 	return diags
+}
+
+func downloadCustomDeclarationPayload(ctx context.Context, client *simplemdm.Client, declarationID string) (json.RawMessage, error) {
+	url := fmt.Sprintf("https://%s/api/v1/custom_declarations/%s/download", client.HostName, declarationID)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := client.RequestResponse200(httpReq)
+	if err != nil {
+		return nil, err
+	}
+
+	trimmed := bytes.TrimSpace(body)
+	if len(trimmed) == 0 {
+		return nil, nil
+	}
+
+	return json.RawMessage(trimmed), nil
 }
 
 func normalizeJSON(input string) (string, error) {

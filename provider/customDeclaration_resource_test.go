@@ -20,6 +20,10 @@ func TestAccCustomDeclarationResource(t *testing.T) {
                                         identifier       = "com.example.terraform"
                                         declaration_type = "com.apple.configuration.management.test"
                                         topic            = "com.example.topic"
+                                        user_scope       = false
+                                        attribute_support = true
+                                        escape_attributes = true
+                                        activation_predicate = "TRUEPREDICATE"
                                         platforms        = ["macos"]
                                         data             = jsonencode({
                                                 declaration_identifier = "com.example.terraform"
@@ -36,6 +40,10 @@ func TestAccCustomDeclarationResource(t *testing.T) {
 					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "name", "Terraform Custom Declaration"),
 					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "identifier", "com.example.terraform"),
 					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "declaration_type", "com.apple.configuration.management.test"),
+					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "user_scope", "false"),
+					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "attribute_support", "true"),
+					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "escape_attributes", "true"),
+					resource.TestCheckResourceAttrPair("simplemdm_customdeclaration.test", "payload", "simplemdm_customdeclaration.test", "data"),
 				),
 			},
 			{
@@ -50,6 +58,10 @@ func TestAccCustomDeclarationResource(t *testing.T) {
                                         identifier       = "com.example.terraform"
                                         declaration_type = "com.apple.configuration.management.updated"
                                         description      = "Updated description"
+                                        user_scope       = true
+                                        attribute_support = false
+                                        escape_attributes = false
+                                        activation_predicate = "FALSEPREDICATE"
                                         platforms        = ["macos", "ios"]
                                         active           = false
                                         data             = jsonencode({
@@ -67,6 +79,7 @@ func TestAccCustomDeclarationResource(t *testing.T) {
 					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "declaration_type", "com.apple.configuration.management.updated"),
 					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "description", "Updated description"),
 					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "active", "false"),
+					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "user_scope", "true"),
 				),
 			},
 		},
