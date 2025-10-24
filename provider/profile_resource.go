@@ -2,6 +2,10 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -22,6 +26,7 @@ var (
 
 type profileResourceModel struct {
 	ID                     types.String `tfsdk:"id"`
+	Type                   types.String `tfsdk:"type"`
 	Name                   types.String `tfsdk:"name"`
 	AutoDeploy             types.Bool   `tfsdk:"auto_deploy"`
 	InstallType            types.String `tfsdk:"install_type"`
@@ -32,6 +37,7 @@ type profileResourceModel struct {
 	EscapeAttributes       types.Bool   `tfsdk:"escape_attributes"`
 	GroupCount             types.Int64  `tfsdk:"group_count"`
 	DeviceCount            types.Int64  `tfsdk:"device_count"`
+	GroupIDs               types.Set    `tfsdk:"group_ids"`
 	ProfileSHA             types.String `tfsdk:"profile_sha"`
 	Source                 types.String `tfsdk:"source"`
 	CreatedAt              types.String `tfsdk:"created_at"`
@@ -69,6 +75,10 @@ func (r *profileResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
+			},
+			"type": schema.StringAttribute{
+				Computed:    true,
+				Description: "The profile payload type reported by SimpleMDM.",
 			},
 			"name": schema.StringAttribute{
 				Computed:    true,
@@ -110,6 +120,11 @@ func (r *profileResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 				Computed:    true,
 				Description: "Number of devices currently assigned to the profile.",
 			},
+			"group_ids": schema.SetAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "IDs of device or assignment groups currently assigned to the profile.",
+			},
 			"profile_sha": schema.StringAttribute{
 				Computed:    true,
 				Description: "SHA hash reported by SimpleMDM for the profile contents.",
@@ -142,7 +157,7 @@ func (r *profileResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	model, err := r.readProfile(plan.ID.ValueString())
+	model, err := r.readProfile(ctx, plan.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating SimpleMDM profile reference",
@@ -163,7 +178,7 @@ func (r *profileResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	model, err := r.readProfile(state.ID.ValueString())
+	model, err := r.readProfile(ctx, state.ID.ValueString())
 	if err != nil {
 		if strings.Contains(err.Error(), "404") {
 			resp.State.RemoveResource(ctx)
@@ -189,7 +204,7 @@ func (r *profileResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	model, err := r.readProfile(plan.ID.ValueString())
+	model, err := r.readProfile(ctx, plan.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error refreshing SimpleMDM profile",
@@ -206,24 +221,36 @@ func (r *profileResource) Delete(ctx context.Context, _ resource.DeleteRequest, 
 	resp.State.RemoveResource(ctx)
 }
 
-func (r *profileResource) readProfile(profileID string) (*profileResourceModel, error) {
-	profile, err := r.client.ProfileGet(profileID)
+func (r *profileResource) readProfile(ctx context.Context, profileID string) (*profileResourceModel, error) {
+	profile, err := fetchProfile(ctx, r.client, profileID)
 	if err != nil {
 		return nil, err
 	}
 
+	groupIDs, err := convertGroupIDs(ctx, profile.Data.Relationships)
+	if err != nil {
+		return nil, err
+	}
+
+	typeValue := types.StringNull()
+	if profile.Data.Type != "" {
+		typeValue = types.StringValue(profile.Data.Type)
+	}
+
 	model := &profileResourceModel{
 		ID:                     types.StringValue(strconv.Itoa(profile.Data.ID)),
+		Type:                   typeValue,
 		Name:                   types.StringValue(profile.Data.Attributes.Name),
 		AutoDeploy:             types.BoolValue(profile.Data.Attributes.AutoDeploy),
 		InstallType:            types.StringValue(profile.Data.Attributes.InstallType),
-		ReinstallAfterOSUpdate: types.BoolValue(profile.Data.Attributes.ReinstallAfterOsUpdate),
+		ReinstallAfterOSUpdate: types.BoolValue(profile.Data.Attributes.ReinstallAfterOSUpdate),
 		ProfileIdentifier:      types.StringValue(profile.Data.Attributes.ProfileIdentifier),
 		UserScope:              types.BoolValue(profile.Data.Attributes.UserScope),
 		AttributeSupport:       types.BoolValue(profile.Data.Attributes.AttributeSupport),
 		EscapeAttributes:       types.BoolValue(profile.Data.Attributes.EscapeAttributes),
 		GroupCount:             types.Int64Value(int64(profile.Data.Attributes.GroupCount)),
 		DeviceCount:            types.Int64Value(int64(profile.Data.Attributes.DeviceCount)),
+		GroupIDs:               groupIDs,
 		ProfileSHA:             types.StringValue(profile.Data.Attributes.ProfileSHA),
 		Source:                 types.StringValue(profile.Data.Attributes.Source),
 		CreatedAt:              types.StringValue(profile.Data.Attributes.CreatedAt),
@@ -231,4 +258,91 @@ func (r *profileResource) readProfile(profileID string) (*profileResourceModel, 
 	}
 
 	return model, nil
+}
+
+type profileAPIResponse struct {
+	Data struct {
+		Type          string               `json:"type"`
+		ID            int                  `json:"id"`
+		Attributes    profileAttributes    `json:"attributes"`
+		Relationships profileRelationships `json:"relationships"`
+	} `json:"data"`
+}
+
+type profileAttributes struct {
+	Name                   string `json:"name"`
+	AutoDeploy             bool   `json:"auto_deploy"`
+	InstallType            string `json:"install_type"`
+	ReinstallAfterOSUpdate bool   `json:"reinstall_after_os_update"`
+	ProfileIdentifier      string `json:"profile_identifier"`
+	UserScope              bool   `json:"user_scope"`
+	AttributeSupport       bool   `json:"attribute_support"`
+	EscapeAttributes       bool   `json:"escape_attributes"`
+	GroupCount             int    `json:"group_count"`
+	DeviceCount            int    `json:"device_count"`
+	ProfileSHA             string `json:"profile_sha"`
+	Source                 string `json:"source"`
+	CreatedAt              string `json:"created_at"`
+	UpdatedAt              string `json:"updated_at"`
+}
+
+type profileRelationships struct {
+	DeviceGroups relationshipCollection `json:"device_groups"`
+	Groups       relationshipCollection `json:"groups"`
+}
+
+type relationshipCollection struct {
+	Data []relationshipReference `json:"data"`
+}
+
+type relationshipReference struct {
+	ID int `json:"id"`
+}
+
+func fetchProfile(ctx context.Context, client *simplemdm.Client, profileID string) (*profileAPIResponse, error) {
+	url := fmt.Sprintf("https://%s/api/v1/profiles/%s", client.HostName, profileID)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := client.RequestResponse200(req)
+	if err != nil {
+		return nil, err
+	}
+
+	var profile profileAPIResponse
+	if err := json.Unmarshal(body, &profile); err != nil {
+		return nil, err
+	}
+
+	return &profile, nil
+}
+
+func convertGroupIDs(ctx context.Context, relationships profileRelationships) (types.Set, error) {
+	unique := make(map[int]struct{})
+	for _, item := range relationships.DeviceGroups.Data {
+		unique[item.ID] = struct{}{}
+	}
+	for _, item := range relationships.Groups.Data {
+		unique[item.ID] = struct{}{}
+	}
+
+	if len(unique) == 0 {
+		return types.SetNull(types.StringType), nil
+	}
+
+	ids := make([]string, 0, len(unique))
+	for id := range unique {
+		ids = append(ids, strconv.Itoa(id))
+	}
+	sort.Strings(ids)
+
+	value, diags := types.SetValueFrom(ctx, types.StringType, ids)
+	if diags.HasError() {
+		return types.SetNull(types.StringType), fmt.Errorf("unable to convert profile group IDs: %s", diags)
+	}
+
+	return value, nil
 }

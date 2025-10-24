@@ -24,7 +24,7 @@ The SimpleMDM API documentation is published at https://api.simplemdm.com/v1. Th
 | Logs | `/api/v1/logs` | - | - | Not covered |
 | Lost Mode | `/api/v1/devices/{DEVICE_ID}/lost_mode` | - | - | Not covered |
 | Managed App Configs | `/api/v1/apps/{APP_ID}/managed_configs` | - | - | Not covered |
-| Profiles | `/api/v1/profiles` | `simplemdm_profile` | `simplemdm_profile` | Covered |
+| Profiles | `/api/v1/profiles` | `simplemdm_profile` | `simplemdm_profile` | Covered (resource & data source expose profile metadata including payload type, assignment counts, SHA/source details, and assigned group IDs; device and device group resources manage the device/group assignment endpoints) |
 | Push Certificate | `/api/v1/push_certificate` | - | - | Not covered |
 | Scripts | `/api/v1/scripts` | `simplemdm_script` | `simplemdm_script` | Covered |
 | Script Jobs | `/api/v1/script_jobs` | `simplemdm_scriptjob` | `simplemdm_scriptjob` | Covered |
