@@ -8,6 +8,7 @@ import (
 
 func TestAccCustomDeclarationDataSource(t *testing.T) {
 	testAccPreCheck(t)
+	_ = testAccRequireEnv(t, "SIMPLEMDM_RUN_CUSTOM_DECLARATION_TESTS")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
