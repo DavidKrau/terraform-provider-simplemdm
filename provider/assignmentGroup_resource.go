@@ -7,7 +7,6 @@ import (
 
 	"github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -40,6 +39,10 @@ type assignment_groupResourceModel struct {
 	ProfilesSync types.Bool   `tfsdk:"profiles_sync"`
 	Groups       types.Set    `tfsdk:"groups"`
 	Devices      types.Set    `tfsdk:"devices"`
+	CreatedAt    types.String `tfsdk:"created_at"`
+	UpdatedAt    types.String `tfsdk:"updated_at"`
+	DeviceCount  types.Int64  `tfsdk:"device_count"`
+	GroupCount   types.Int64  `tfsdk:"group_count"`
 }
 
 // AssignmentGroupResource is a helper function to simplify the provider implementation.
@@ -149,6 +152,22 @@ func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRe
 				ElementType: types.StringType,
 				Optional:    true,
 				Description: "Optional. List of Devices assigned to this Assignment Group",
+			},
+			"created_at": schema.StringAttribute{
+				Computed:    true,
+				Description: "Timestamp when the assignment group was created.",
+			},
+			"updated_at": schema.StringAttribute{
+				Computed:    true,
+				Description: "Timestamp when the assignment group was last updated.",
+			},
+			"device_count": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of devices currently assigned to the assignment group.",
+			},
+			"group_count": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of device groups currently assigned to the assignment group.",
 			},
 		},
 	}
@@ -306,7 +325,7 @@ func (r *assignment_groupResource) Read(ctx context.Context, req resource.ReadRe
 	}
 
 	// Get refreshed assignment group values from SimpleMDM
-	assignmentGroup, err := r.client.AssignmentGroupGet(state.ID.ValueString())
+	assignmentGroup, err := fetchAssignmentGroup(ctx, r.client, state.ID.ValueString())
 	if err != nil {
 		if strings.Contains(err.Error(), "404") {
 			resp.State.RemoveResource(ctx)
@@ -319,76 +338,10 @@ func (r *assignment_groupResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	//read apps and put them to slice
-	appsPresent := false
-	appsElements := []attr.Value{}
-	for _, appAssigned := range assignmentGroup.Data.Relationships.Apps.Data {
-		appsElements = append(appsElements, types.StringValue(strconv.Itoa(appAssigned.ID)))
-		appsPresent = true
-	}
-	//if there are apps return them to state
-	if appsPresent {
-		appsSetValue, _ := types.SetValue(types.StringType, appsElements)
-		state.Apps = appsSetValue
-	} else {
-		appsSetValue := types.SetNull(types.StringType)
-		state.Apps = appsSetValue
-	}
-
-	//read all groups and put them to slice
-	groupsPresent := false
-	groupsElements := []attr.Value{}
-	for _, groupAssigned := range assignmentGroup.Data.Relationships.DeviceGroups.Data {
-		groupsElements = append(groupsElements, types.StringValue(strconv.Itoa(groupAssigned.ID)))
-		groupsPresent = true
-	}
-	//if there are groups return them to state
-	if groupsPresent {
-		groupsSetValue, _ := types.SetValue(types.StringType, groupsElements)
-		state.Groups = groupsSetValue
-	} else {
-		groupsSetValue := types.SetNull(types.StringType)
-		state.Groups = groupsSetValue
-	}
-
-	//read all devices and put them to slice
-	devicesPresent := false
-	devicesElements := []attr.Value{}
-	for _, deviceAssigned := range assignmentGroup.Data.Relationships.Devices.Data {
-		devicesElements = append(devicesElements, types.StringValue(strconv.Itoa(deviceAssigned.ID)))
-		devicesPresent = true
-	}
-	//if there are groups return them to state
-	if devicesPresent {
-		devicesSetValue, _ := types.SetValue(types.StringType, devicesElements)
-		state.Devices = devicesSetValue
-	} else {
-		devicesSetValue := types.SetNull(types.StringType)
-		state.Devices = devicesSetValue
-	}
-
-	resp.Diagnostics.AddWarning(
-		"Notice about profiles:",
-		"API limitations is currently not allowing terraform provider to get state of the profiles assigned to assigment group."+
-			" This is not issue as long as you are using only terraform provider to manage profiles for assigment group."+
-			" This will be implemented properly once API will have correct responses and we will be able to load profiles for assignment group via API.",
-	)
-
-	// //read all profiles and put them to slice
-	// profilesPresent := false
-	// profilesElements := []attr.Value{}
-	// for _, profileAssigned := range assignmentGroup.Data.Relationships.DeviceGroups.Data { //<<edit here
-	// 	profilesElements = append(profilesElements, types.StringValue(strconv.Itoa(profileAssigned.ID)))
-	// 	profilesPresent = true
-	// }
-	// //if there are groups return them to state
-	// if profilesPresent {
-	// 	profilesSetValue, _ := types.SetValue(types.StringType, profilesElements)
-	// 	state.Profiles = profilesSetValue
-	// }else {
-	// 	profilesSetValue := types.SetNull(types.StringType)
-	// 	state.Profiles = profilesSetValue
-	// }
+	state.Apps = buildStringSetFromRelationshipItems(assignmentGroup.Data.Relationships.Apps.Data)
+	state.Groups = buildStringSetFromRelationshipItems(assignmentGroup.Data.Relationships.DeviceGroups.Data)
+	state.Devices = buildStringSetFromRelationshipItems(assignmentGroup.Data.Relationships.Devices.Data)
+	state.Profiles = buildStringSetFromRelationshipItems(assignmentGroup.Data.Relationships.Profiles.Data)
 
 	// Overwrite items with refreshed state
 	state.Name = types.StringValue(assignmentGroup.Data.Attributes.Name)
@@ -396,7 +349,21 @@ func (r *assignment_groupResource) Read(ctx context.Context, req resource.ReadRe
 	state.GroupType = types.StringValue(assignmentGroup.Data.Attributes.Type)
 	if assignmentGroup.Data.Attributes.Type == "munki" {
 		state.InstallType = types.StringValue(assignmentGroup.Data.Attributes.InstallType)
+	} else {
+		state.InstallType = types.StringNull()
 	}
+	if assignmentGroup.Data.Attributes.CreatedAt != "" {
+		state.CreatedAt = types.StringValue(assignmentGroup.Data.Attributes.CreatedAt)
+	} else {
+		state.CreatedAt = types.StringNull()
+	}
+	if assignmentGroup.Data.Attributes.UpdatedAt != "" {
+		state.UpdatedAt = types.StringValue(assignmentGroup.Data.Attributes.UpdatedAt)
+	} else {
+		state.UpdatedAt = types.StringNull()
+	}
+	state.DeviceCount = types.Int64Value(int64(assignmentGroup.Data.Attributes.DeviceCount))
+	state.GroupCount = types.Int64Value(int64(assignmentGroup.Data.Attributes.GroupCount))
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
