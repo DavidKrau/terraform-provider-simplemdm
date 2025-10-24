@@ -302,12 +302,16 @@ func fetchApp(ctx context.Context, client *simplemdm.Client, appID string) (*app
 	return &app, nil
 }
 
-func (r *appResource) appCreateWithBinary(ctx context.Context, binaryPath, name string) (*simplemdm.SimplemdmDefaultStruct, error) {
+func (r *appResource) appCreateWithBinary(ctx context.Context, binaryPath, name string) (_ *simplemdm.SimplemdmDefaultStruct, err error) {
 	file, err := os.Open(binaryPath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to open app binary %q: %w", binaryPath, err)
 	}
-	defer file.Close()
+	defer func() {
+		if cerr := file.Close(); err == nil && cerr != nil {
+			err = fmt.Errorf("unable to close app binary %q: %w", binaryPath, cerr)
+		}
+	}()
 
 	payload := &bytes.Buffer{}
 	writer := multipart.NewWriter(payload)
@@ -351,12 +355,16 @@ func (r *appResource) appCreateWithBinary(ctx context.Context, binaryPath, name 
 	return &app, nil
 }
 
-func (r *appResource) appUpdateWithBinary(ctx context.Context, appID, binaryPath, name, deployTo string) error {
+func (r *appResource) appUpdateWithBinary(ctx context.Context, appID, binaryPath, name, deployTo string) (err error) {
 	file, err := os.Open(binaryPath)
 	if err != nil {
 		return fmt.Errorf("unable to open app binary %q: %w", binaryPath, err)
 	}
-	defer file.Close()
+	defer func() {
+		if cerr := file.Close(); err == nil && cerr != nil {
+			err = fmt.Errorf("unable to close app binary %q: %w", binaryPath, cerr)
+		}
+	}()
 
 	payload := &bytes.Buffer{}
 	writer := multipart.NewWriter(payload)
