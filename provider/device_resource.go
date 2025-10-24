@@ -6,7 +6,9 @@ import (
 	"strings"
 
 	"github.com/DavidKrau/simplemdm-go-client"
+	"github.com/DavidKrau/terraform-provider-simplemdm/internal/simplemdmext"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -32,6 +34,7 @@ type deviceResourceModel struct {
 	DeviceGroup    types.String `tfsdk:"devicegroup"`
 	DeviceName     types.String `tfsdk:"devicename"`
 	EnrollmentURL  types.String `tfsdk:"enrollmenturl"`
+	Details        types.Map    `tfsdk:"details"`
 }
 
 // deviceGroupResource is a helper function to simplify the provider implementation.
@@ -107,6 +110,11 @@ func (r *deviceResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				},
 				Description: "SimpleMDM enrollment URL is generated when new device is created via API.",
 			},
+			"details": schema.MapAttribute{
+				ElementType: types.StringType,
+				Computed:    true,
+				Description: "Full set of attributes returned by the SimpleMDM device record.",
+			},
 		},
 	}
 }
@@ -175,16 +183,22 @@ func (r *deviceResource) Create(ctx context.Context, req resource.CreateRequest,
 		}
 	}
 
-	// Map response body to schema and populate Computed attribute values
-	//mataDataLink := fmt.Sprintf("%s/%s/%s", r.client.HostName, "private", secret.MetadataKey)
-	//plan.MetaDataLink = types.StringValue(mataDataLink)
-	//plan.SecretValue = types.StringValue(secret.Value)
+	// Refresh state from API to populate computed attributes and relationships
+	apiDevice, err := simplemdmext.GetDevice(ctx, r.client, plan.ID.ValueString(), true)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading SimpleMDM device",
+			"Could not read SimpleMDM device "+plan.ID.ValueString()+": "+err.Error(),
+		)
+		return
+	}
 
-	//secretLink := fmt.Sprintf("%s/%s/%s", r.client.HostName, "secret", secret.SecretKey)
-	//plan.SecretLink = types.StringValue(secretLink)
+        resp.Diagnostics.Append(r.assignAPIValues(ctx, apiDevice, &plan)...)
+        if resp.Diagnostics.HasError() {
+                return
+        }
 
-	// Set state to fully populated data
-	diags = resp.State.Set(ctx, plan)
+        diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -200,20 +214,13 @@ func (r *deviceResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	resp.Diagnostics.AddWarning(
-		"Notice about profiles:",
-		"API limitations is currently not allowing terraform provider to get state of the profiles assigned to device."+
-			" This is not issue as long as you are using only terraform provider to manage profiles on the device."+
-			" This will be implemented properly once API will have correct responses and we will be able to load profiles assigned to device via API.",
-	)
-
-	// Get device group value from SimpleMDM
-	device, err := r.client.DeviceGet(state.ID.ValueString())
+	apiDevice, err := simplemdmext.GetDevice(ctx, r.client, state.ID.ValueString(), true)
 	if err != nil {
 		if strings.Contains(err.Error(), "404") {
 			resp.State.RemoveResource(ctx)
 			return
 		}
+
 		resp.Diagnostics.AddError(
 			"Error Reading SimpleMDM device",
 			"Could not read SimpleMDM device "+state.ID.ValueString()+": "+err.Error(),
@@ -221,34 +228,11 @@ func (r *deviceResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	//adding attributes to the map
-	attributePresent := false
-	attributesElements := map[string]attr.Value{}
-	for _, attribute := range device.Data.Relationships.CustomAttributes.Data {
-		if attribute.Attributes.Value != "" {
-			attributesElements[attribute.ID] = types.StringValue(attribute.Attributes.Value)
-			attributePresent = true
-		}
-	}
-	if attributePresent {
-		attributesSetValue, _ := types.MapValue(types.StringType, attributesElements)
-		state.Attributes = attributesSetValue
-	} else {
-		attributesSetValue := types.MapNull(types.StringType)
-		state.Attributes = attributesSetValue
+	resp.Diagnostics.Append(r.assignAPIValues(ctx, apiDevice, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	// Overwrite items with refreshed state
-	state.Name = types.StringValue(device.Data.Attributes.Name)
-	state.DeviceName = types.StringValue(device.Data.Attributes.Name)
-	state.DeviceGroup = types.StringValue(strconv.Itoa(device.Data.Relationships.DeviceGroup.Data.ID))
-	if device.Data.Attributes.EnrollmentURL == "" {
-		state.EnrollmentURL = types.StringValue("nil")
-	} else {
-		state.EnrollmentURL = types.StringValue(device.Data.Attributes.EnrollmentURL)
-	}
-
-	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -442,4 +426,59 @@ func (r *deviceResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		)
 		return
 	}
+}
+
+func (r *deviceResource) assignAPIValues(ctx context.Context, apiDevice *simplemdmext.DeviceResponse, model *deviceResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	flatAttributes := simplemdmext.FlattenAttributes(apiDevice.Data.Attributes)
+	detailsValue, detailsDiags := types.MapValueFrom(ctx, types.StringType, flatAttributes)
+	diags.Append(detailsDiags...)
+	if !detailsValue.IsNull() {
+		model.Details = detailsValue
+	} else {
+		model.Details = types.MapNull(types.StringType)
+	}
+
+	if id := apiDevice.Data.ID; id != 0 {
+		model.ID = types.StringValue(strconv.Itoa(id))
+	}
+
+	if name, ok := flatAttributes["name"]; ok && name != "" {
+		model.Name = types.StringValue(name)
+	}
+
+	if deviceName, ok := flatAttributes["device_name"]; ok && deviceName != "" {
+		model.DeviceName = types.StringValue(deviceName)
+	} else if model.DeviceName.IsNull() {
+		model.DeviceName = types.StringNull()
+	}
+
+	enrollmentURL := flatAttributes["enrollment_url"]
+	if enrollmentURL != "" && enrollmentURL != "null" {
+		model.EnrollmentURL = types.StringValue(enrollmentURL)
+	} else {
+		model.EnrollmentURL = types.StringNull()
+	}
+
+	if groupID := apiDevice.Data.Relationships.DeviceGroup.Data.ID; groupID != 0 {
+		model.DeviceGroup = types.StringValue(strconv.Itoa(groupID))
+	}
+
+	attributeValues := map[string]attr.Value{}
+	for _, attribute := range apiDevice.Data.Relationships.CustomAttributeValues.Data {
+		if attribute.Attributes.Value != "" {
+			attributeValues[attribute.ID] = types.StringValue(attribute.Attributes.Value)
+		}
+	}
+
+	if len(attributeValues) > 0 {
+		attributesMap, attrDiags := types.MapValue(types.StringType, attributeValues)
+		diags.Append(attrDiags...)
+		model.Attributes = attributesMap
+	} else {
+		model.Attributes = types.MapNull(types.StringType)
+	}
+
+	return diags
 }

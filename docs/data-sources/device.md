@@ -27,4 +27,8 @@ data "simplemdm_device" "mydevice" {
 
 ### Read-Only
 
+- `details` (Map of String) Full set of attributes returned by the SimpleMDM API for the device.
+- `devicegroup` (String) Device group identifier for the device.
+- `devicename` (String) The hostname reported by the device.
+- `enrollmenturl` (String) Enrollment URL generated for the device, when available.
 - `name` (String) The SimpleMDM name of the device.

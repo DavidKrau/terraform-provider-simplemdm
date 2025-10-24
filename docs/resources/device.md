@@ -43,6 +43,7 @@ resource "simplemdm_device" "firstdevice" {
 
 ### Read-Only
 
+- `details` (Map of String) Full set of attributes returned by the SimpleMDM device record.
 - `enrollmenturl` (String) SimpleMDM enrollment URL is generated when new device is created via API.
 - `id` (String) The ID of the Device in SimpleMDM
 
