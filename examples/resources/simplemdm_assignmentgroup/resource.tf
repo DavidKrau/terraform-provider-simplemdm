@@ -4,13 +4,16 @@ resource "simplemdm_assignmentgroup" "myfirstgroup" {
   //auto deploy true or false, default is true
   auto_deploy = true
   //group type "standard" or "munki", defaults to standard. If this parameter is changed it will destroy/create whole group
-  group_type    = "standard"
-  install_type  = "managed"
-  apps          = [123456]
-  profiles      = [123456, 987654]
-  groups        = [135431, 654321]
-  devices       = [135431, 987654]
-  profiles_sync = false
-  apps_push     = false
-  apps_update   = false
+  group_type            = "standard"
+  install_type          = "managed"
+  priority              = 10
+  app_track_location    = true
+  apps                  = [123456]
+  profiles              = [123456, 987654]
+  groups                = [135431, 654321]
+  devices               = [135431, 987654]
+  devices_remove_others = false
+  profiles_sync         = false
+  apps_push             = false
+  apps_update           = false
 }

@@ -19,15 +19,18 @@ resource "simplemdm_assignmentgroup" "myfirstgroup" {
   //auto deploy true or false, default is true
   auto_deploy = true
   //group type "standard" or "munki", defaults to standard. If this parameter is changed it will destroy/create whole group
-  group_type    = "standard"
-  install_type  = "managed"
-  apps          = [123456]
-  profiles      = [123456, 987654]
-  groups        = [135431, 654321]
-  devices       = [135431, 987654]
-  profiles_sync = false
-  apps_push     = false
-  apps_update   = false
+  group_type            = "standard"
+  install_type          = "managed"
+  priority              = 10
+  app_track_location    = true
+  apps                  = [123456]
+  profiles              = [123456, 987654]
+  groups                = [135431, 654321]
+  devices               = [135431, 987654]
+  devices_remove_others = false
+  profiles_sync         = false
+  apps_push             = false
+  apps_update           = false
 }
 ```
 
@@ -40,14 +43,17 @@ resource "simplemdm_assignmentgroup" "myfirstgroup" {
 
 ### Optional
 
+- `app_track_location` (Boolean) Optional. Controls whether the SimpleMDM app tracks device location when installed.
 - `apps` (Set of String) Optional. List of Apps assigned to this assignment group
 - `apps_push` (Boolean) Optional. Set true if you would like to send push Apps command after assignment group creation or changes. Defaults to false.
 - `apps_update` (Boolean) Optional. Set true if you would like to send update Apps command after assignment group creation or changes. Defaults to false.
 - `auto_deploy` (Boolean) Optional. Whether the Apps should be automatically pushed to device(s) when they join this Assignment Group. Defaults to true
 - `devices` (Set of String) Optional. List of Devices assigned to this Assignment Group
+- `devices_remove_others` (Boolean) Optional. When true, devices assigned through Terraform will be removed from other assignment groups before being added to this one.
 - `group_type` (String) Optional. Type of assignment group. Must be one of standard (for MDM app/media deployments) or munki for Munki app deployments. Defaults to standard.
 - `groups` (Set of String) Optional. List of Device Groups assigned to this Assignment Group
 - `install_type` (String) Optional. The install type for munki assignment groups. Must be one of managed, self_serve, managed_updates or default_installs. This setting has no effect for non-munki (standard) assignment groups. Defaults to managed.
+- `priority` (Number) Optional. Sets the priority order in which assignment groups are evaluated when devices are part of multiple groups.
 - `profiles` (Set of String) Optional. List of Configuration Profiles (both Custom and predefined Profiles) assigned to this assignment group
 - `profiles_sync` (Boolean) Optional. Set true if you would like to send Sync Profiles command after Assignment Group creation or changes. Defaults to false.
 

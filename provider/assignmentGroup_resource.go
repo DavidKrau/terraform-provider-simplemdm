@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/DavidKrau/simplemdm-go-client"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -27,22 +28,25 @@ var (
 
 // assignment_groupResourceModel maps the resource schema data.
 type assignment_groupResourceModel struct {
-	Name         types.String `tfsdk:"name"`
-	AutoDeploy   types.Bool   `tfsdk:"auto_deploy"`
-	GroupType    types.String `tfsdk:"group_type"`
-	InstallType  types.String `tfsdk:"install_type"`
-	ID           types.String `tfsdk:"id"`
-	Apps         types.Set    `tfsdk:"apps"`
-	AppsUpdate   types.Bool   `tfsdk:"apps_update"`
-	AppsPush     types.Bool   `tfsdk:"apps_push"`
-	Profiles     types.Set    `tfsdk:"profiles"`
-	ProfilesSync types.Bool   `tfsdk:"profiles_sync"`
-	Groups       types.Set    `tfsdk:"groups"`
-	Devices      types.Set    `tfsdk:"devices"`
-	CreatedAt    types.String `tfsdk:"created_at"`
-	UpdatedAt    types.String `tfsdk:"updated_at"`
-	DeviceCount  types.Int64  `tfsdk:"device_count"`
-	GroupCount   types.Int64  `tfsdk:"group_count"`
+	Name                types.String `tfsdk:"name"`
+	AutoDeploy          types.Bool   `tfsdk:"auto_deploy"`
+	GroupType           types.String `tfsdk:"group_type"`
+	InstallType         types.String `tfsdk:"install_type"`
+	Priority            types.Int64  `tfsdk:"priority"`
+	AppTrackLocation    types.Bool   `tfsdk:"app_track_location"`
+	ID                  types.String `tfsdk:"id"`
+	Apps                types.Set    `tfsdk:"apps"`
+	AppsUpdate          types.Bool   `tfsdk:"apps_update"`
+	AppsPush            types.Bool   `tfsdk:"apps_push"`
+	Profiles            types.Set    `tfsdk:"profiles"`
+	ProfilesSync        types.Bool   `tfsdk:"profiles_sync"`
+	Groups              types.Set    `tfsdk:"groups"`
+	Devices             types.Set    `tfsdk:"devices"`
+	DevicesRemoveOthers types.Bool   `tfsdk:"devices_remove_others"`
+	CreatedAt           types.String `tfsdk:"created_at"`
+	UpdatedAt           types.String `tfsdk:"updated_at"`
+	DeviceCount         types.Int64  `tfsdk:"device_count"`
+	GroupCount          types.Int64  `tfsdk:"group_count"`
 }
 
 // AssignmentGroupResource is a helper function to simplify the provider implementation.
@@ -115,6 +119,20 @@ func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRe
 				},
 				Description: "Optional. The install type for munki assignment groups. Must be one of managed, self_serve, managed_updates or default_installs. This setting has no effect for non-munki (standard) assignment groups. Defaults to managed.",
 			},
+			"priority": schema.Int64Attribute{
+				Optional: true,
+				Computed: true,
+				Validators: []validator.Int64{
+					int64validator.AtLeast(0),
+				},
+				Description: "Optional. Sets the priority order in which assignment groups are evaluated when devices are part of multiple groups.",
+			},
+			"app_track_location": schema.BoolAttribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(true),
+				Description: "Optional. Controls whether the SimpleMDM app tracks device location when installed.",
+			},
 			"apps": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
@@ -153,6 +171,12 @@ func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRe
 				Optional:    true,
 				Description: "Optional. List of Devices assigned to this Assignment Group",
 			},
+			"devices_remove_others": schema.BoolAttribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(false),
+				Description: "Optional. When true, devices assigned through Terraform will be removed from other assignment groups before being added to this one.",
+			},
 			"created_at": schema.StringAttribute{
 				Computed:    true,
 				Description: "Timestamp when the assignment group was created.",
@@ -189,8 +213,14 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	// Generate API request body from plan
-	assignmentgroup, err := r.client.AssignmentGroupCreate(plan.Name.ValueString(), plan.AutoDeploy.ValueBool(), plan.GroupType.ValueString(), plan.InstallType.ValueString())
+	assignmentgroup, err := createAssignmentGroup(ctx, r.client, assignmentGroupUpsertRequest{
+		Name:             plan.Name.ValueString(),
+		AutoDeploy:       boolPointerFromType(plan.AutoDeploy),
+		GroupType:        stringPointerFromType(plan.GroupType),
+		InstallType:      stringPointerFromType(plan.InstallType),
+		Priority:         int64PointerFromType(plan.Priority),
+		AppTrackLocation: boolPointerFromType(plan.AppTrackLocation),
+	})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating assignment group",
@@ -239,7 +269,7 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 
 	//assign all devices in plan
 	for _, deviceId := range plan.Devices.Elements() {
-		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), strings.Replace(deviceId.String(), "\"", "", 2), "devices")
+		err := assignmentGroupAssignDevice(ctx, r.client, plan.ID.ValueString(), strings.Replace(deviceId.String(), "\"", "", 2), boolValueOrDefault(plan.DevicesRemoveOthers, false))
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group device group assignment",
@@ -306,6 +336,17 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 		}
 	}
 
+	fetched, err := fetchAssignmentGroup(ctx, r.client, plan.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error refreshing assignment group state",
+			"Could not read assignment group after creation: "+err.Error(),
+		)
+		return
+	}
+
+	applyAssignmentGroupResponseToResourceModel(&plan, fetched)
+
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -338,32 +379,7 @@ func (r *assignment_groupResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	state.Apps = buildStringSetFromRelationshipItems(assignmentGroup.Data.Relationships.Apps.Data)
-	state.Groups = buildStringSetFromRelationshipItems(assignmentGroup.Data.Relationships.DeviceGroups.Data)
-	state.Devices = buildStringSetFromRelationshipItems(assignmentGroup.Data.Relationships.Devices.Data)
-	state.Profiles = buildStringSetFromRelationshipItems(assignmentGroup.Data.Relationships.Profiles.Data)
-
-	// Overwrite items with refreshed state
-	state.Name = types.StringValue(assignmentGroup.Data.Attributes.Name)
-	state.AutoDeploy = types.BoolValue(assignmentGroup.Data.Attributes.AutoDeploy)
-	state.GroupType = types.StringValue(assignmentGroup.Data.Attributes.Type)
-	if assignmentGroup.Data.Attributes.Type == "munki" {
-		state.InstallType = types.StringValue(assignmentGroup.Data.Attributes.InstallType)
-	} else {
-		state.InstallType = types.StringNull()
-	}
-	if assignmentGroup.Data.Attributes.CreatedAt != "" {
-		state.CreatedAt = types.StringValue(assignmentGroup.Data.Attributes.CreatedAt)
-	} else {
-		state.CreatedAt = types.StringNull()
-	}
-	if assignmentGroup.Data.Attributes.UpdatedAt != "" {
-		state.UpdatedAt = types.StringValue(assignmentGroup.Data.Attributes.UpdatedAt)
-	} else {
-		state.UpdatedAt = types.StringNull()
-	}
-	state.DeviceCount = types.Int64Value(int64(assignmentGroup.Data.Attributes.DeviceCount))
-	state.GroupCount = types.Int64Value(int64(assignmentGroup.Data.Attributes.GroupCount))
+	applyAssignmentGroupResponseToResourceModel(&state, assignmentGroup)
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
@@ -384,8 +400,14 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
-	// Generate API request body from plan
-	err := r.client.AssignmentGroupUpdate(plan.Name.ValueString(), plan.AutoDeploy.ValueBool(), plan.ID.ValueString(), plan.GroupType.ValueString(), plan.InstallType.ValueString())
+	err := updateAssignmentGroup(ctx, r.client, plan.ID.ValueString(), assignmentGroupUpsertRequest{
+		Name:             plan.Name.ValueString(),
+		AutoDeploy:       boolPointerFromType(plan.AutoDeploy),
+		GroupType:        stringPointerFromType(plan.GroupType),
+		InstallType:      stringPointerFromType(plan.InstallType),
+		Priority:         int64PointerFromType(plan.Priority),
+		AppTrackLocation: boolPointerFromType(plan.AppTrackLocation),
+	})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating assignment group",
@@ -520,7 +542,7 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 	}
 	//reading configured apps in TF file
 	planDevices := []string{}
-	for _, device := range plan.Groups.Elements() {
+	for _, device := range plan.Devices.Elements() {
 		planDevices = append(planDevices, strings.Replace(device.String(), "\"", "", 2))
 	}
 	//creating diff
@@ -528,7 +550,7 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 
 	//groups to add
 	for _, deviceId := range devicesToAdd {
-		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), deviceId, "devices")
+		err := assignmentGroupAssignDevice(ctx, r.client, plan.ID.ValueString(), deviceId, boolValueOrDefault(plan.DevicesRemoveOthers, false))
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group device group assignment",
@@ -582,6 +604,17 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 			return
 		}
 	}
+
+	fetched, err := fetchAssignmentGroup(ctx, r.client, plan.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error refreshing assignment group state",
+			"Could not read assignment group after update: "+err.Error(),
+		)
+		return
+	}
+
+	applyAssignmentGroupResponseToResourceModel(&plan, fetched)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -641,4 +674,39 @@ func diffFunction(state []string, plan []string) (add []string, remove []string)
 		}
 	}
 	return IDsToAdd, IDsToRemove
+}
+
+func boolPointerFromType(value types.Bool) *bool {
+	if value.IsNull() || value.IsUnknown() {
+		return nil
+	}
+
+	v := value.ValueBool()
+	return &v
+}
+
+func stringPointerFromType(value types.String) *string {
+	if value.IsNull() || value.IsUnknown() {
+		return nil
+	}
+
+	v := value.ValueString()
+	return &v
+}
+
+func int64PointerFromType(value types.Int64) *int64 {
+	if value.IsNull() || value.IsUnknown() {
+		return nil
+	}
+
+	v := value.ValueInt64()
+	return &v
+}
+
+func boolValueOrDefault(value types.Bool, fallback bool) bool {
+	if value.IsNull() || value.IsUnknown() {
+		return fallback
+	}
+
+	return value.ValueBool()
 }
