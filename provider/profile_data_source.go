@@ -20,6 +20,7 @@ var (
 // ProfileDataSourceModel maps the data source schema data.
 type profileDataSourceModel struct {
 	ID                     types.String `tfsdk:"id"`
+	Type                   types.String `tfsdk:"type"`
 	Name                   types.String `tfsdk:"name"`
 	AutoDeploy             types.Bool   `tfsdk:"auto_deploy"`
 	InstallType            types.String `tfsdk:"install_type"`
@@ -30,6 +31,7 @@ type profileDataSourceModel struct {
 	EscapeAttributes       types.Bool   `tfsdk:"escape_attributes"`
 	GroupCount             types.Int64  `tfsdk:"group_count"`
 	DeviceCount            types.Int64  `tfsdk:"device_count"`
+	GroupIDs               types.Set    `tfsdk:"group_ids"`
 	ProfileSHA             types.String `tfsdk:"profile_sha"`
 	Source                 types.String `tfsdk:"source"`
 	CreatedAt              types.String `tfsdk:"created_at"`
@@ -59,6 +61,10 @@ func (d *profileDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 			"id": schema.StringAttribute{
 				Required:    true,
 				Description: "The ID of the Profile.",
+			},
+			"type": schema.StringAttribute{
+				Computed:    true,
+				Description: "The profile payload type reported by SimpleMDM.",
 			},
 			"name": schema.StringAttribute{
 				Computed:    true,
@@ -100,6 +106,11 @@ func (d *profileDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 				Computed:    true,
 				Description: "Number of devices currently assigned to the profile.",
 			},
+			"group_ids": schema.SetAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "IDs of device or assignment groups currently assigned to the profile.",
+			},
 			"profile_sha": schema.StringAttribute{
 				Computed:    true,
 				Description: "SHA hash reported by SimpleMDM for the profile contents.",
@@ -126,7 +137,16 @@ func (d *profileDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
-	profile, err := d.client.ProfileGet(state.ID.ValueString())
+	profile, err := fetchProfile(ctx, d.client, state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Read SimpleMDM profile",
+			err.Error(),
+		)
+		return
+	}
+
+	groupIDs, err := convertGroupIDs(ctx, profile.Data.Relationships)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read SimpleMDM profile",
@@ -137,16 +157,22 @@ func (d *profileDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 	// Map response body to model
 	state.ID = types.StringValue(strconv.Itoa(profile.Data.ID))
+	if profile.Data.Type != "" {
+		state.Type = types.StringValue(profile.Data.Type)
+	} else {
+		state.Type = types.StringNull()
+	}
 	state.Name = types.StringValue(profile.Data.Attributes.Name)
 	state.AutoDeploy = types.BoolValue(profile.Data.Attributes.AutoDeploy)
 	state.InstallType = types.StringValue(profile.Data.Attributes.InstallType)
-	state.ReinstallAfterOSUpdate = types.BoolValue(profile.Data.Attributes.ReinstallAfterOsUpdate)
+	state.ReinstallAfterOSUpdate = types.BoolValue(profile.Data.Attributes.ReinstallAfterOSUpdate)
 	state.ProfileIdentifier = types.StringValue(profile.Data.Attributes.ProfileIdentifier)
 	state.UserScope = types.BoolValue(profile.Data.Attributes.UserScope)
 	state.AttributeSupport = types.BoolValue(profile.Data.Attributes.AttributeSupport)
 	state.EscapeAttributes = types.BoolValue(profile.Data.Attributes.EscapeAttributes)
 	state.GroupCount = types.Int64Value(int64(profile.Data.Attributes.GroupCount))
 	state.DeviceCount = types.Int64Value(int64(profile.Data.Attributes.DeviceCount))
+	state.GroupIDs = groupIDs
 	state.ProfileSHA = types.StringValue(profile.Data.Attributes.ProfileSHA)
 	state.Source = types.StringValue(profile.Data.Attributes.Source)
 	state.CreatedAt = types.StringValue(profile.Data.Attributes.CreatedAt)

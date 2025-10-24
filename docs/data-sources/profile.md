@@ -33,11 +33,13 @@ data "simplemdm_profile" "profile" {
 - `device_count` (Number) Number of devices currently assigned to the profile.
 - `escape_attributes` (Boolean) Whether attribute values are escaped during installation.
 - `group_count` (Number) Number of device groups currently assigned to the profile.
+- `group_ids` (Set of String) IDs of device or assignment groups currently assigned to the profile.
 - `install_type` (String) The install type configured for the profile.
 - `name` (String) The name of the Profile.
 - `profile_identifier` (String) The identifier contained within the profile payload.
 - `profile_sha` (String) SHA hash reported by SimpleMDM for the profile contents.
 - `reinstall_after_os_update` (Boolean) Whether the profile reinstalls automatically after macOS updates.
 - `source` (String) Origin of the profile within SimpleMDM.
+- `type` (String) The profile payload type reported by SimpleMDM.
 - `updated_at` (String) Timestamp when the profile was last updated.
 - `user_scope` (Boolean) Indicates if the profile is installed in the user scope.
