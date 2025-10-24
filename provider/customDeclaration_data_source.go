@@ -18,19 +18,27 @@ type customDeclarationDataSource struct {
 }
 
 type customDeclarationDataSourceModel struct {
-	ID              types.String `tfsdk:"id"`
-	Name            types.String `tfsdk:"name"`
-	Identifier      types.String `tfsdk:"identifier"`
-	DeclarationType types.String `tfsdk:"declaration_type"`
-	Topic           types.String `tfsdk:"topic"`
-	Transport       types.String `tfsdk:"transport"`
-	Description     types.String `tfsdk:"description"`
-	Platforms       types.Set    `tfsdk:"platforms"`
-	Data            types.String `tfsdk:"data"`
-	Active          types.Bool   `tfsdk:"active"`
-	Priority        types.Int64  `tfsdk:"priority"`
-	CreatedAt       types.String `tfsdk:"created_at"`
-	UpdatedAt       types.String `tfsdk:"updated_at"`
+	ID                  types.String `tfsdk:"id"`
+	Name                types.String `tfsdk:"name"`
+	Identifier          types.String `tfsdk:"identifier"`
+	DeclarationType     types.String `tfsdk:"declaration_type"`
+	Topic               types.String `tfsdk:"topic"`
+	Transport           types.String `tfsdk:"transport"`
+	Description         types.String `tfsdk:"description"`
+	Platforms           types.Set    `tfsdk:"platforms"`
+	Data                types.String `tfsdk:"data"`
+	Active              types.Bool   `tfsdk:"active"`
+	Priority            types.Int64  `tfsdk:"priority"`
+	Payload             types.String `tfsdk:"payload"`
+	UserScope           types.Bool   `tfsdk:"user_scope"`
+	AttributeSupport    types.Bool   `tfsdk:"attribute_support"`
+	EscapeAttributes    types.Bool   `tfsdk:"escape_attributes"`
+	ActivationPredicate types.String `tfsdk:"activation_predicate"`
+	ProfileIdentifier   types.String `tfsdk:"profile_identifier"`
+	GroupCount          types.Int64  `tfsdk:"group_count"`
+	DeviceCount         types.Int64  `tfsdk:"device_count"`
+	CreatedAt           types.String `tfsdk:"created_at"`
+	UpdatedAt           types.String `tfsdk:"updated_at"`
 }
 
 var _ datasource.DataSource = &customDeclarationDataSource{}
@@ -85,6 +93,10 @@ func (d *customDeclarationDataSource) Schema(_ context.Context, _ datasource.Sch
 				Computed:    true,
 				Description: "JSON payload of the declaration data.",
 			},
+			"payload": schema.StringAttribute{
+				Computed:    true,
+				Description: "Alias that mirrors the JSON payload returned by the SimpleMDM download endpoint.",
+			},
 			"active": schema.BoolAttribute{
 				Computed:    true,
 				Description: "Whether the declaration is active.",
@@ -92,6 +104,34 @@ func (d *customDeclarationDataSource) Schema(_ context.Context, _ datasource.Sch
 			"priority": schema.Int64Attribute{
 				Computed:    true,
 				Description: "Priority value used for ordering declarations.",
+			},
+			"user_scope": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Whether the declaration is scoped to users (true) or devices (false).",
+			},
+			"attribute_support": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Whether variable expansion is enabled for the declaration payload.",
+			},
+			"escape_attributes": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Whether custom variable values are escaped before being delivered.",
+			},
+			"activation_predicate": schema.StringAttribute{
+				Computed:    true,
+				Description: "Predicate that controls when the declaration activates on a device.",
+			},
+			"profile_identifier": schema.StringAttribute{
+				Computed:    true,
+				Description: "Identifier assigned by SimpleMDM for tracking the declaration profile.",
+			},
+			"group_count": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of device groups currently assigned to the declaration.",
+			},
+			"device_count": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of devices currently assigned to the declaration.",
 			},
 			"created_at": schema.StringAttribute{
 				Computed:    true,
@@ -145,6 +185,16 @@ func (d *customDeclarationDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
+	if len(declaration.Data.Attributes.Data) == 0 && len(declaration.Data.Attributes.Payload) == 0 {
+		raw, err := downloadCustomDeclarationPayload(ctx, d.client, state.ID.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError("Error downloading SimpleMDM custom declaration payload", err.Error())
+			return
+		}
+
+		declaration.Data.Attributes.Data = raw
+	}
+
 	var model customDeclarationResourceModel
 	if diags := model.refreshFromResponse(ctx, &declaration); diags.HasError() {
 		resp.Diagnostics.Append(diags...)
@@ -163,6 +213,14 @@ func (d *customDeclarationDataSource) Read(ctx context.Context, req datasource.R
 	state.Data = model.Data
 	state.Active = model.Active
 	state.Priority = model.Priority
+	state.Payload = model.Payload
+	state.UserScope = model.UserScope
+	state.AttributeSupport = model.AttributeSupport
+	state.EscapeAttributes = model.EscapeAttributes
+	state.ActivationPredicate = model.ActivationPredicate
+	state.ProfileIdentifier = model.ProfileIdentifier
+	state.GroupCount = model.GroupCount
+	state.DeviceCount = model.DeviceCount
 	state.CreatedAt = model.CreatedAt
 	state.UpdatedAt = model.UpdatedAt
 

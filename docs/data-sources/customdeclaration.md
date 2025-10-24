@@ -21,15 +21,23 @@ Custom Declaration data source retrieves Declarative Device Management custom de
 
 ### Read-Only
 
+- `activation_predicate` (String) Predicate that controls when the declaration activates on a device.
 - `active` (Boolean) Whether the declaration is active.
+- `attribute_support` (Boolean) Whether variable expansion is enabled for the declaration payload.
 - `created_at` (String) Timestamp when the declaration was created in SimpleMDM.
 - `data` (String) JSON payload of the declaration data.
 - `declaration_type` (String) Declaration type reported to Apple devices.
 - `description` (String) Description of the declaration.
+- `device_count` (Number) Number of devices currently assigned to the declaration.
+- `escape_attributes` (Boolean) Whether custom variable values are escaped before being delivered.
+- `group_count` (Number) Number of device groups currently assigned to the declaration.
 - `identifier` (String) Unique declaration identifier.
 - `name` (String) Human readable name for the declaration.
+- `payload` (String) Alias that mirrors the JSON payload returned by the SimpleMDM download endpoint.
 - `platforms` (Set of String) List of platforms that receive the declaration.
 - `priority` (Number) Priority value used for ordering declarations.
+- `profile_identifier` (String) Identifier assigned by SimpleMDM for tracking the declaration profile.
 - `topic` (String) Topic used for declarative management payloads.
 - `transport` (String) Transport mechanism for the declaration.
 - `updated_at` (String) Timestamp when the declaration was last updated in SimpleMDM.
+- `user_scope` (Boolean) Whether the declaration is scoped to users (true) or devices (false).

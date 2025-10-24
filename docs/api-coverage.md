@@ -15,7 +15,7 @@ The SimpleMDM API documentation is published at https://api.simplemdm.com/v1. Th
 | Assignment Groups | `/api/v1/assignment_groups` | `simplemdm_assignmentgroup` | `simplemdm_assignmentgroup` | Covered |
 | Custom Attributes | `/api/v1/custom_attributes` | `simplemdm_attribute` | `simplemdm_attribute` | Covered |
 | Custom Configuration Profiles | `/api/v1/custom_configuration_profiles` | `simplemdm_customprofile` | `simplemdm_customprofile` | Covered |
-| Custom Declarations | `/api/v1/custom_declarations` | `simplemdm_customdeclaration` | `simplemdm_customdeclaration` | Covered |
+| Custom Declarations | `/api/v1/custom_declarations`, `/api/v1/custom_declarations/{PROFILE_ID}/devices/{DEVICE_ID}` | `simplemdm_customdeclaration`, `simplemdm_customdeclaration_device_assignment` | `simplemdm_customdeclaration` | Covered (resource manages declaration lifecycle and payload download; assignment resource handles device-level deployment) |
 | DEP Servers | `/api/v1/dep_servers` | - | - | Not covered |
 | Devices | `/api/v1/devices` | `simplemdm_device` | `simplemdm_device` | Covered |
 | Device Groups (deprecated) | `/api/v1/device_groups` | `simplemdm_devicegroup` | `simplemdm_devicegroup` | Covered |
