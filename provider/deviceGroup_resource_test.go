@@ -25,11 +25,15 @@ func TestAccDeviceGroupResource(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:            providerConfig + testAccDeviceGroupResourceConfig(name, attributeKey, attributeValue, profileID, customProfileID),
-				ResourceName:      "simplemdm_devicegroup.test",
-				ImportState:       true,
-				ImportStateId:     groupID,
-				ImportStateVerify: true,
+				Config:             providerConfig + testAccDeviceGroupResourceConfig(name, attributeKey, attributeValue, profileID, customProfileID),
+				ResourceName:       "simplemdm_devicegroup.test",
+				ImportState:        true,
+				ImportStateId:      groupID,
+				ImportStatePersist: true,
+				ImportStateVerify:  true,
+			},
+			{
+				Config: providerConfig + testAccDeviceGroupResourceConfig(name, attributeKey, attributeValue, profileID, customProfileID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("simplemdm_devicegroup.test", "name", name),
 					resource.TestCheckResourceAttr("simplemdm_devicegroup.test", fmt.Sprintf("attributes.%s", attributeKey), attributeValue),
