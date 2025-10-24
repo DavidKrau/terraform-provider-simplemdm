@@ -5,13 +5,14 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccDeviceGroupResource(t *testing.T) {
 	testAccPreCheck(t)
 	_ = testAccRequireEnv(t, "SIMPLEMDM_RUN_DEVICE_GROUP_RESOURCE_TESTS")
 
-	groupID := testAccRequireEnv(t, "SIMPLEMDM_DEVICE_GROUP_ID")
+	cloneSourceID := testAccRequireEnv(t, "SIMPLEMDM_DEVICE_GROUP_CLONE_SOURCE_ID")
 	name := testAccRequireEnv(t, "SIMPLEMDM_DEVICE_GROUP_NAME")
 	attributeKey := testAccRequireEnv(t, "SIMPLEMDM_DEVICE_GROUP_ATTRIBUTE_KEY")
 	attributeValue := testAccRequireEnv(t, "SIMPLEMDM_DEVICE_GROUP_ATTRIBUTE_VALUE")
@@ -25,15 +26,7 @@ func TestAccDeviceGroupResource(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:             providerConfig + testAccDeviceGroupResourceConfig(name, attributeKey, attributeValue, profileID, customProfileID),
-				ResourceName:       "simplemdm_devicegroup.test",
-				ImportState:        true,
-				ImportStateId:      groupID,
-				ImportStatePersist: true,
-				ImportStateVerify:  true,
-			},
-			{
-				Config: providerConfig + testAccDeviceGroupResourceConfig(name, attributeKey, attributeValue, profileID, customProfileID),
+				Config: providerConfig + testAccDeviceGroupResourceConfig(name, attributeKey, attributeValue, profileID, customProfileID, cloneSourceID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("simplemdm_devicegroup.test", "name", name),
 					resource.TestCheckResourceAttr("simplemdm_devicegroup.test", fmt.Sprintf("attributes.%s", attributeKey), attributeValue),
@@ -41,11 +34,24 @@ func TestAccDeviceGroupResource(t *testing.T) {
 					resource.TestCheckResourceAttr("simplemdm_devicegroup.test", "profiles.0", profileID),
 					resource.TestCheckResourceAttr("simplemdm_devicegroup.test", "customprofiles.#", "1"),
 					resource.TestCheckResourceAttr("simplemdm_devicegroup.test", "customprofiles.0", customProfileID),
-					resource.TestCheckResourceAttr("simplemdm_devicegroup.test", "id", groupID),
+					resource.TestCheckResourceAttrSet("simplemdm_devicegroup.test", "id"),
 				),
 			},
 			{
-				Config: providerConfig + testAccDeviceGroupResourceConfig(name, attributeKey, attributeUpdatedValue, profileUpdatedID, customProfileUpdatedID),
+				ResourceName:      "simplemdm_devicegroup.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources["simplemdm_devicegroup.test"]
+					if !ok {
+						return "", fmt.Errorf("resource not found: simplemdm_devicegroup.test")
+					}
+
+					return rs.Primary.ID, nil
+				},
+			},
+			{
+				Config: providerConfig + testAccDeviceGroupResourceConfig(name, attributeKey, attributeUpdatedValue, profileUpdatedID, customProfileUpdatedID, cloneSourceID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("simplemdm_devicegroup.test", "name", name),
 					resource.TestCheckResourceAttr("simplemdm_devicegroup.test", fmt.Sprintf("attributes.%s", attributeKey), attributeUpdatedValue),
@@ -57,7 +63,7 @@ func TestAccDeviceGroupResource(t *testing.T) {
 				),
 			},
 			{
-				Config: providerConfig + testAccDeviceGroupResourceConfig(name, attributeKey, attributeValue, profileID, customProfileID),
+				Config: providerConfig + testAccDeviceGroupResourceConfig(name, attributeKey, attributeValue, profileID, customProfileID, cloneSourceID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("simplemdm_devicegroup.test", "name", name),
 					resource.TestCheckResourceAttr("simplemdm_devicegroup.test", fmt.Sprintf("attributes.%s", attributeKey), attributeValue),
@@ -72,10 +78,11 @@ func TestAccDeviceGroupResource(t *testing.T) {
 	})
 }
 
-func testAccDeviceGroupResourceConfig(name, attributeKey, attributeValue, profileID, customProfileID string) string {
+func testAccDeviceGroupResourceConfig(name, attributeKey, attributeValue, profileID, customProfileID, cloneFrom string) string {
 	return fmt.Sprintf(`
 resource "simplemdm_devicegroup" "test" {
   name = %q
+  clone_from = %q
 
   attributes = {
     %q = %q
@@ -85,5 +92,5 @@ resource "simplemdm_devicegroup" "test" {
 
   customprofiles = [%s]
 }
-`, name, attributeKey, attributeValue, profileID, customProfileID)
+`, name, cloneFrom, attributeKey, attributeValue, profileID, customProfileID)
 }
