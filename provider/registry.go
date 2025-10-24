@@ -39,7 +39,7 @@ var resourceDefinitions = []ResourceDefinition{
 		DocsPath:     "docs/resources/attribute.md",
 		ExampleDirs:  []string{"examples/resources/simplemdm_attribute"},
 		TestFiles:    []string{"provider/attribute_resourse_test.go"},
-		APIEndpoints: []string{"/api/v1/attributes"},
+		APIEndpoints: []string{"/api/v1/custom_attributes"},
 	},
 	{
 		TypeName:     "simplemdm_assignmentgroup",
@@ -122,7 +122,7 @@ var dataSourceDefinitions = []DataSourceDefinition{
 		DocsPath:     "docs/data-sources/attribute.md",
 		ExampleDirs:  []string{"examples/data-sources/simplemdm_attribute"},
 		TestFiles:    []string{"provider/attribute_data_source_test.go"},
-		APIEndpoints: []string{"/api/v1/attributes"},
+		APIEndpoints: []string{"/api/v1/custom_attributes"},
 	},
 	{
 		TypeName:     "simplemdm_assignmentgroup",

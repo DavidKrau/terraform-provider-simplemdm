@@ -40,7 +40,11 @@ resource "simplemdm_customprofile" "myprofile" {
 
 ### Read-Only
 
+- `devicecount` (Number) Number of devices assigned to this custom configuration profile.
+- `groupcount` (Number) Number of device groups assigned to this custom configuration profile.
 - `id` (String) ID of a Custom Configuration Profile in SimpleMDM
+- `profileidentifier` (String) Read-only profile identifier assigned by SimpleMDM.
+- `profilesha` (String) SHA-256 checksum reported by SimpleMDM for the current mobileconfig payload.
 
 ## Import
 

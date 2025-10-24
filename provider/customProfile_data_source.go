@@ -3,7 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"strings"
 
 	"github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -19,8 +19,17 @@ var (
 
 // ProfileDataSourceModel maps the data source schema data.
 type customProfileDataSourceModel struct {
-	ID   types.String `tfsdk:"id"`
-	Name types.String `tfsdk:"name"`
+	ID                     types.String `tfsdk:"id"`
+	Name                   types.String `tfsdk:"name"`
+	MobileConfig           types.String `tfsdk:"mobileconfig"`
+	UserScope              types.Bool   `tfsdk:"userscope"`
+	AttributeSupport       types.Bool   `tfsdk:"attributesupport"`
+	EscapeAttributes       types.Bool   `tfsdk:"escapeattributes"`
+	ReinstallAfterOSUpdate types.Bool   `tfsdk:"reinstallafterosupdate"`
+	ProfileIdentifier      types.String `tfsdk:"profileidentifier"`
+	GroupCount             types.Int64  `tfsdk:"groupcount"`
+	DeviceCount            types.Int64  `tfsdk:"devicecount"`
+	ProfileSHA             types.String `tfsdk:"profilesha"`
 }
 
 // ProfileDataSource is a helper function to simplify the provider implementation.
@@ -43,6 +52,10 @@ func (d *customProfileDataSource) Schema(_ context.Context, _ datasource.SchemaR
 	resp.Schema = schema.Schema{
 		Description: "Custom Profile data source can be used together with Device(s), Assignment Group(s) or Device Group(s) to assign profiles to these objects.",
 		Attributes: map[string]schema.Attribute{
+			"mobileconfig": schema.StringAttribute{
+				Computed:    true,
+				Description: "Contents of the downloaded custom configuration profile.",
+			},
 			"name": schema.StringAttribute{
 				Computed:    true,
 				Description: "The name of the custom profile.",
@@ -50,6 +63,38 @@ func (d *customProfileDataSource) Schema(_ context.Context, _ datasource.SchemaR
 			"id": schema.StringAttribute{
 				Required:    true,
 				Description: "The ID of the custom profile.",
+			},
+			"userscope": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Whether the profile deploys as a user profile for macOS devices.",
+			},
+			"attributesupport": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Indicates whether variable substitution is enabled for the profile.",
+			},
+			"escapeattributes": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Indicates whether custom attribute values are escaped when substituted into the profile.",
+			},
+			"reinstallafterosupdate": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Whether the profile reinstalls automatically after macOS updates.",
+			},
+			"profileidentifier": schema.StringAttribute{
+				Computed:    true,
+				Description: "Profile identifier assigned by SimpleMDM.",
+			},
+			"groupcount": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of device groups currently assigned to this profile.",
+			},
+			"devicecount": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of devices currently assigned to this profile.",
+			},
+			"profilesha": schema.StringAttribute{
+				Computed:    true,
+				Description: "SHA-256 checksum reported by SimpleMDM for the profile payload.",
 			},
 		},
 	}
@@ -61,8 +106,16 @@ func (d *customProfileDataSource) Read(ctx context.Context, req datasource.ReadR
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
-	profiles, err := d.client.CustomProfileGetAll()
+	profile, err := d.client.CustomProfileGet(state.ID.ValueString())
 	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			resp.Diagnostics.AddError(
+				"Error Reading SimpleMDM custom profile",
+				"Custom profile with ID "+state.ID.ValueString()+" was not found.",
+			)
+			return
+		}
+
 		resp.Diagnostics.AddError(
 			"Unable to Read SimpleMDM profile",
 			err.Error(),
@@ -70,22 +123,34 @@ func (d *customProfileDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	profilefound := false
-	for _, profile := range profiles.Data {
-		if state.ID.ValueString() == strconv.Itoa(profile.ID) {
-			state.Name = types.StringValue(profile.Attributes.Name)
-			profilefound = true
-			break
-		}
-	}
+	state.Name = types.StringValue(profile.Data.Attributes.Name)
+	state.UserScope = types.BoolValue(profile.Data.Attributes.UserScope)
+	state.AttributeSupport = types.BoolValue(profile.Data.Attributes.AttributeSupport)
+	state.EscapeAttributes = types.BoolValue(profile.Data.Attributes.EscapeAttributes)
+	state.ReinstallAfterOSUpdate = types.BoolValue(profile.Data.Attributes.ReinstallAfterOsUpdate)
+	state.ProfileIdentifier = stringValueOrNull(profile.Data.Attributes.ProfileIdentifier)
+	state.GroupCount = types.Int64Value(int64(profile.Data.Attributes.GroupCount))
+	state.DeviceCount = types.Int64Value(int64(profile.Data.Attributes.DeviceCount))
 
-	if !profilefound {
+	sha, body, err := d.client.CustomProfileSHA(state.ID.ValueString())
+	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			resp.Diagnostics.AddError(
+				"Error Reading SimpleMDM custom profile",
+				"Custom profile payload for ID "+state.ID.ValueString()+" was not found.",
+			)
+			return
+		}
+
 		resp.Diagnostics.AddError(
-			"Error Reading SimpleMDM custom profile",
-			"Could not read custom profles ID %s from array:"+state.ID.ValueString(),
+			"Unable to Read SimpleMDM profile",
+			err.Error(),
 		)
 		return
 	}
+
+	state.MobileConfig = types.StringValue(body)
+	state.ProfileSHA = stringValueOrNull(sha)
 
 	// Set state
 

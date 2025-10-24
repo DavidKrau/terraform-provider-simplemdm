@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"strconv"
+	"strings"
 
 	"github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -29,6 +30,10 @@ type customProfileResourceModel struct {
 	AttributeSupport       types.Bool   `tfsdk:"attributesupport"`
 	EscapeAttributes       types.Bool   `tfsdk:"escapeattributes"`
 	ReinstallAfterOSUpdate types.Bool   `tfsdk:"reinstallafterosupdate"`
+	ProfileIdentifier      types.String `tfsdk:"profileidentifier"`
+	GroupCount             types.Int64  `tfsdk:"groupcount"`
+	DeviceCount            types.Int64  `tfsdk:"devicecount"`
+	ProfileSHA             types.String `tfsdk:"profilesha"`
 	ID                     types.String `tfsdk:"id"`
 }
 
@@ -102,6 +107,22 @@ func (r *customProfileResource) Schema(_ context.Context, _ resource.SchemaReque
 				Computed:    true,
 				Description: "Optional. A boolean true or false. When enabled, SimpleMDM will re-install the profile automatically after macOS software updates are detected. Defaults to false",
 			},
+			"profileidentifier": schema.StringAttribute{
+				Computed:    true,
+				Description: "Read-only profile identifier assigned by SimpleMDM.",
+			},
+			"groupcount": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of device groups assigned to this custom configuration profile.",
+			},
+			"devicecount": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of devices assigned to this custom configuration profile.",
+			},
+			"profilesha": schema.StringAttribute{
+				Computed:    true,
+				Description: "SHA-256 checksum reported by SimpleMDM for the current mobileconfig payload.",
+			},
 		},
 	}
 }
@@ -137,7 +158,19 @@ func (r *customProfileResource) Create(ctx context.Context, req resource.CreateR
 
 	// Map response body to schema and populate Computed attribute values
 	plan.ID = types.StringValue(strconv.Itoa(Profile.Data.ID))
-	//plan.FileSHA = types.StringValue(sha256_hash)
+	assignCustomProfileAttributes(&plan, Profile.Data.Attributes)
+
+	sha, body, err := r.client.CustomProfileSHA(plan.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading SimpleMDM custom profile",
+			"Could not read custom profile ID "+plan.ID.ValueString()+": "+err.Error(),
+		)
+		return
+	}
+
+	plan.MobileConfig = types.StringValue(body)
+	plan.ProfileSHA = stringValueOrNull(sha)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, plan)
@@ -156,50 +189,39 @@ func (r *customProfileResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	//retrive one needs to be implemented first
-	// Get refreshed profile values from SimpleMDM
-	profiles, err := r.client.CustomProfileGetAll()
+	profile, err := r.client.CustomProfileGet(state.ID.ValueString())
 	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+
 		resp.Diagnostics.AddError(
 			"Error Reading SimpleMDM custom profile",
-			"Could not read custom profles ID "+state.ID.ValueString()+": "+err.Error(),
+			"Could not read custom profile ID "+state.ID.ValueString()+": "+err.Error(),
 		)
 		return
 	}
 
-	profilefound := false
-	for _, profile := range profiles.Data {
-		if state.ID.ValueString() == strconv.Itoa(profile.ID) {
-			state.Name = types.StringValue(profile.Attributes.Name)
-			state.UserScope = types.BoolValue(profile.Attributes.UserScope)
-			state.AttributeSupport = types.BoolValue(profile.Attributes.AttributeSupport)
-			state.EscapeAttributes = types.BoolValue(profile.Attributes.EscapeAttributes)
-			state.ReinstallAfterOSUpdate = types.BoolValue(profile.Attributes.ReinstallAfterOsUpdate)
-			profilefound = true
-			break
-		}
-	}
+	assignCustomProfileAttributes(&state, profile.Data.Attributes)
+	state.ID = types.StringValue(strconv.Itoa(profile.Data.ID))
 
-	if !profilefound {
-		resp.State.RemoveResource(ctx)
-		return
-	}
-
-	_, body, err := r.client.CustomProfileSHA(state.ID.ValueString())
+	sha, body, err := r.client.CustomProfileSHA(state.ID.ValueString())
 	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+
 		resp.Diagnostics.AddError(
 			"Error Reading SimpleMDM custom profile",
-			"Could not read custom profles ID "+state.ID.ValueString()+": "+err.Error(),
+			"Could not download custom profile ID "+state.ID.ValueString()+": "+err.Error(),
 		)
 		return
 	}
 
 	state.MobileConfig = types.StringValue(body)
-	//state.FileSHA = types.StringValue(sha)
-	// h := sha256.New()
-	// h.Write([]byte(plan.MobileConfig.ValueString()))
-	// sha256_hash := hex.EncodeToString(h.Sum(nil))[0:32]
-	// plan.FileSHA = types.StringValue(sha256_hash)
+	state.ProfileSHA = stringValueOrNull(sha)
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
@@ -232,7 +254,38 @@ func (r *customProfileResource) Update(ctx context.Context, req resource.UpdateR
 	// h.Write([]byte(plan.MobileConfig.ValueString()))
 	// sha256_hash := hex.EncodeToString(h.Sum(nil))[0:32]
 
-	// plan.FileSHA = types.StringValue(sha256_hash)
+	profile, err := r.client.CustomProfileGet(plan.ID.ValueString())
+	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+
+		resp.Diagnostics.AddError(
+			"Error Reading SimpleMDM custom profile",
+			"Could not read custom profile ID "+plan.ID.ValueString()+": "+err.Error(),
+		)
+		return
+	}
+
+	assignCustomProfileAttributes(&plan, profile.Data.Attributes)
+
+	sha, body, err := r.client.CustomProfileSHA(plan.ID.ValueString())
+	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+
+		resp.Diagnostics.AddError(
+			"Error Reading SimpleMDM custom profile",
+			"Could not download custom profile ID "+plan.ID.ValueString()+": "+err.Error(),
+		)
+		return
+	}
+
+	plan.MobileConfig = types.StringValue(body)
+	plan.ProfileSHA = stringValueOrNull(sha)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -258,4 +311,26 @@ func (r *customProfileResource) Delete(ctx context.Context, req resource.DeleteR
 		)
 		return
 	}
+}
+
+func assignCustomProfileAttributes(model *customProfileResourceModel, attributes simplemdm.Attributes) {
+	model.Name = types.StringValue(attributes.Name)
+	model.UserScope = types.BoolValue(attributes.UserScope)
+	model.AttributeSupport = types.BoolValue(attributes.AttributeSupport)
+	model.EscapeAttributes = types.BoolValue(attributes.EscapeAttributes)
+	model.ReinstallAfterOSUpdate = types.BoolValue(attributes.ReinstallAfterOsUpdate)
+	model.ProfileIdentifier = stringValueOrNull(attributes.ProfileIdentifier)
+	model.GroupCount = types.Int64Value(int64(attributes.GroupCount))
+	model.DeviceCount = types.Int64Value(int64(attributes.DeviceCount))
+	if attributes.ProfileSHA != "" {
+		model.ProfileSHA = types.StringValue(attributes.ProfileSHA)
+	}
+}
+
+func stringValueOrNull(value string) types.String {
+	if value == "" {
+		return types.StringNull()
+	}
+
+	return types.StringValue(value)
 }
