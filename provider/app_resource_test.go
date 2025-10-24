@@ -26,6 +26,11 @@ func TestAccAppResourceWithAppStoreIdAttr(t *testing.T) {
 					resource.TestCheckResourceAttr("simplemdm_app.testapp", "app_store_id", "1477376905"),
 					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "name"),
 					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "status"),
+					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "app_type"),
+					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "version"),
+					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "platform_support"),
+					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "processing_status"),
+					resource.TestCheckResourceAttr("simplemdm_app.testapp", "installation_channels.#", "1"),
 
 					// Verify dynamic values have any value set in the state.
 					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "id"),
@@ -51,6 +56,11 @@ func TestAccAppResourceWithAppStoreIdAttr(t *testing.T) {
 					resource.TestCheckResourceAttr("simplemdm_app.testapp", "app_store_id", "586447913"),
 					resource.TestCheckResourceAttr("simplemdm_app.testapp", "deploy_to", "all"),
 					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "status"),
+					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "app_type"),
+					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "version"),
+					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "platform_support"),
+					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "processing_status"),
+					resource.TestCheckResourceAttr("simplemdm_app.testapp", "installation_channels.#", "1"),
 
 					// Verify dynamic values have any value set in the state.
 					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "id"),
@@ -80,6 +90,9 @@ func TestAccAppResourceWithBundleIdAttr(t *testing.T) {
 					resource.TestCheckResourceAttr("simplemdm_app.testapp", "bundle_id", "com.microsoft.Office.Excel"),
 					resource.TestCheckResourceAttr("simplemdm_app.testapp", "deploy_to", "none"),
 					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "status"),
+					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "app_type"),
+					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "platform_support"),
+					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "processing_status"),
 
 					// Verify dynamic values have any value set in the state.
 					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "id"),
@@ -104,6 +117,7 @@ func TestAccAppResourceWithBundleIdAttr(t *testing.T) {
 					// Verify attributes
 					resource.TestCheckResourceAttr("simplemdm_app.testapp", "app_store_id", "586447913"),
 					resource.TestCheckResourceAttr("simplemdm_app.testapp", "deploy_to", "all"),
+					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "app_type"),
 
 					// Verify dynamic values have any value set in the state.
 					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "id"),

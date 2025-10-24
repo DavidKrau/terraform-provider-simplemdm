@@ -18,12 +18,19 @@ var (
 
 // appDataSourceModel maps the data source schema data.
 type appDataSourceModel struct {
-	ID         types.String `tfsdk:"id"`
-	Name       types.String `tfsdk:"name"`
-	AppStoreId types.String `tfsdk:"app_store_id"`
-	BundleId   types.String `tfsdk:"bundle_id"`
-	DeployTo   types.String `tfsdk:"deploy_to"`
-	Status     types.String `tfsdk:"status"`
+	ID                   types.String `tfsdk:"id"`
+	Name                 types.String `tfsdk:"name"`
+	AppStoreId           types.String `tfsdk:"app_store_id"`
+	BundleId             types.String `tfsdk:"bundle_id"`
+	DeployTo             types.String `tfsdk:"deploy_to"`
+	Status               types.String `tfsdk:"status"`
+	AppType              types.String `tfsdk:"app_type"`
+	Version              types.String `tfsdk:"version"`
+	PlatformSupport      types.String `tfsdk:"platform_support"`
+	ProcessingStatus     types.String `tfsdk:"processing_status"`
+	InstallationChannels types.List   `tfsdk:"installation_channels"`
+	CreatedAt            types.String `tfsdk:"created_at"`
+	UpdatedAt            types.String `tfsdk:"updated_at"`
 }
 
 // appDataSource is a helper function to simplify the provider implementation.
@@ -58,6 +65,35 @@ func (d *appDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, re
 				Computed:    true,
 				Description: "The bundle identifier of the app.",
 			},
+			"app_type": schema.StringAttribute{
+				Computed:    true,
+				Description: "The catalog classification of the app, for example app store, enterprise, or custom b2b.",
+			},
+			"version": schema.StringAttribute{
+				Computed:    true,
+				Description: "The latest version reported by SimpleMDM for the app.",
+			},
+			"platform_support": schema.StringAttribute{
+				Computed:    true,
+				Description: "The platform supported by the app, such as iOS or macOS.",
+			},
+			"processing_status": schema.StringAttribute{
+				Computed:    true,
+				Description: "The current processing status of the app binary within SimpleMDM.",
+			},
+			"installation_channels": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "The deployment channels supported by the app.",
+			},
+			"created_at": schema.StringAttribute{
+				Computed:    true,
+				Description: "Timestamp when the app was added to SimpleMDM.",
+			},
+			"updated_at": schema.StringAttribute{
+				Computed:    true,
+				Description: "Timestamp when the app was last updated in SimpleMDM.",
+			},
 			"deploy_to": schema.StringAttribute{
 				Computed:    true,
 				Description: "Where the app is deployed (none, outdated, or all).",
@@ -80,7 +116,7 @@ func (d *appDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
-	app, err := d.client.AppGet(state.ID.ValueString())
+	app, err := fetchApp(ctx, d.client, state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read SimpleMDM app",
@@ -90,7 +126,11 @@ func (d *appDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 	}
 
 	// Map response body to model
-	resourceModel := newAppResourceModelFromAPI(app)
+	resourceModel, diags := newAppResourceModelFromAPI(ctx, app)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	state.ID = resourceModel.ID
 	state.Name = resourceModel.Name
@@ -98,6 +138,13 @@ func (d *appDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 	state.BundleId = resourceModel.BundleId
 	state.DeployTo = resourceModel.DeployTo
 	state.Status = resourceModel.Status
+	state.AppType = resourceModel.AppType
+	state.Version = resourceModel.Version
+	state.PlatformSupport = resourceModel.PlatformSupport
+	state.ProcessingStatus = resourceModel.ProcessingStatus
+	state.InstallationChannels = resourceModel.InstallationChannels
+	state.CreatedAt = resourceModel.CreatedAt
+	state.UpdatedAt = resourceModel.UpdatedAt
 
 	// Set state
 
