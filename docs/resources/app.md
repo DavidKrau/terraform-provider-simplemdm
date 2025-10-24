@@ -15,7 +15,8 @@ App resource can be used to manage Apps.
 ```terraform
 resource "simplemdm_app" "app" {
   app_store_id = "1090161858"
-  deploy_to    = "outdated" // Default to "none" if not added but possible values are "outdated" and "all"
+  name         = "Marketing App"
+  deploy_to    = "outdated" // Defaults to "none". Valid values: "none", "outdated", "all".
 }
 ```
 
@@ -27,11 +28,12 @@ resource "simplemdm_app" "app" {
 - `app_store_id` (String) Required. The Apple App Store ID of the app to be added. Example: 1090161858.
 - `bundle_id` (String) Required. The bundle identifier of the Apple App Store app to be added. Example: com.myCompany.MyApp1
 - `deploy_to` (String) Optional. Deploy the app to associated devices immediately after the app has been uploaded and processed. Possible values are none, outdated or all. Defaults to none.
+- `name` (String) Optional. The name that SimpleMDM will use to reference this app. If left blank, SimpleMDM will automatically set this to the app name specified by the binary.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `name` (String) The name that SimpleMDM will use to reference this app. If left blank, SimpleMDM will automatically set this to the app name specified by the binary.
+- `status` (String) The current deployment status of the app.
 
 ## Import
 
