@@ -13,7 +13,7 @@ Profile resource exposes read-only information for existing configuration profil
 ## Example Usage
 
 ```terraform
-resource "simplemdm_profile" "profile" {
+resource "simplemdm_profile" "example" {
   id = "123456"
 }
 ```

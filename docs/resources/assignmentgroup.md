@@ -53,11 +53,11 @@ resource "simplemdm_assignmentgroup" "myfirstgroup" {
 
 ### Read-Only
 
-- `id` (String) ID of the Assignment Group in SimpleMDM
 - `created_at` (String) Timestamp when the assignment group was created.
-- `updated_at` (String) Timestamp when the assignment group was last updated.
 - `device_count` (Number) Number of devices currently assigned to the assignment group.
 - `group_count` (Number) Number of device groups currently assigned to the assignment group.
+- `id` (String) ID of the Assignment Group in SimpleMDM
+- `updated_at` (String) Timestamp when the assignment group was last updated.
 
 ## Import
 

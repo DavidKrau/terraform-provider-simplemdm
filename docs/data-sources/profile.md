@@ -40,4 +40,4 @@ data "simplemdm_profile" "profile" {
 - `reinstall_after_os_update` (Boolean) Whether the profile reinstalls automatically after macOS updates.
 - `source` (String) Origin of the profile within SimpleMDM.
 - `updated_at` (String) Timestamp when the profile was last updated.
-- `user_scope` (Boolean) Indicates if the profile installs in the user scope.
+- `user_scope` (Boolean) Indicates if the profile is installed in the user scope.
