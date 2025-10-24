@@ -57,10 +57,9 @@ var Catalog = []EndpointCoverage{
 	{
 		Name:           "Profiles",
 		Endpoint:       "/api/v1/profiles",
-		ResourceType:   "",
+		ResourceType:   "simplemdm_profile",
 		DataSourceType: "simplemdm_profile",
 		DocsURL:        "https://api.simplemdm.com/v1/#tag/Profiles",
-		// TODO: Add a simplemdm_profile resource to cover profile CRUD operations.
 	},
 	{
 		Name:           "Scripts",

@@ -58,6 +58,14 @@ var resourceDefinitions = []ResourceDefinition{
 		APIEndpoints: []string{"/api/v1/custom_profiles"},
 	},
 	{
+		TypeName:     "simplemdm_profile",
+		Factory:      ProfileResource,
+		DocsPath:     "docs/resources/profile.md",
+		ExampleDirs:  []string{"examples/resources/simplemdm_profile"},
+		TestFiles:    []string{"provider/profile_resource_test.go"},
+		APIEndpoints: []string{"/api/v1/profiles"},
+	},
+	{
 		TypeName:     "simplemdm_device",
 		Factory:      DeviceResource,
 		DocsPath:     "docs/resources/device.md",
