@@ -18,6 +18,10 @@ func TestAccAppDataSource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify name of the app
 					resource.TestCheckResourceAttr("data.simplemdm_app.test", "name", "SimpleMDM"),
+					resource.TestCheckResourceAttrSet("data.simplemdm_app.test", "app_store_id"),
+					resource.TestCheckResourceAttrSet("data.simplemdm_app.test", "bundle_id"),
+					resource.TestCheckResourceAttrSet("data.simplemdm_app.test", "deploy_to"),
+					resource.TestCheckResourceAttrSet("data.simplemdm_app.test", "status"),
 				),
 			},
 		},

@@ -23,6 +23,8 @@ func TestAccAssignmentGroupDataSource(t *testing.T) {
                 `, assignmentGroupID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.simplemdm_assignmentgroup.test", "id", assignmentGroupID),
+					resource.TestCheckResourceAttrSet("data.simplemdm_assignmentgroup.test", "created_at"),
+					resource.TestCheckResourceAttrSet("data.simplemdm_assignmentgroup.test", "updated_at"),
 				),
 			},
 		},

@@ -14,6 +14,7 @@ The SimpleMDM API documentation is published at https://api.simplemdm.com/v1. Th
 | Assignment Groups | `/api/v1/assignment_groups` | `simplemdm_assignmentgroup` | `simplemdm_assignmentgroup` | Covered |
 | Custom Attributes | `/api/v1/attributes` | `simplemdm_attribute` | `simplemdm_attribute` | Covered |
 | Custom Profiles | `/api/v1/custom_profiles` | `simplemdm_customprofile` | `simplemdm_customprofile` | Covered |
+| Custom Declarations | `/api/v1/custom_declarations` | `simplemdm_customdeclaration` | `simplemdm_customdeclaration` | Covered |
 | Devices | `/api/v1/devices` | `simplemdm_device` | `simplemdm_device` | Covered |
 | Device Groups | `/api/v1/device_groups` | `simplemdm_devicegroup` | `simplemdm_devicegroup` | Covered |
 | Profiles | `/api/v1/profiles` | `simplemdm_profile` | `simplemdm_profile` | Covered |

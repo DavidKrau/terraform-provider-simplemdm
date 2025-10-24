@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -19,8 +18,12 @@ var (
 
 // appDataSourceModel maps the data source schema data.
 type appDataSourceModel struct {
-	ID   types.String `tfsdk:"id"`
-	Name types.String `tfsdk:"name"`
+	ID         types.String `tfsdk:"id"`
+	Name       types.String `tfsdk:"name"`
+	AppStoreId types.String `tfsdk:"app_store_id"`
+	BundleId   types.String `tfsdk:"bundle_id"`
+	DeployTo   types.String `tfsdk:"deploy_to"`
+	Status     types.String `tfsdk:"status"`
 }
 
 // appDataSource is a helper function to simplify the provider implementation.
@@ -47,6 +50,22 @@ func (d *appDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, re
 				Computed:    true,
 				Description: "The name of the attribute.",
 			},
+			"app_store_id": schema.StringAttribute{
+				Computed:    true,
+				Description: "The Apple App Store ID associated with the app.",
+			},
+			"bundle_id": schema.StringAttribute{
+				Computed:    true,
+				Description: "The bundle identifier of the app.",
+			},
+			"deploy_to": schema.StringAttribute{
+				Computed:    true,
+				Description: "Where the app is deployed (none, outdated, or all).",
+			},
+			"status": schema.StringAttribute{
+				Computed:    true,
+				Description: "The current deployment status of the app.",
+			},
 			"id": schema.StringAttribute{
 				Required:    true,
 				Description: "The ID of the attribute.",
@@ -71,8 +90,14 @@ func (d *appDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 	}
 
 	// Map response body to model
-	state.Name = types.StringValue(app.Data.Attributes.Name)
-	state.ID = types.StringValue(strconv.Itoa(app.Data.ID))
+	resourceModel := newAppResourceModelFromAPI(app)
+
+	state.ID = resourceModel.ID
+	state.Name = resourceModel.Name
+	state.AppStoreId = resourceModel.AppStoreId
+	state.BundleId = resourceModel.BundleId
+	state.DeployTo = resourceModel.DeployTo
+	state.Status = resourceModel.Status
 
 	// Set state
 

@@ -43,6 +43,8 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "groups.0", "140188"),
 					// Verify dynamic values have any value set in the state.
 					resource.TestCheckResourceAttrSet("simplemdm_assignmentgroup.testgroup2", "id"),
+					resource.TestCheckResourceAttrSet("simplemdm_assignmentgroup.testgroup2", "created_at"),
+					resource.TestCheckResourceAttrSet("simplemdm_assignmentgroup.testgroup2", "updated_at"),
 				),
 			},
 			// ImportState testing
@@ -50,7 +52,7 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 				ResourceName:            "simplemdm_assignmentgroup.testgroup2",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apps_update", "apps_push", "auto_deploy", "profiles_sync", "install_type", "profiles"},
+				ImportStateVerifyIgnore: []string{"apps_update", "apps_push", "auto_deploy", "profiles_sync", "install_type", "profiles", "created_at", "updated_at", "device_count", "group_count"},
 			},
 			//Update and Read testing
 			{
