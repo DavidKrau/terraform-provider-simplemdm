@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -8,31 +9,36 @@ import (
 
 func TestAccDeviceResource(t *testing.T) {
 	testAccPreCheck(t)
-	_ = testAccRequireEnv(t, "SIMPLEMDM_RUN_DEVICE_RESOURCE_TESTS")
+
+	deviceGroupID := testAccRequireEnv(t, "SIMPLEMDM_DEVICE_GROUP_ID")
+	profileID := testAccRequireEnv(t, "SIMPLEMDM_DEVICE_GROUP_PROFILE_ID")
+	profileUpdatedID := testAccRequireEnv(t, "SIMPLEMDM_DEVICE_GROUP_PROFILE_UPDATED_ID")
+	customProfileID := testAccRequireEnv(t, "SIMPLEMDM_DEVICE_GROUP_CUSTOM_PROFILE_ID")
+	customProfileUpdatedID := testAccRequireEnv(t, "SIMPLEMDM_DEVICE_GROUP_CUSTOM_PROFILE_UPDATED_ID")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: providerConfig + `
-		resource "simplemdm_device" "test" {
-			name= "Created test device"
-			devicename  = "Created test device"
-			devicegroup = 140188
-  			profiles = [172801]
-  			customprofiles = [172804]
-		}
-`,
+				Config: fmt.Sprintf(providerConfig+`
+                resource "simplemdm_device" "test" {
+                        name          = "Created test device"
+                        devicename    = "Created test device"
+                        devicegroup   = %s
+                        profiles      = [%s]
+                        customprofiles = [%s]
+                }
+`, deviceGroupID, profileID, customProfileID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify attributes
 					resource.TestCheckResourceAttr("simplemdm_device.test", "name", "Created test device"),
 					resource.TestCheckResourceAttr("simplemdm_device.test", "devicename", "Created test device"),
-					resource.TestCheckResourceAttr("simplemdm_device.test", "devicegroup", "140188"),
+					resource.TestCheckResourceAttr("simplemdm_device.test", "devicegroup", deviceGroupID),
 					resource.TestCheckResourceAttr("simplemdm_device.test", "profiles.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_device.test", "profiles.0", "172801"),
+					resource.TestCheckResourceAttr("simplemdm_device.test", "profiles.0", profileID),
 					resource.TestCheckResourceAttr("simplemdm_device.test", "customprofiles.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_device.test", "customprofiles.0", "172804"),
+					resource.TestCheckResourceAttr("simplemdm_device.test", "customprofiles.0", customProfileID),
 					// Verify dynamic values have any value set in the state.
 					resource.TestCheckResourceAttrSet("simplemdm_device.test", "id"),
 					resource.TestCheckResourceAttrSet("simplemdm_device.test", "enrollmenturl"),
@@ -49,24 +55,24 @@ func TestAccDeviceResource(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: providerConfig + `
-				resource "simplemdm_device" "test" {
-					name= "Created test device changed"
-					devicename  = "Created test device changed"
-					devicegroup = 140189
-					profiles = [172802]
-					customprofiles = [172805]
-				  }
-`,
+				Config: fmt.Sprintf(providerConfig+`
+                                resource "simplemdm_device" "test" {
+                                        name           = "Created test device changed"
+                                        devicename     = "Created test device changed"
+                                        devicegroup    = %s
+                                        profiles       = [%s]
+                                        customprofiles = [%s]
+                                  }
+`, deviceGroupID, profileUpdatedID, customProfileUpdatedID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify attributes
 					resource.TestCheckResourceAttr("simplemdm_device.test", "name", "Created test device changed"),
 					resource.TestCheckResourceAttr("simplemdm_device.test", "devicename", "Created test device changed"),
-					resource.TestCheckResourceAttr("simplemdm_device.test", "devicegroup", "140189"),
+					resource.TestCheckResourceAttr("simplemdm_device.test", "devicegroup", deviceGroupID),
 					resource.TestCheckResourceAttr("simplemdm_device.test", "profiles.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_device.test", "profiles.0", "172802"),
+					resource.TestCheckResourceAttr("simplemdm_device.test", "profiles.0", profileUpdatedID),
 					resource.TestCheckResourceAttr("simplemdm_device.test", "customprofiles.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_device.test", "customprofiles.0", "172805"),
+					resource.TestCheckResourceAttr("simplemdm_device.test", "customprofiles.0", customProfileUpdatedID),
 					// Verify dynamic values have any value set in the state.
 					resource.TestCheckResourceAttrSet("simplemdm_device.test", "id"),
 					resource.TestCheckResourceAttrSet("simplemdm_device.test", "enrollmenturl"),

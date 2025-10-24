@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -8,14 +9,20 @@ import (
 
 func TestAccAssignmentGroupResource(t *testing.T) {
 	testAccPreCheck(t)
-	_ = testAccRequireEnv(t, "SIMPLEMDM_RUN_ASSIGNMENT_GROUP_TESTS")
+
+	appID := testAccRequireEnv(t, "SIMPLEMDM_ASSIGNMENT_GROUP_APP_ID")
+	groupID := testAccRequireEnv(t, "SIMPLEMDM_ASSIGNMENT_GROUP_GROUP_ID")
+	profileID := testAccRequireEnv(t, "SIMPLEMDM_ASSIGNMENT_GROUP_PROFILE_ID")
+	deviceID := testAccRequireEnv(t, "SIMPLEMDM_ASSIGNMENT_GROUP_DEVICE_ID")
+	updatedAppID := testAccRequireEnv(t, "SIMPLEMDM_ASSIGNMENT_GROUP_UPDATED_APP_ID")
+	updatedDeviceID := testAccRequireEnv(t, "SIMPLEMDM_ASSIGNMENT_GROUP_UPDATED_DEVICE_ID")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: providerConfig + `
+				Config: fmt.Sprintf(providerConfig+`
                                 resource "simplemdm_assignmentgroup" "testgroup2" {
                                         name= "This assignment group"
                                         auto_deploy = false
@@ -23,16 +30,16 @@ func TestAccAssignmentGroupResource(t *testing.T) {
                                         install_type = "managed"
                                         priority     = 3
                                         app_track_location = false
-                                        apps= [577575]
-                                        groups = [140188]
-                                        profiles = [172801]
-                                        devices = [1601809]
+                                        apps= [%s]
+                                        groups = [%s]
+                                        profiles = [%s]
+                                        devices = [%s]
                                         devices_remove_others = true
                                         profiles_sync = false
                                         apps_push = false
                                         apps_update = false
                                   }
-`,
+`, appID, groupID, profileID, deviceID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify attributes
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "name", "This assignment group"),
@@ -41,13 +48,13 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "app_track_location", "false"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices_remove_others", "true"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "profiles.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "profiles.0", "172801"),
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "profiles.0", profileID),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices.0", "1601809"),
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices.0", deviceID),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "apps.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "apps.0", "577575"),
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "apps.0", appID),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "groups.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "groups.0", "140188"),
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "groups.0", groupID),
 					// Verify dynamic values have any value set in the state.
 					resource.TestCheckResourceAttrSet("simplemdm_assignmentgroup.testgroup2", "id"),
 					resource.TestCheckResourceAttrSet("simplemdm_assignmentgroup.testgroup2", "created_at"),
@@ -63,7 +70,7 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 			},
 			//Update and Read testing
 			{
-				Config: providerConfig + `
+				Config: fmt.Sprintf(providerConfig+`
                                 resource "simplemdm_assignmentgroup" "testgroup2" {
                                         name= "renamed assignemnt group"
                                         auto_deploy = false
@@ -71,14 +78,14 @@ func TestAccAssignmentGroupResource(t *testing.T) {
                                         install_type = "managed"
                                         priority     = 7
                                         app_track_location = true
-                                        apps= [553192]
-                                        devices = [1601810]
+                                        apps= [%s]
+                                        devices = [%s]
                                         devices_remove_others = false
                                         profiles_sync = false
                                         apps_push = false
                                         apps_update = false
                                   }
-			`,
+                        `, updatedAppID, updatedDeviceID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify attributes
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "name", "renamed assignemnt group"),
@@ -88,9 +95,9 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "app_track_location", "true"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices_remove_others", "false"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices.0", "1601810"),
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices.0", updatedDeviceID),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "apps.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "apps.0", "553192"),
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "apps.0", updatedAppID),
 					// Verify dynamic values have any value set in the state.
 					resource.TestCheckResourceAttrSet("simplemdm_assignmentgroup.testgroup2", "id"),
 				),

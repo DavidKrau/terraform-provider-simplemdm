@@ -8,7 +8,6 @@ import (
 
 func TestAccAppResourceWithAppStoreIdAttr(t *testing.T) {
 	testAccPreCheck(t)
-	_ = testAccRequireEnv(t, "SIMPLEMDM_RUN_APP_RESOURCE_TESTS")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -73,7 +72,6 @@ func TestAccAppResourceWithAppStoreIdAttr(t *testing.T) {
 
 func TestAccAppResourceWithBundleIdAttr(t *testing.T) {
 	testAccPreCheck(t)
-	_ = testAccRequireEnv(t, "SIMPLEMDM_RUN_APP_RESOURCE_TESTS")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

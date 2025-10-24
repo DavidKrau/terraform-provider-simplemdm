@@ -10,7 +10,6 @@ import (
 
 func TestAccDeviceGroupResource(t *testing.T) {
 	testAccPreCheck(t)
-	_ = testAccRequireEnv(t, "SIMPLEMDM_RUN_DEVICE_GROUP_RESOURCE_TESTS")
 
 	cloneSourceID := testAccRequireEnv(t, "SIMPLEMDM_DEVICE_GROUP_CLONE_SOURCE_ID")
 	name := testAccRequireEnv(t, "SIMPLEMDM_DEVICE_GROUP_NAME")

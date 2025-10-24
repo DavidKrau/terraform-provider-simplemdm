@@ -21,19 +21,18 @@ func TestAccScriptResource(t *testing.T) {
 			variablesupport = true
 		  }
 `,
-                                Check: resource.ComposeAggregateTestCheckFunc(
-                                        // Verify attributes
-                                        resource.TestCheckResourceAttr("simplemdm_script.test", "name", "This is test script"),
-                                        resource.TestCheckResourceAttr("simplemdm_script.test", "scriptfile", "#!/bin/bash\necho \"Hello!\""),
-                                        resource.TestCheckResourceAttr("simplemdm_script.test", "variablesupport", "true"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// Verify attributes
+					resource.TestCheckResourceAttr("simplemdm_script.test", "name", "This is test script"),
+					resource.TestCheckResourceAttr("simplemdm_script.test", "scriptfile", "#!/bin/bash\necho \"Hello!\""),
+					resource.TestCheckResourceAttr("simplemdm_script.test", "variablesupport", "true"),
 
-                                        // Verify dynamic values have any value set in the state.
-                                        resource.TestCheckResourceAttrSet("simplemdm_script.test", "id"),
-                                        resource.TestCheckResourceAttrSet("simplemdm_script.test", "created_at"),
-                                        resource.TestCheckResourceAttrSet("simplemdm_script.test", "updated_at"),
-                                        resource.TestCheckResourceAttrSet("simplemdm_script.test", "created_by"),
-                                ),
-                        },
+					// Verify dynamic values have any value set in the state.
+					resource.TestCheckResourceAttrSet("simplemdm_script.test", "id"),
+					resource.TestCheckResourceAttrSet("simplemdm_script.test", "created_at"),
+					resource.TestCheckResourceAttrSet("simplemdm_script.test", "updated_at"),
+				),
+			},
 			// ImportState testing
 			{
 				ResourceName:      "simplemdm_script.test",
@@ -53,16 +52,15 @@ func TestAccScriptResource(t *testing.T) {
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify attributes
-                                        resource.TestCheckResourceAttr("simplemdm_script.test", "name", "This is test script 2"),
-                                        resource.TestCheckResourceAttr("simplemdm_script.test", "scriptfile", "#!/bin/bash\necho \"Hello again!\""),
-                                        resource.TestCheckResourceAttr("simplemdm_script.test", "variablesupport", "false"),
-                                        // Verify dynamic values have any value set in the state.
-                                        resource.TestCheckResourceAttrSet("simplemdm_script.test", "id"),
-                                        resource.TestCheckResourceAttrSet("simplemdm_script.test", "created_at"),
-                                        resource.TestCheckResourceAttrSet("simplemdm_script.test", "created_by"),
-                                        resource.TestCheckResourceAttrSet("simplemdm_script.test", "updated_at"),
-                                ),
-                        },
+					resource.TestCheckResourceAttr("simplemdm_script.test", "name", "This is test script 2"),
+					resource.TestCheckResourceAttr("simplemdm_script.test", "scriptfile", "#!/bin/bash\necho \"Hello again!\""),
+					resource.TestCheckResourceAttr("simplemdm_script.test", "variablesupport", "false"),
+					// Verify dynamic values have any value set in the state.
+					resource.TestCheckResourceAttrSet("simplemdm_script.test", "id"),
+					resource.TestCheckResourceAttrSet("simplemdm_script.test", "created_at"),
+					resource.TestCheckResourceAttrSet("simplemdm_script.test", "updated_at"),
+				),
+			},
 			// Delete testing automatically occurs in TestCase
 		},
 	})

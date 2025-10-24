@@ -25,6 +25,7 @@ func TestAccCustomProfileResource(t *testing.T) {
 			
 		  }
 `,
+				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify attributes
 					resource.TestCheckResourceAttr("simplemdm_customprofile.test", "name", "testprofile"),
@@ -52,7 +53,7 @@ func TestAccCustomProfileResource(t *testing.T) {
 			// Update and Read testing
 			{
 				Config: providerConfig + `
-				resource "simplemdm_customprofile" "test" {
+resource "simplemdm_customprofile" "test" {
 					name= "testprofile2"
 					mobileconfig = file("./testfiles/testprofile2.mobileconfig")
 					userscope = false
@@ -62,6 +63,7 @@ func TestAccCustomProfileResource(t *testing.T) {
 					
 				  }
 `,
+				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify attributes
 					resource.TestCheckResourceAttr("simplemdm_customprofile.test", "name", "testprofile2"),

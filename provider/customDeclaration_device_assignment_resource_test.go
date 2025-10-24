@@ -9,7 +9,6 @@ import (
 
 func TestAccCustomDeclarationDeviceAssignmentResource(t *testing.T) {
 	testAccPreCheck(t)
-	_ = testAccRequireEnv(t, "SIMPLEMDM_RUN_CUSTOM_DECLARATION_TESTS")
 	deviceID := testAccRequireEnv(t, "SIMPLEMDM_CUSTOM_DECLARATION_DEVICE_ID")
 
 	resource.Test(t, resource.TestCase{

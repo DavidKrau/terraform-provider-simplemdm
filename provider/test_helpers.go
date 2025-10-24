@@ -8,10 +8,6 @@ import (
 // testAccPreCheck ensures acceptance tests run only when TF_ACC is enabled
 // and the required authentication information is present.
 func testAccPreCheck(t *testing.T) {
-	if os.Getenv("TF_ACC") != "1" {
-		t.Skip("Acceptance tests skipped unless TF_ACC=1")
-	}
-
 	if os.Getenv("SIMPLEMDM_APIKEY") == "" {
 		t.Skip("Acceptance tests require SIMPLEMDM_APIKEY to be set")
 	}

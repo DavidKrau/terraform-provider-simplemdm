@@ -19,10 +19,11 @@ provider to build your own SimpleMDM infrastructure.Provider's official document
 
 ## Acceptance testing
 
-Acceptance tests are guarded behind the standard `TF_ACC=1` flag. They require a valid
-`SIMPLEMDM_APIKEY` and a handful of fixture identifiers that point at objects in a SimpleMDM test
-account. Tests that rely on these variables automatically skip when values are missing, so day-to-day
-development can rely on unit coverage while CI can opt into the full suite.
+Acceptance tests run automatically whenever `SIMPLEMDM_APIKEY` is defined. The traditional
+`TF_ACC=1` flag is still honored for compatibility, but it is no longer required in CI. The suite also
+expects a handful of fixture identifiers that point at objects in a SimpleMDM test account. Tests that
+rely on these variables automatically skip when values are missing, so day-to-day development can rely
+on unit coverage while CI can opt into the full suite simply by exporting the necessary values.
 
 ### GitLab CI secrets
 
@@ -39,6 +40,12 @@ tests that read existing objects:
 
 * `SIMPLEMDM_APP_ID`
 * `SIMPLEMDM_ASSIGNMENT_GROUP_ID`
+* `SIMPLEMDM_ASSIGNMENT_GROUP_APP_ID`
+* `SIMPLEMDM_ASSIGNMENT_GROUP_GROUP_ID`
+* `SIMPLEMDM_ASSIGNMENT_GROUP_PROFILE_ID`
+* `SIMPLEMDM_ASSIGNMENT_GROUP_DEVICE_ID`
+* `SIMPLEMDM_ASSIGNMENT_GROUP_UPDATED_APP_ID`
+* `SIMPLEMDM_ASSIGNMENT_GROUP_UPDATED_DEVICE_ID`
 * `SIMPLEMDM_ATTRIBUTE_NAME`
 * `SIMPLEMDM_CUSTOM_PROFILE_ID`
 * `SIMPLEMDM_DEVICE_GROUP_ID`
@@ -46,6 +53,9 @@ tests that read existing objects:
 * `SIMPLEMDM_PROFILE_ID`
 * `SIMPLEMDM_SCRIPT_ID`
 * `SIMPLEMDM_SCRIPT_JOB_ID`
+* `SIMPLEMDM_SCRIPT_JOB_SCRIPT_ID`
+* `SIMPLEMDM_SCRIPT_JOB_GROUP_ID`
+* `SIMPLEMDM_SCRIPT_JOB_DEVICE_ID`
 
 The device group resource tests also expect additional fixture metadata so that profile and attribute
 assignments can be exercised end-to-end:
@@ -59,21 +69,10 @@ assignments can be exercised end-to-end:
 * `SIMPLEMDM_DEVICE_GROUP_CUSTOM_PROFILE_ID`
 * `SIMPLEMDM_DEVICE_GROUP_CUSTOM_PROFILE_UPDATED_ID`
 
-### Opt-in flags for mutating tests
-
-Resource acceptance tests that modify or create data are disabled by default. Set the following variables
-to `1` (or any non-empty value) in GitLab CI when you want to exercise them:
-
-* `SIMPLEMDM_RUN_APP_RESOURCE_TESTS`
-* `SIMPLEMDM_RUN_ASSIGNMENT_GROUP_TESTS`
-* `SIMPLEMDM_RUN_CUSTOM_DECLARATION_TESTS`
-* `SIMPLEMDM_RUN_DEVICE_RESOURCE_TESTS`
-* `SIMPLEMDM_RUN_DEVICE_GROUP_RESOURCE_TESTS`
-* `SIMPLEMDM_RUN_PROFILE_RESOURCE_TESTS`
-* `SIMPLEMDM_RUN_SCRIPT_JOB_TESTS`
-
-With all of the above defined (alongside `TF_ACC=1`), GitLab CI pipelines can execute the provider's full
-acceptance test coverage without manual intervention.
+The acceptance suite now runs automatically when a `SIMPLEMDM_APIKEY` is available. GitHub Actions
+pipelines only need to expose the API key (and any of the optional fixture variables above) to execute the
+tests—no additional feature flags are required. Locally, tests that require extra fixtures will continue to
+skip until the corresponding environment variables are provided.
 
 ## Know issues
 

@@ -8,7 +8,6 @@ import (
 
 func TestAccProfileResource(t *testing.T) {
 	testAccPreCheck(t)
-	_ = testAccRequireEnv(t, "SIMPLEMDM_RUN_PROFILE_RESOURCE_TESTS")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

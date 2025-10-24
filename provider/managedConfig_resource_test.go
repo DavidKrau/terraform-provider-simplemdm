@@ -8,7 +8,6 @@ import (
 
 func TestAccManagedConfigResource_basic(t *testing.T) {
 	testAccPreCheck(t)
-	_ = testAccRequireEnv(t, "SIMPLEMDM_RUN_MANAGED_CONFIG_TESTS")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
