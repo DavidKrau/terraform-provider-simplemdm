@@ -30,6 +30,7 @@ type appResourceModel struct {
 	AppStoreId types.String `tfsdk:"app_store_id"`
 	BundleId   types.String `tfsdk:"bundle_id"`
 	DeployTo   types.String `tfsdk:"deploy_to"`
+	Status     types.String `tfsdk:"status"`
 }
 
 func AppResource() resource.Resource {
@@ -67,8 +68,12 @@ func (r *appResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 				},
 			},
 			"name": schema.StringAttribute{
+				Optional:    true,
 				Computed:    true,
 				Description: "The name that SimpleMDM will use to reference this app. If left blank, SimpleMDM will automatically set this to the app name specified by the binary.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"app_store_id": schema.StringAttribute{
 				Optional:    true,
@@ -105,12 +110,52 @@ func (r *appResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 				Computed:    true,
 				Description: "Optional. Deploy the app to associated devices immediately after the app has been uploaded and processed. Possible values are none, outdated or all. Defaults to none.",
 				Default:     stringdefault.StaticString("none"),
-				Validators: []validator.String{
-					stringvalidator.OneOf("outdated", "all"),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
+				Validators: []validator.String{
+					stringvalidator.OneOf("none", "outdated", "all"),
+				},
+			},
+			"status": schema.StringAttribute{
+				Computed:    true,
+				Description: "The current deployment status of the app.",
 			},
 		},
 	}
+}
+
+func newAppResourceModelFromAPI(app *simplemdm.SimplemdmDefaultStruct) appResourceModel {
+	model := appResourceModel{
+		ID:         types.StringValue(strconv.Itoa(app.Data.ID)),
+		Name:       types.StringNull(),
+		AppStoreId: types.StringNull(),
+		BundleId:   types.StringNull(),
+		DeployTo:   types.StringValue("none"),
+		Status:     types.StringNull(),
+	}
+
+	if name := app.Data.Attributes.Name; name != "" {
+		model.Name = types.StringValue(name)
+	}
+
+	if storeID := app.Data.Attributes.AppStoreId; storeID != 0 {
+		model.AppStoreId = types.StringValue(strconv.Itoa(storeID))
+	}
+
+	if bundleID := app.Data.Attributes.BundleId; bundleID != "" {
+		model.BundleId = types.StringValue(bundleID)
+	}
+
+	if deployTo := app.Data.Attributes.DeployTo; deployTo != "" {
+		model.DeployTo = types.StringValue(deployTo)
+	}
+
+	if status := app.Data.Attributes.Status; status != "" {
+		model.Status = types.StringValue(status)
+	}
+
+	return model
 }
 
 func (r *appResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -152,19 +197,22 @@ func (r *appResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	plan.ID = types.StringValue(strconv.Itoa(app.Data.ID))
+	newState := newAppResourceModelFromAPI(app)
 
-	if app.Data.Attributes.AppStoreId != 0 {
-		plan.AppStoreId = types.StringValue(strconv.Itoa(app.Data.Attributes.AppStoreId))
+	if newState.Name.IsNull() && !plan.Name.IsNull() {
+		newState.Name = plan.Name
 	}
-	if app.Data.Attributes.BundleId != "" {
-		plan.BundleId = types.StringValue(app.Data.Attributes.BundleId)
+	if newState.AppStoreId.IsNull() && !plan.AppStoreId.IsNull() {
+		newState.AppStoreId = plan.AppStoreId
 	}
-	if app.Data.Attributes.Name != "" {
-		plan.Name = types.StringValue(app.Data.Attributes.Name)
+	if newState.BundleId.IsNull() && !plan.BundleId.IsNull() {
+		newState.BundleId = plan.BundleId
+	}
+	if (newState.DeployTo.IsNull() || newState.DeployTo.ValueString() == "") && !plan.DeployTo.IsNull() {
+		newState.DeployTo = plan.DeployTo
 	}
 
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, newState)
 	resp.Diagnostics.Append(diags...)
 }
 
@@ -209,17 +257,9 @@ func (r *appResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
-	state.ID = types.StringValue(strconv.Itoa(app.Data.ID))
-	state.Name = types.StringValue(app.Data.Attributes.Name)
+	newState := newAppResourceModelFromAPI(app)
 
-	if app.Data.Attributes.AppStoreId != 0 {
-		state.AppStoreId = types.StringValue(strconv.Itoa(app.Data.Attributes.AppStoreId))
-	}
-	if app.Data.Attributes.BundleId != "" {
-		state.BundleId = types.StringValue(app.Data.Attributes.BundleId)
-	}
-
-	diags = resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &newState)
 	resp.Diagnostics.Append(diags...)
 }
 
@@ -237,7 +277,7 @@ func (r *appResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	_, err := r.client.AppUpdate(
+	updatedApp, err := r.client.AppUpdate(
 		plan.ID.ValueString(),
 		plan.Name.ValueString(),
 		plan.DeployTo.ValueString(),
@@ -250,6 +290,21 @@ func (r *appResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	diags = resp.State.Set(ctx, plan)
+	newState := newAppResourceModelFromAPI(updatedApp)
+
+	if newState.AppStoreId.IsNull() && !state.AppStoreId.IsNull() {
+		newState.AppStoreId = state.AppStoreId
+	}
+	if newState.BundleId.IsNull() && !state.BundleId.IsNull() {
+		newState.BundleId = state.BundleId
+	}
+	if newState.Name.IsNull() && !plan.Name.IsNull() {
+		newState.Name = plan.Name
+	}
+	if (newState.DeployTo.IsNull() || newState.DeployTo.ValueString() == "") && !plan.DeployTo.IsNull() {
+		newState.DeployTo = plan.DeployTo
+	}
+
+	diags = resp.State.Set(ctx, newState)
 	resp.Diagnostics.Append(diags...)
 }

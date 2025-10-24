@@ -27,4 +27,8 @@ data "simplemdm_app" "myapp" {
 
 ### Read-Only
 
+- `app_store_id` (String) The Apple App Store ID associated with the app.
+- `bundle_id` (String) The bundle identifier of the app.
+- `deploy_to` (String) Where the app is deployed (none, outdated, or all).
 - `name` (String) The name of the attribute.
+- `status` (String) The current deployment status of the app.
