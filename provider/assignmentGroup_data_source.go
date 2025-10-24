@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -17,19 +16,21 @@ var (
 )
 
 type assignmentGroupDataSourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	AutoDeploy  types.Bool   `tfsdk:"auto_deploy"`
-	GroupType   types.String `tfsdk:"group_type"`
-	InstallType types.String `tfsdk:"install_type"`
-	Apps        types.Set    `tfsdk:"apps"`
-	Groups      types.Set    `tfsdk:"groups"`
-	Devices     types.Set    `tfsdk:"devices"`
-	Profiles    types.Set    `tfsdk:"profiles"`
-	CreatedAt   types.String `tfsdk:"created_at"`
-	UpdatedAt   types.String `tfsdk:"updated_at"`
-	DeviceCount types.Int64  `tfsdk:"device_count"`
-	GroupCount  types.Int64  `tfsdk:"group_count"`
+	ID               types.String `tfsdk:"id"`
+	Name             types.String `tfsdk:"name"`
+	AutoDeploy       types.Bool   `tfsdk:"auto_deploy"`
+	GroupType        types.String `tfsdk:"group_type"`
+	InstallType      types.String `tfsdk:"install_type"`
+	Priority         types.Int64  `tfsdk:"priority"`
+	AppTrackLocation types.Bool   `tfsdk:"app_track_location"`
+	Apps             types.Set    `tfsdk:"apps"`
+	Groups           types.Set    `tfsdk:"groups"`
+	Devices          types.Set    `tfsdk:"devices"`
+	Profiles         types.Set    `tfsdk:"profiles"`
+	CreatedAt        types.String `tfsdk:"created_at"`
+	UpdatedAt        types.String `tfsdk:"updated_at"`
+	DeviceCount      types.Int64  `tfsdk:"device_count"`
+	GroupCount       types.Int64  `tfsdk:"group_count"`
 }
 
 func AssignmentGroupDataSource() datasource.DataSource {
@@ -67,6 +68,14 @@ func (d *assignmentGroupDataSource) Schema(_ context.Context, _ datasource.Schem
 			"install_type": schema.StringAttribute{
 				Computed:    true,
 				Description: "Install type used when the assignment group is of type munki.",
+			},
+			"priority": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The priority of the assignment group.",
+			},
+			"app_track_location": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Whether the SimpleMDM app tracks device location when installed for this assignment group.",
 			},
 			"apps": schema.SetAttribute{
 				Computed:    true,
@@ -142,37 +151,7 @@ func (d *assignmentGroupDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	state.Name = types.StringValue(assignmentGroup.Data.Attributes.Name)
-	state.AutoDeploy = types.BoolValue(assignmentGroup.Data.Attributes.AutoDeploy)
-	state.GroupType = types.StringValue(assignmentGroup.Data.Attributes.Type)
-
-	if assignmentGroup.Data.Attributes.Type == "munki" {
-		state.InstallType = types.StringValue(assignmentGroup.Data.Attributes.InstallType)
-	} else {
-		state.InstallType = types.StringNull()
-	}
-
-	state.Apps = buildStringSetFromRelationshipItems(assignmentGroup.Data.Relationships.Apps.Data)
-	state.Groups = buildStringSetFromRelationshipItems(assignmentGroup.Data.Relationships.DeviceGroups.Data)
-	state.Devices = buildStringSetFromRelationshipItems(assignmentGroup.Data.Relationships.Devices.Data)
-	state.Profiles = buildStringSetFromRelationshipItems(assignmentGroup.Data.Relationships.Profiles.Data)
-
-	if assignmentGroup.Data.Attributes.CreatedAt != "" {
-		state.CreatedAt = types.StringValue(assignmentGroup.Data.Attributes.CreatedAt)
-	} else {
-		state.CreatedAt = types.StringNull()
-	}
-
-	if assignmentGroup.Data.Attributes.UpdatedAt != "" {
-		state.UpdatedAt = types.StringValue(assignmentGroup.Data.Attributes.UpdatedAt)
-	} else {
-		state.UpdatedAt = types.StringNull()
-	}
-
-	state.DeviceCount = types.Int64Value(int64(assignmentGroup.Data.Attributes.DeviceCount))
-	state.GroupCount = types.Int64Value(int64(assignmentGroup.Data.Attributes.GroupCount))
-
-	state.ID = types.StringValue(strconv.Itoa(assignmentGroup.Data.ID))
+	applyAssignmentGroupResponseToDataSourceModel(&state, assignmentGroup)
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)

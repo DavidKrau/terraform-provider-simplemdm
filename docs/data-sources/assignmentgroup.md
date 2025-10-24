@@ -27,6 +27,7 @@ data "simplemdm_assignmentgroup" "example" {
 
 ### Read-Only
 
+- `app_track_location` (Boolean) Whether the SimpleMDM app tracks device location when installed for this assignment group.
 - `apps` (Set of String) IDs of apps assigned to the assignment group.
 - `auto_deploy` (Boolean) Whether the assignment group automatically deploys apps.
 - `created_at` (String) Timestamp when the assignment group was created.
@@ -37,5 +38,6 @@ data "simplemdm_assignmentgroup" "example" {
 - `groups` (Set of String) IDs of device groups assigned to the assignment group.
 - `install_type` (String) Install type used when the assignment group is of type munki.
 - `name` (String) The name of the assignment group.
+- `priority` (Number) The priority of the assignment group.
 - `profiles` (Set of String) IDs of profiles assigned to the assignment group.
 - `updated_at` (String) Timestamp when the assignment group was last updated.
