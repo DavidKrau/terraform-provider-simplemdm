@@ -99,6 +99,19 @@ var resourceDefinitions = []ResourceDefinition{
 		APIEndpoints: []string{"/api/v1/device_groups"},
 	},
 	{
+		TypeName:    "simplemdm_enrollment",
+		Factory:     EnrollmentResource,
+		DocsPath:    "docs/resources/enrollment.md",
+		ExampleDirs: []string{"examples/resources/simplemdm_enrollment"},
+		TestFiles: []string{
+			"provider/enrollment_resource_test.go",
+		},
+		APIEndpoints: []string{
+			"/api/v1/enrollments",
+			"/api/v1/enrollments/{enrollment_id}/invitations",
+		},
+	},
+	{
 		TypeName:     "simplemdm_script",
 		Factory:      ScriptResource,
 		DocsPath:     "docs/resources/script.md",
@@ -172,6 +185,14 @@ var dataSourceDefinitions = []DataSourceDefinition{
 		ExampleDirs:  []string{"examples/data-sources/simplemdm_devicegroup"},
 		TestFiles:    []string{"provider/deviceGroup_data_source_test.go"},
 		APIEndpoints: []string{"/api/v1/device_groups"},
+	},
+	{
+		TypeName:     "simplemdm_enrollment",
+		Factory:      EnrollmentDataSource,
+		DocsPath:     "docs/data-sources/enrollment.md",
+		ExampleDirs:  []string{"examples/data-sources/simplemdm_enrollment"},
+		TestFiles:    []string{"provider/enrollment_data_source_test.go"},
+		APIEndpoints: []string{"/api/v1/enrollments"},
 	},
 	{
 		TypeName:     "simplemdm_profile",
