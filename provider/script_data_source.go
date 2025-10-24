@@ -19,8 +19,13 @@ var (
 
 // scriptDataSourceModel maps the data source schema data.
 type scriptDataSourceModel struct {
-	ID   types.String `tfsdk:"id"`
-	Name types.String `tfsdk:"name"`
+	ID              types.String `tfsdk:"id"`
+	Name            types.String `tfsdk:"name"`
+	ScriptFile      types.String `tfsdk:"scriptfile"`
+	VariableSupport types.Bool   `tfsdk:"variablesupport"`
+	CreatedAt       types.String `tfsdk:"created_at"`
+	UpdatedAt       types.String `tfsdk:"updated_at"`
+	CreatedBy       types.String `tfsdk:"created_by"`
 }
 
 // scriptDataSource is a helper function to simplify the provider implementation.
@@ -46,6 +51,26 @@ func (d *scriptDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 			"name": schema.StringAttribute{
 				Computed:    true,
 				Description: "The name of the Script.",
+			},
+			"scriptfile": schema.StringAttribute{
+				Computed:    true,
+				Description: "The script content.",
+			},
+			"variablesupport": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Whether variable support is enabled for this script.",
+			},
+			"created_at": schema.StringAttribute{
+				Computed:    true,
+				Description: "Timestamp when the Script was created.",
+			},
+			"updated_at": schema.StringAttribute{
+				Computed:    true,
+				Description: "Timestamp when the Script was last updated.",
+			},
+			"created_by": schema.StringAttribute{
+				Computed:    true,
+				Description: "User that created the Script in SimpleMDM.",
 			},
 			"id": schema.StringAttribute{
 				Required:    true,
@@ -73,6 +98,11 @@ func (d *scriptDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	// Map response body to model
 	state.Name = types.StringValue(script.Data.Attributes.Name)
 	state.ID = types.StringValue(strconv.Itoa(script.Data.ID))
+	state.ScriptFile = types.StringValue(script.Data.Attributes.Content)
+	state.VariableSupport = types.BoolValue(script.Data.Attributes.VariableSupport)
+	state.CreatedAt = types.StringValue(script.Data.Attributes.CreatedAt)
+	state.UpdatedAt = types.StringValue(script.Data.Attributes.UpdatedAt)
+	state.CreatedBy = types.StringValue(script.Data.Attributes.CreateBy)
 
 	// Set state
 

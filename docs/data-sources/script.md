@@ -27,4 +27,9 @@ data "simplemdm_script" "script" {
 
 ### Read-Only
 
+- `created_at` (String) Timestamp when the Script was created.
+- `created_by` (String) User that created the Script in SimpleMDM.
 - `name` (String) The name of the Script.
+- `scriptfile` (String) The script content.
+- `updated_at` (String) Timestamp when the Script was last updated.
+- `variablesupport` (Boolean) Whether variable support is enabled for this script.
