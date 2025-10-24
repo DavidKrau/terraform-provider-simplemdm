@@ -34,3 +34,8 @@ data "simplemdm_assignmentgroup" "example" {
 - `groups` (Set of String) IDs of device groups assigned to the assignment group.
 - `install_type` (String) Install type used when the assignment group is of type munki.
 - `name` (String) The name of the assignment group.
+- `profiles` (Set of String) IDs of profiles assigned to the assignment group.
+- `created_at` (String) Timestamp when the assignment group was created.
+- `updated_at` (String) Timestamp when the assignment group was last updated.
+- `device_count` (Number) Number of devices currently assigned to the assignment group.
+- `group_count` (Number) Number of device groups currently assigned to the assignment group.

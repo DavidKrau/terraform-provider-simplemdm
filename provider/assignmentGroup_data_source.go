@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/DavidKrau/simplemdm-go-client"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -26,6 +25,11 @@ type assignmentGroupDataSourceModel struct {
 	Apps        types.Set    `tfsdk:"apps"`
 	Groups      types.Set    `tfsdk:"groups"`
 	Devices     types.Set    `tfsdk:"devices"`
+	Profiles    types.Set    `tfsdk:"profiles"`
+	CreatedAt   types.String `tfsdk:"created_at"`
+	UpdatedAt   types.String `tfsdk:"updated_at"`
+	DeviceCount types.Int64  `tfsdk:"device_count"`
+	GroupCount  types.Int64  `tfsdk:"group_count"`
 }
 
 func AssignmentGroupDataSource() datasource.DataSource {
@@ -79,6 +83,27 @@ func (d *assignmentGroupDataSource) Schema(_ context.Context, _ datasource.Schem
 				ElementType: types.StringType,
 				Description: "IDs of devices assigned directly to the assignment group.",
 			},
+			"profiles": schema.SetAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "IDs of profiles assigned to the assignment group.",
+			},
+			"created_at": schema.StringAttribute{
+				Computed:    true,
+				Description: "Timestamp when the assignment group was created.",
+			},
+			"updated_at": schema.StringAttribute{
+				Computed:    true,
+				Description: "Timestamp when the assignment group was last updated.",
+			},
+			"device_count": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of devices currently assigned to the assignment group.",
+			},
+			"group_count": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of device groups currently assigned to the assignment group.",
+			},
 		},
 	}
 }
@@ -108,7 +133,7 @@ func (d *assignmentGroupDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	assignmentGroup, err := d.client.AssignmentGroupGet(state.ID.ValueString())
+	assignmentGroup, err := fetchAssignmentGroup(ctx, d.client, state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read SimpleMDM assignment group",
@@ -127,25 +152,28 @@ func (d *assignmentGroupDataSource) Read(ctx context.Context, req datasource.Rea
 		state.InstallType = types.StringNull()
 	}
 
-	state.Apps = buildStringSetFromRelationship(assignmentGroup.Data.Relationships.Apps.Data)
-	state.Groups = buildStringSetFromRelationship(assignmentGroup.Data.Relationships.DeviceGroups.Data)
-	state.Devices = buildStringSetFromRelationship(assignmentGroup.Data.Relationships.Devices.Data)
+	state.Apps = buildStringSetFromRelationshipItems(assignmentGroup.Data.Relationships.Apps.Data)
+	state.Groups = buildStringSetFromRelationshipItems(assignmentGroup.Data.Relationships.DeviceGroups.Data)
+	state.Devices = buildStringSetFromRelationshipItems(assignmentGroup.Data.Relationships.Devices.Data)
+	state.Profiles = buildStringSetFromRelationshipItems(assignmentGroup.Data.Relationships.Profiles.Data)
+
+	if assignmentGroup.Data.Attributes.CreatedAt != "" {
+		state.CreatedAt = types.StringValue(assignmentGroup.Data.Attributes.CreatedAt)
+	} else {
+		state.CreatedAt = types.StringNull()
+	}
+
+	if assignmentGroup.Data.Attributes.UpdatedAt != "" {
+		state.UpdatedAt = types.StringValue(assignmentGroup.Data.Attributes.UpdatedAt)
+	} else {
+		state.UpdatedAt = types.StringNull()
+	}
+
+	state.DeviceCount = types.Int64Value(int64(assignmentGroup.Data.Attributes.DeviceCount))
+	state.GroupCount = types.Int64Value(int64(assignmentGroup.Data.Attributes.GroupCount))
 
 	state.ID = types.StringValue(strconv.Itoa(assignmentGroup.Data.ID))
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
-}
-
-func buildStringSetFromRelationship(items []simplemdm.Data) types.Set {
-	if len(items) == 0 {
-		return types.SetNull(types.StringType)
-	}
-
-	values := make([]attr.Value, len(items))
-	for i, item := range items {
-		values[i] = types.StringValue(strconv.Itoa(item.ID))
-	}
-
-	return types.SetValueMust(types.StringType, values)
 }
