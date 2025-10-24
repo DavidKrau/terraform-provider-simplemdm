@@ -268,7 +268,7 @@ func (r *scriptJobResource) Read(ctx context.Context, req resource.ReadRequest, 
 	// Update fields returned by the API
 	//state.ScriptId = types.StringValue(scriptJob.Data.Attributes.ScriptName)
 	state.ID = types.StringValue(strconv.Itoa(scriptJob.Data.ID))
-	if customAttributeID := scriptJob.Data.Relationships.CustomAttribute.Data.ID; customAttributeID != "" {
+	if customAttributeID := scriptJobCustomAttributeID(scriptJob); customAttributeID != "" {
 		state.CustomAttribute = types.StringValue(customAttributeID)
 	} else {
 		state.CustomAttribute = types.StringNull()
@@ -293,6 +293,52 @@ func (r *scriptJobResource) Update(ctx context.Context, req resource.UpdateReque
 		"Update Not Supported",
 		"Updating this resource is not supported. Please destroy and recreate the resource.",
 	)
+}
+
+func scriptJobCustomAttributeID(scriptJob *simplemdm.SimplemdmDefaultStruct) string {
+	if scriptJob == nil {
+		return ""
+	}
+
+	switch relationships := any(scriptJob.Data.Relationships).(type) {
+	case simplemdm.Relations:
+		return customAttributeRelationshipID(relationships.CustomAttribute)
+	case *simplemdm.Relations:
+		if relationships == nil {
+			return ""
+		}
+		return customAttributeRelationshipID(relationships.CustomAttribute)
+	default:
+		return ""
+	}
+}
+
+func customAttributeRelationshipID(customAttribute any) string {
+	switch ca := customAttribute.(type) {
+	case simplemdm.CustomAttribute:
+		return customAttributeDataID(ca.Data)
+	case *simplemdm.CustomAttribute:
+		if ca == nil {
+			return ""
+		}
+		return customAttributeDataID(ca.Data)
+	default:
+		return ""
+	}
+}
+
+func customAttributeDataID(data any) string {
+	switch d := data.(type) {
+	case simplemdm.DataCustomAttributes:
+		return d.ID
+	case *simplemdm.DataCustomAttributes:
+		if d == nil {
+			return ""
+		}
+		return d.ID
+	default:
+		return ""
+	}
 }
 
 func convertSetToSlice(ctx context.Context, set types.Set) ([]string, error) {
