@@ -496,8 +496,11 @@ func normalizeJSON(input string) (string, error) {
 		return "", fmt.Errorf("expected JSON object or array")
 	}
 
+	decoder := json.NewDecoder(strings.NewReader(trimmed))
+	decoder.UseNumber()
+
 	var value any
-	if err := json.Unmarshal([]byte(trimmed), &value); err != nil {
+	if err := decoder.Decode(&value); err != nil {
 		return "", err
 	}
 
