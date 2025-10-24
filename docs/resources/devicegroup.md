@@ -14,7 +14,8 @@ Device Group resource can be used to manage Device Group. Can be used together w
 
 ```terraform
 resource "simplemdm_devicegroup" "testgroup" {
-  name = "group2"
+  name       = "group2"
+  clone_from = "123456"
   attributes = {
     "myattribute" = "attributevalue"
   }
@@ -33,6 +34,7 @@ resource "simplemdm_devicegroup" "testgroup" {
 ### Optional
 
 - `attributes` (Map of String) Optional. Map of Custom Configuration Profiles and values set for this Device Group
+- `clone_from` (String) Optional. Clone configuration from an existing legacy device group. Changing this value forces a new device group to be created.
 - `customprofiles` (Set of String) Optional. List of Custom Configuration Profiles assigned to this Device Group
 - `profiles` (Set of String) Optional. List of Configuration Profiles assigned to this Device Group
 

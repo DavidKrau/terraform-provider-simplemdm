@@ -2,11 +2,15 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -29,6 +33,7 @@ type deviceGroupResourceModel struct {
 	Attributes     types.Map    `tfsdk:"attributes"`
 	Profiles       types.Set    `tfsdk:"profiles"`
 	CustomProfiles types.Set    `tfsdk:"customprofiles"`
+	CloneFrom      types.String `tfsdk:"clone_from"`
 }
 
 // deviceGroupResource is a helper function to simplify the provider implementation.
@@ -82,6 +87,13 @@ func (r *deviceGroupResource) Schema(_ context.Context, _ resource.SchemaRequest
 				Optional:    true,
 				Description: "Optional. List of Custom Configuration Profiles assigned to this Device Group",
 			},
+			"clone_from": schema.StringAttribute{
+				Optional:    true,
+				Description: "Optional. Clone configuration from an existing legacy device group. Changing this value forces a new device group to be created.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			"attributes": schema.MapAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
@@ -106,58 +118,60 @@ func (r *deviceGroupResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	resp.Diagnostics.AddError(
-		"Resource can not be created!",
-		"Device groups currently do not support creation via API request, if you wish to create new group  "+
-			"go to website and create group and use import. Name of the group also can not be managed via provider, "+
-			"same as deletion of the group can not be done via terraform. This will be implemented properly once API will have correct endpoints.",
+	var (
+		deviceGroup *simplemdm.SimplemdmDefaultStruct
+		err         error
 	)
+
+	if !plan.CloneFrom.IsNull() && !plan.CloneFrom.IsUnknown() && plan.CloneFrom.ValueString() != "" {
+		deviceGroup, err = cloneDeviceGroup(ctx, r.client, plan.CloneFrom.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error cloning device group",
+				"Could not clone SimpleMDM device group: "+err.Error(),
+			)
+			return
+		}
+	} else {
+		deviceGroup, err = r.client.DeviceGroupCreate(plan.Name.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error creating device group",
+				"Could not create SimpleMDM device group: "+err.Error(),
+			)
+			return
+		}
+	}
+
+	plan.ID = types.StringValue(strconv.Itoa(deviceGroup.Data.ID))
+
+	if plan.Name.ValueString() != "" && plan.Name.ValueString() != deviceGroup.Data.Attributes.Name {
+		if err := updateDeviceGroupName(ctx, r.client, plan.ID.ValueString(), plan.Name.ValueString()); err != nil {
+			resp.Diagnostics.AddError(
+				"Error updating device group name",
+				"Could not update SimpleMDM device group name: "+err.Error(),
+			)
+			return
+		}
+	}
+
+	r.reconcileAttributes(ctx, plan.ID.ValueString(), types.MapNull(types.StringType), plan.Attributes, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	// // Generate API request body from plan
-	// deviceGroup, err := r.client.CreateDeviceGroup(plan.Name.ValueString())
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(
-	// 		"Error creating device group",
-	// 		"Could not create device group, unexpected error: "+err.Error(),
-	// 	)
-	// 	return
-	// }
 
-	// plan.ID = types.StringValue(strconv.Itoa(deviceGroup.Data.ID))
+	r.reconcileProfiles(ctx, plan.ID.ValueString(), types.SetNull(types.StringType), plan.Profiles, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	// //setting attributes
-	// for attribute, value := range plan.Attributes.Elements() {
-	// 	err := r.client.SetAttributeForDeviceGroupAttribute(plan.ID.ValueString(), attribute, strings.Replace(value.String(), "\"", "", 2))
-	// 	if err != nil {
-	// 		resp.Diagnostics.AddError(
-	// 			"Error updating device group attribute",
-	// 			"Could not set attribute value for device group, unexpected error: "+err.Error(),
-	// 		)
-	// 		return
-	// 	}
-	// }
+	r.reconcileCustomProfiles(ctx, plan.ID.ValueString(), types.SetNull(types.StringType), plan.CustomProfiles, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	// // Assign all profiles in plan
-	// for _, profileId := range plan.Profiles.Elements() {
-	// 	err := r.client.AssignToAssignmentGroup(plan.ID.ValueString(), strings.Replace(profileId.String(), "\"", "", 2), "profiles")
-	// 	if err != nil {
-	// 		resp.Diagnostics.AddError(
-	// 			"Error updating device group profile assignment",
-	// 			"Could not update device group profile assignment, unexpected error: "+err.Error(),
-	// 		)
-	// 		return
-	// 	}
-	// }
-	// // Map response body to schema and populate Computed attribute values
-
-	// Set state to fully populated data
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 }
 
 func (r *deviceGroupResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -275,158 +289,33 @@ func (r *deviceGroupResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	// Generate API request body from plan
-	// err := r.client.UpdateDeviceGroup(plan.ID.ValueString())
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(
-	// 		"Error updating device group",
-	// 		"Could not update device group, unexpected error: "+err.Error(),
-	// 	)
-	// 	return
-	// }
-
-	resp.Diagnostics.AddWarning(
-		"Name can not be changed via terraform",
-		"Device groups currently do not support change of the name via API request, in case you wish to change "+
-			"name of the device group please do it via website.",
-	)
-
-	//comparing planed attributes and their values to attributes in SimpleMDM
-	for planAttribute, planValue := range plan.Attributes.Elements() {
-		found := false
-		for stateAttribute, stateValue := range state.Attributes.Elements() {
-			if planAttribute == stateAttribute {
-				found = true
-				if planValue != stateValue {
-					err := r.client.AttributeSetAttributeForDeviceGroup(plan.ID.ValueString(), planAttribute, strings.Replace(planValue.String(), "\"", "", 2))
-					if err != nil {
-						resp.Diagnostics.AddError(
-							"Error updating SimpleMDM device group attributes value",
-							"Could not update SimpleMDM device group attributes value "+plan.ID.ValueString()+": "+err.Error(),
-						)
-						return
-					}
-				}
-				break
-			}
-		}
-		if !found {
-			err := r.client.AttributeSetAttributeForDeviceGroup(plan.ID.ValueString(), planAttribute, strings.Replace(planValue.String(), "\"", "", 2))
-			if err != nil {
-				resp.Diagnostics.AddError(
-					"Error updating SimpleMDM device group attributes value",
-					"Could not update SimpleMDM device group attributes value "+plan.ID.ValueString()+": "+err.Error(),
-				)
-				return
-			}
-		}
-	}
-
-	//comparing attributes from SimpleMDM to the plan to find attributes set manually in MDM
-	for stateAttribute := range state.Attributes.Elements() {
-		found := false
-		for planAttribute := range plan.Attributes.Elements() {
-			if stateAttribute == planAttribute {
-				found = true
-				break
-			}
-		}
-		if !found {
-			err := r.client.AttributeSetAttributeForDeviceGroup(plan.ID.ValueString(), stateAttribute, "")
-			if err != nil {
-				resp.Diagnostics.AddError(
-					"Error updating SimpleMDM device group attributes value",
-					"Could not update SimpleMDM device group attributes value "+plan.ID.ValueString()+": "+err.Error(),
-				)
-				return
-			}
-		}
-	}
-
-	//Handling assigned profiles
-	//reading assigned profiles from simpleMDM
-	stateProfiles := []string{}
-	for _, profileId := range state.Profiles.Elements() {
-		stateProfiles = append(stateProfiles, strings.Replace(profileId.String(), "\"", "", 2))
-	}
-
-	//reading configured profiles from TF file
-	planProfiles := []string{}
-	for _, profileId := range plan.Profiles.Elements() {
-		planProfiles = append(planProfiles, strings.Replace(profileId.String(), "\"", "", 2))
-	}
-
-	// // creating diff
-	profilesToAdd, profilesToRemove := diffFunction(stateProfiles, planProfiles)
-
-	// //adding profiles
-	for _, profileId := range profilesToAdd {
-		err := r.client.ProfileAssignToGroup(profileId, plan.ID.ValueString())
-		if err != nil {
+	if plan.Name.ValueString() != state.Name.ValueString() {
+		if err := updateDeviceGroupName(ctx, r.client, plan.ID.ValueString(), plan.Name.ValueString()); err != nil {
 			resp.Diagnostics.AddError(
-				"Error updating device group profile assignment",
-				"Could not update device group profile assignment, unexpected error: "+err.Error(),
+				"Error updating device group name",
+				"Could not update SimpleMDM device group name "+plan.ID.ValueString()+": "+err.Error(),
 			)
 			return
 		}
 	}
 
-	//removing profiles
-	for _, profileId := range profilesToRemove {
-		err := r.client.ProfileUnAssignToGroup(profileId, plan.ID.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating device group profile assignment",
-				"Could not update device group profile assignment, unexpected error: "+err.Error(),
-			)
-			return
-		}
+	r.reconcileAttributes(ctx, plan.ID.ValueString(), state.Attributes, plan.Attributes, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	//Handling assigned custom profiles
-	stateCustomProfiles := []string{}
-	for _, profileId := range state.CustomProfiles.Elements() {
-		stateCustomProfiles = append(stateCustomProfiles, strings.Replace(profileId.String(), "\"", "", 2))
+	r.reconcileProfiles(ctx, plan.ID.ValueString(), state.Profiles, plan.Profiles, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	//reading configured profiles from TF file
-	planCustomProfiles := []string{}
-	for _, profileId := range plan.CustomProfiles.Elements() {
-		planCustomProfiles = append(planCustomProfiles, strings.Replace(profileId.String(), "\"", "", 2))
-	}
-
-	// // creating diff
-	customProfilesToAdd, customProfilesToRemove := diffFunction(stateCustomProfiles, planCustomProfiles)
-
-	// //adding profiles
-	for _, profileId := range customProfilesToAdd {
-		err := r.client.CustomProfileAssignToDeviceGroup(profileId, plan.ID.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating device group profile assignment",
-				"Could not update device group profile assignment, unexpected error: "+err.Error(),
-			)
-			return
-		}
-	}
-
-	//removing profiles
-	for _, profileId := range customProfilesToRemove {
-		err := r.client.CustomProfileUnassignFromDeviceGroup(profileId, plan.ID.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating device group profile assignment",
-				"Could not update device group profile assignment, unexpected error: "+err.Error(),
-			)
-			return
-		}
+	r.reconcileCustomProfiles(ctx, plan.ID.ValueString(), state.CustomProfiles, plan.CustomProfiles, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 }
 
 func (r *deviceGroupResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -437,19 +326,174 @@ func (r *deviceGroupResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	resp.Diagnostics.AddWarning(
-		"Device group can not be deleted",
-		"Applying this resource destruction will only remove the resource from the Terraform state "+
-			"and will not call the deletion API due to API limitations. Manually use the web interface to fully destroy this resource.",
-	)
+	if err := r.client.DeviceGroupDelete(state.ID.ValueString()); err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting SimpleMDM device group",
+			"Could not delete SimpleMDM device group "+state.ID.ValueString()+": "+err.Error(),
+		)
+		return
+	}
+}
 
-	// // Delete existing group
-	// err := r.client.DeleteDeviceGroup(state.ID.ValueString())
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(
-	// 		"Error Deleting SimpleMDM device groups",
-	// 		"Could not delte device group, unexpected error: "+err.Error(),
-	// 	)
-	// 	return
-	// }
+func (r *deviceGroupResource) reconcileAttributes(ctx context.Context, groupID string, oldAttributes, newAttributes types.Map, diags *diag.Diagnostics) {
+	_ = ctx
+
+	if diags.HasError() {
+		return
+	}
+
+	planElements := map[string]attr.Value{}
+	stateElements := map[string]attr.Value{}
+
+	if !newAttributes.IsNull() && !newAttributes.IsUnknown() {
+		planElements = newAttributes.Elements()
+	}
+
+	if !oldAttributes.IsNull() && !oldAttributes.IsUnknown() {
+		stateElements = oldAttributes.Elements()
+	}
+
+	for planAttribute, planValue := range planElements {
+		trimmed := strings.Replace(planValue.String(), "\"", "", 2)
+
+		if stateValue, ok := stateElements[planAttribute]; ok {
+			if planValue.Equal(stateValue) {
+				continue
+			}
+		}
+
+		if err := r.client.AttributeSetAttributeForDeviceGroup(groupID, planAttribute, trimmed); err != nil {
+			diags.AddError(
+				"Error updating SimpleMDM device group attribute",
+				fmt.Sprintf("Could not update attribute %q on device group %s: %s", planAttribute, groupID, err.Error()),
+			)
+			return
+		}
+	}
+
+	for stateAttribute := range stateElements {
+		if _, ok := planElements[stateAttribute]; ok {
+			continue
+		}
+
+		if err := r.client.AttributeSetAttributeForDeviceGroup(groupID, stateAttribute, ""); err != nil {
+			diags.AddError(
+				"Error clearing SimpleMDM device group attribute",
+				fmt.Sprintf("Could not clear attribute %q on device group %s: %s", stateAttribute, groupID, err.Error()),
+			)
+			return
+		}
+	}
+}
+
+func (r *deviceGroupResource) reconcileProfiles(ctx context.Context, groupID string, oldProfiles, newProfiles types.Set, diags *diag.Diagnostics) {
+	_ = ctx
+
+	if diags.HasError() {
+		return
+	}
+
+	stateProfiles := extractStringSet(oldProfiles)
+	planProfiles := extractStringSet(newProfiles)
+
+	profilesToAdd, profilesToRemove := diffFunction(stateProfiles, planProfiles)
+
+	for _, profileID := range profilesToAdd {
+		if err := r.client.ProfileAssignToGroup(profileID, groupID); err != nil {
+			diags.AddError(
+				"Error assigning profile to device group",
+				fmt.Sprintf("Could not assign profile %s to device group %s: %s", profileID, groupID, err.Error()),
+			)
+			return
+		}
+	}
+
+	for _, profileID := range profilesToRemove {
+		if err := r.client.ProfileUnAssignToGroup(profileID, groupID); err != nil {
+			diags.AddError(
+				"Error unassigning profile from device group",
+				fmt.Sprintf("Could not unassign profile %s from device group %s: %s", profileID, groupID, err.Error()),
+			)
+			return
+		}
+	}
+}
+
+func (r *deviceGroupResource) reconcileCustomProfiles(ctx context.Context, groupID string, oldProfiles, newProfiles types.Set, diags *diag.Diagnostics) {
+	_ = ctx
+
+	if diags.HasError() {
+		return
+	}
+
+	stateProfiles := extractStringSet(oldProfiles)
+	planProfiles := extractStringSet(newProfiles)
+
+	profilesToAdd, profilesToRemove := diffFunction(stateProfiles, planProfiles)
+
+	for _, profileID := range profilesToAdd {
+		if err := r.client.CustomProfileAssignToDeviceGroup(profileID, groupID); err != nil {
+			diags.AddError(
+				"Error assigning custom profile to device group",
+				fmt.Sprintf("Could not assign custom profile %s to device group %s: %s", profileID, groupID, err.Error()),
+			)
+			return
+		}
+	}
+
+	for _, profileID := range profilesToRemove {
+		if err := r.client.CustomProfileUnassignFromDeviceGroup(profileID, groupID); err != nil {
+			diags.AddError(
+				"Error unassigning custom profile from device group",
+				fmt.Sprintf("Could not unassign custom profile %s from device group %s: %s", profileID, groupID, err.Error()),
+			)
+			return
+		}
+	}
+}
+
+func extractStringSet(set types.Set) []string {
+	if set.IsNull() || set.IsUnknown() {
+		return []string{}
+	}
+
+	values := []string{}
+	for _, value := range set.Elements() {
+		values = append(values, strings.Replace(value.String(), "\"", "", 2))
+	}
+
+	return values
+}
+
+func updateDeviceGroupName(ctx context.Context, client *simplemdm.Client, groupID, name string) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPatch, fmt.Sprintf("https://%s/api/v1/device_groups/%s", client.HostName, groupID), nil)
+	if err != nil {
+		return err
+	}
+
+	query := req.URL.Query()
+	query.Add("name", name)
+	req.URL.RawQuery = query.Encode()
+
+	_, err = client.RequestResponse200(req)
+	return err
+}
+
+func cloneDeviceGroup(ctx context.Context, client *simplemdm.Client, sourceID string) (*simplemdm.SimplemdmDefaultStruct, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("https://%s/api/v1/device_groups/%s/clone", client.HostName, sourceID), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := client.RequestResponse200(req)
+	if err != nil {
+		return nil, err
+	}
+
+	clonedGroup := simplemdm.SimplemdmDefaultStruct{}
+	if err := json.Unmarshal(body, &clonedGroup); err != nil {
+		return nil, err
+	}
+
+	return &clonedGroup, nil
 }

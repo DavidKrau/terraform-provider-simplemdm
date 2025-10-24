@@ -1,5 +1,6 @@
 resource "simplemdm_devicegroup" "testgroup" {
-  name = "group2"
+  name       = "group2"
+  clone_from = "123456"
   attributes = {
     "myattribute" = "attributevalue"
   }
