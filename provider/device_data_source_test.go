@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -9,15 +10,18 @@ import (
 func TestAccDeviceDataSource(t *testing.T) {
 	testAccPreCheck(t)
 
+	deviceID := testAccRequireEnv(t, "SIMPLEMDM_DEVICE_ID")
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Read testing
 			{
-				Config: providerConfig + `data "simplemdm_device" "test" {id ="1601809"}`,
+				Config: providerConfig + fmt.Sprintf(`data "simplemdm_device" "test" {id ="%s"}`, deviceID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify returned values
-					resource.TestCheckResourceAttr("data.simplemdm_device.test", "name", "Test device"),
+					resource.TestCheckResourceAttr("data.simplemdm_device.test", "id", deviceID),
+					resource.TestCheckResourceAttrSet("data.simplemdm_device.test", "name"),
 				),
 			},
 		},
