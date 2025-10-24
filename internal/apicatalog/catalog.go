@@ -20,6 +20,13 @@ var Catalog = []EndpointCoverage{
 		DocsURL:        "https://api.simplemdm.com/v1/#tag/Apps",
 	},
 	{
+		Name:           "Managed App Configs",
+		Endpoint:       "/api/v1/apps/{APP_ID}/managed_configs",
+		ResourceType:   "simplemdm_managed_config",
+		DataSourceType: "simplemdm_managed_config",
+		DocsURL:        "https://api.simplemdm.com/v1/#tag/Managed-App-Configs",
+	},
+	{
 		Name:           "Assignment Groups",
 		Endpoint:       "/api/v1/assignment_groups",
 		ResourceType:   "simplemdm_assignmentgroup",

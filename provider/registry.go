@@ -127,6 +127,14 @@ var resourceDefinitions = []ResourceDefinition{
 		TestFiles:    []string{"provider/scriptJob_resource_test.go"},
 		APIEndpoints: []string{"/api/v1/script_jobs"},
 	},
+	{
+		TypeName:     "simplemdm_managed_config",
+		Factory:      ManagedConfigResource,
+		DocsPath:     "docs/resources/managed_config.md",
+		ExampleDirs:  []string{"examples/resources/simplemdm_managed_config"},
+		TestFiles:    []string{"provider/managedConfig_resource_test.go"},
+		APIEndpoints: []string{"/api/v1/apps/{APP_ID}/managed_configs", "/api/v1/apps/{APP_ID}/managed_configs/push"},
+	},
 }
 
 var dataSourceDefinitions = []DataSourceDefinition{
@@ -217,6 +225,14 @@ var dataSourceDefinitions = []DataSourceDefinition{
 		ExampleDirs:  []string{"examples/data-sources/simplemdm_scriptjob"},
 		TestFiles:    []string{"provider/scriptJob_data_source_test.go"},
 		APIEndpoints: []string{"/api/v1/script_jobs"},
+	},
+	{
+		TypeName:     "simplemdm_managed_config",
+		Factory:      ManagedConfigDataSource,
+		DocsPath:     "docs/data-sources/managed_config.md",
+		ExampleDirs:  []string{"examples/data-sources/simplemdm_managed_config"},
+		TestFiles:    []string{"provider/managedConfig_data_source_test.go"},
+		APIEndpoints: []string{"/api/v1/apps/{APP_ID}/managed_configs"},
 	},
 }
 
