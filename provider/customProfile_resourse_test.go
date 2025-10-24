@@ -33,6 +33,10 @@ func TestAccCustomProfileResource(t *testing.T) {
 					resource.TestCheckResourceAttr("simplemdm_customprofile.test", "attributesupport", "true"),
 					resource.TestCheckResourceAttr("simplemdm_customprofile.test", "escapeattributes", "true"),
 					resource.TestCheckResourceAttr("simplemdm_customprofile.test", "reinstallafterosupdate", "true"),
+					resource.TestCheckResourceAttrSet("simplemdm_customprofile.test", "profileidentifier"),
+					resource.TestCheckResourceAttr("simplemdm_customprofile.test", "groupcount", "0"),
+					resource.TestCheckResourceAttr("simplemdm_customprofile.test", "devicecount", "0"),
+					resource.TestCheckResourceAttrSet("simplemdm_customprofile.test", "profilesha"),
 					// Verify dynamic values have any value set in the state.
 					resource.TestCheckResourceAttrSet("simplemdm_customprofile.test", "id"),
 				),
@@ -66,6 +70,10 @@ func TestAccCustomProfileResource(t *testing.T) {
 					resource.TestCheckResourceAttr("simplemdm_customprofile.test", "attributesupport", "false"),
 					resource.TestCheckResourceAttr("simplemdm_customprofile.test", "escapeattributes", "false"),
 					resource.TestCheckResourceAttr("simplemdm_customprofile.test", "reinstallafterosupdate", "false"),
+					resource.TestCheckResourceAttrSet("simplemdm_customprofile.test", "profileidentifier"),
+					resource.TestCheckResourceAttr("simplemdm_customprofile.test", "groupcount", "0"),
+					resource.TestCheckResourceAttr("simplemdm_customprofile.test", "devicecount", "0"),
+					resource.TestCheckResourceAttrSet("simplemdm_customprofile.test", "profilesha"),
 				),
 			},
 			// Delete testing automatically occurs in TestCase

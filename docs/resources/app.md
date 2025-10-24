@@ -13,10 +13,18 @@ App resource can be used to manage Apps.
 ## Example Usage
 
 ```terraform
-resource "simplemdm_app" "app" {
+resource "simplemdm_app" "marketing" {
   app_store_id = "1090161858"
   name         = "Marketing App"
   deploy_to    = "outdated" // Defaults to "none". Valid values: "none", "outdated", "all".
+}
+
+# Computed attributes such as `installation_channels`, `status`, or `version`
+# can be referenced once the app has been created. This output illustrates how
+# to inspect the deployment channels that SimpleMDM reports for the app.
+output "marketing_installation_channels" {
+  description = "Deployment channels supported by the Marketing App."
+  value       = simplemdm_app.marketing.installation_channels
 }
 ```
 
@@ -26,22 +34,22 @@ resource "simplemdm_app" "app" {
 ### Optional
 
 - `app_store_id` (String) Required. The Apple App Store ID of the app to be added. Example: 1090161858.
+- `binary_file` (String) Optional. Absolute or relative path to an app binary (ipa or pkg) to upload. Required when managing enterprise, custom B2B, or macOS package apps.
 - `bundle_id` (String) Required. The bundle identifier of the Apple App Store app to be added. Example: com.myCompany.MyApp1
-- `binary_file` (String) Optional. Absolute or relative path to an app binary (ipa or pkg) to upload. Required when managing enterprise, custom B2B, or macOS package apps. Exactly one of `app_store_id`, `bundle_id`, or `binary_file` must be provided.
 - `deploy_to` (String) Optional. Deploy the app to associated devices immediately after the app has been uploaded and processed. Possible values are none, outdated or all. Defaults to none.
 - `name` (String) The name that SimpleMDM will use to reference this app. If left blank, SimpleMDM will automatically set this to the app name specified by the binary.
 
 ### Read-Only
 
-- `id` (String) The ID of this resource.
-- `status` (String) The current deployment status of the app.
 - `app_type` (String) The catalog classification of the app, for example app store, enterprise, or custom b2b.
-- `version` (String) The latest version reported by SimpleMDM for the app.
+- `created_at` (String) Timestamp when the app was added to SimpleMDM.
+- `id` (String) The ID of this resource.
+- `installation_channels` (List of String) The deployment channels supported by the app.
 - `platform_support` (String) The platform supported by the app, such as iOS or macOS.
 - `processing_status` (String) The current processing status of the app binary within SimpleMDM.
-- `installation_channels` (List of String) The deployment channels supported by the app.
-- `created_at` (String) Timestamp when the app was added to SimpleMDM.
+- `status` (String) The current deployment status of the app.
 - `updated_at` (String) Timestamp when the app was last updated in SimpleMDM.
+- `version` (String) The latest version reported by SimpleMDM for the app.
 
 ## Import
 
