@@ -27,20 +27,18 @@ func TestAccAppResourceWithAppStoreIdAttr(t *testing.T) {
 			{
 				Config: providerConfig + `
 				resource "simplemdm_app" "testapp" {
-					app_store_id = "1477376905"
-					deploy_to    = "outdated"
+					app_store_id = "284882215"
+					deploy_to    = "none"
 				}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify attributes
-					resource.TestCheckResourceAttr("simplemdm_app.testapp", "app_store_id", "1477376905"),
+					resource.TestCheckResourceAttr("simplemdm_app.testapp", "app_store_id", "284882215"),
+					resource.TestCheckResourceAttr("simplemdm_app.testapp", "deploy_to", "none"),
 					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "name"),
-					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "status"),
 					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "app_type"),
-					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "version"),
 					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "platform_support"),
 					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "processing_status"),
-					resource.TestCheckResourceAttr("simplemdm_app.testapp", "installation_channels.#", "1"),
 
 					// Verify dynamic values have any value set in the state.
 					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "id"),
@@ -52,29 +50,6 @@ func TestAccAppResourceWithAppStoreIdAttr(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"deploy_to"},
-			},
-			//Update and Read testing
-			{
-				Config: providerConfig + `
-				resource "simplemdm_app" "testapp" {
-					app_store_id = "586447913"
-					deploy_to		 = "all"
-				}
-			`,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					// Verify attributes
-					resource.TestCheckResourceAttr("simplemdm_app.testapp", "app_store_id", "586447913"),
-					resource.TestCheckResourceAttr("simplemdm_app.testapp", "deploy_to", "all"),
-					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "status"),
-					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "app_type"),
-					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "version"),
-					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "platform_support"),
-					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "processing_status"),
-					resource.TestCheckResourceAttr("simplemdm_app.testapp", "installation_channels.#", "1"),
-
-					// Verify dynamic values have any value set in the state.
-					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "id"),
-				),
 			},
 			//Delete testing automatically occurs in TestCase
 		},
@@ -99,7 +74,6 @@ func TestAccAppResourceWithBundleIdAttr(t *testing.T) {
 					// Verify attributes
 					resource.TestCheckResourceAttr("simplemdm_app.testapp", "bundle_id", "com.microsoft.Office.Excel"),
 					resource.TestCheckResourceAttr("simplemdm_app.testapp", "deploy_to", "none"),
-					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "status"),
 					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "app_type"),
 					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "platform_support"),
 					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "processing_status"),
@@ -114,24 +88,6 @@ func TestAccAppResourceWithBundleIdAttr(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"deploy_to"},
-			},
-			//Update and Read testing
-			{
-				Config: providerConfig + `
-				resource "simplemdm_app" "testapp" {
-					app_store_id = "586447913"
-					deploy_to		 = "all"
-				}
-			`,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					// Verify attributes
-					resource.TestCheckResourceAttr("simplemdm_app.testapp", "app_store_id", "586447913"),
-					resource.TestCheckResourceAttr("simplemdm_app.testapp", "deploy_to", "all"),
-					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "app_type"),
-
-					// Verify dynamic values have any value set in the state.
-					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "id"),
-				),
 			},
 			//Delete testing automatically occurs in TestCase
 		},

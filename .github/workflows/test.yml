@@ -79,5 +79,20 @@ jobs:
       - env:
           TF_ACC: "1"
           SIMPLEMDM_APIKEY: ${{ secrets.SIMPLEMDM_APIKEY }}
+          # Fixture IDs for data source tests
+          SIMPLEMDM_APP_ID: ${{ secrets.SIMPLEMDM_APP_ID }}
+          SIMPLEMDM_ASSIGNMENT_GROUP_ID: ${{ secrets.SIMPLEMDM_ASSIGNMENT_GROUP_ID }}
+          SIMPLEMDM_ATTRIBUTE_NAME: ${{ secrets.SIMPLEMDM_ATTRIBUTE_NAME }}
+          SIMPLEMDM_CUSTOM_PROFILE_ID: ${{ secrets.SIMPLEMDM_CUSTOM_PROFILE_ID }}
+          SIMPLEMDM_DEVICE_GROUP_ID: ${{ secrets.SIMPLEMDM_DEVICE_GROUP_ID }}
+          SIMPLEMDM_DEVICE_ID: ${{ secrets.SIMPLEMDM_DEVICE_ID }}
+          SIMPLEMDM_ENROLLMENT_ID: ${{ secrets.SIMPLEMDM_ENROLLMENT_ID }}
+          SIMPLEMDM_PROFILE_ID: ${{ secrets.SIMPLEMDM_PROFILE_ID }}
+          SIMPLEMDM_SCRIPT_ID: ${{ secrets.SIMPLEMDM_SCRIPT_ID }}
+          SIMPLEMDM_SCRIPT_JOB_ID: ${{ secrets.SIMPLEMDM_SCRIPT_JOB_ID }}
+          # Fixture IDs for resource tests
+          SIMPLEMDM_DEVICE_GROUP_CLONE_SOURCE_ID: ${{ secrets.SIMPLEMDM_DEVICE_GROUP_CLONE_SOURCE_ID }}
+          SIMPLEMDM_ENROLLMENT_CONTACT: ${{ secrets.SIMPLEMDM_ENROLLMENT_CONTACT }}
+          SIMPLEMDM_CUSTOM_DECLARATION_DEVICE_ID: ${{ secrets.SIMPLEMDM_CUSTOM_DECLARATION_DEVICE_ID }}
         run: go test -v -cover ./provider/
         timeout-minutes: 10

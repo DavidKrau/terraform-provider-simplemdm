@@ -160,6 +160,14 @@ func (d *appDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 	state.CreatedAt = resourceModel.CreatedAt
 	state.UpdatedAt = resourceModel.UpdatedAt
 
+	// Set state
+	diags = resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+}
+
 // fetchAppWithParams fetches an app with optional query parameters
 func fetchAppWithParams(ctx context.Context, client *simplemdm.Client, appID string, includeShared types.Bool) (*appAPIResponse, error) {
 	url := fmt.Sprintf("https://%s/api/v1/apps/%s", client.HostName, appID)
@@ -186,15 +194,6 @@ func fetchAppWithParams(ctx context.Context, client *simplemdm.Client, appID str
 	}
 
 	return &app, nil
-}
-
-	// Set state
-
-	diags = resp.State.Set(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 }
 
 // Configure adds the provider configured client to the data source.

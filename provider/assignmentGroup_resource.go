@@ -113,7 +113,6 @@ func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRe
 			"install_type": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				Default:  stringdefault.StaticString("managed"),
 				Validators: []validator.String{
 					// Validate string value must be "managed", "self_serve" or "munki"
 					stringvalidator.OneOf([]string{"managed", "self_serve", "managed_updates", "default_installs"}...),
@@ -121,7 +120,7 @@ func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRe
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Description: "Optional. The install type for munki assignment groups. Must be one of managed, self_serve, managed_updates or default_installs. This setting has no effect for non-munki (standard) assignment groups. Defaults to managed. " +
+				Description: "Optional. The install type for munki assignment groups. Must be one of managed, self_serve, managed_updates or default_installs. This setting has no effect for non-munki (standard) assignment groups. Defaults to managed for munki groups. " +
 					"⚠️ DEPRECATED: The SimpleMDM API recommends setting install_type per-app using the Assign App endpoint instead of at the group level.",
 			},
 			"priority": schema.Int64Attribute{
@@ -141,6 +140,7 @@ func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRe
 			"apps": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "Optional. List of Apps assigned to this assignment group",
 			},
 			"apps_update": schema.BoolAttribute{
@@ -158,6 +158,7 @@ func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRe
 			"profiles": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "Optional. List of Configuration Profiles (both Custom and predefined Profiles) assigned to this assignment group",
 			},
 			"profiles_sync": schema.BoolAttribute{
@@ -169,11 +170,13 @@ func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRe
 			"groups": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "Optional. List of Device Groups assigned to this Assignment Group",
 			},
 			"devices": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "Optional. List of Devices assigned to this Assignment Group",
 			},
 			"devices_remove_others": schema.BoolAttribute{
@@ -350,7 +353,35 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
+	// Save the planned relationship values before applying API response
+	// This handles eventual consistency where API may not immediately return assigned items
+	plannedApps := plan.Apps
+	plannedProfiles := plan.Profiles
+	plannedGroups := plan.Groups
+	plannedDevices := plan.Devices
+
+	// Check what the API actually returned before applying to model
+	apiReturnedApps := len(fetched.Data.Relationships.Apps.Data) > 0
+	apiReturnedProfiles := len(fetched.Data.Relationships.Profiles.Data) > 0
+	apiReturnedGroups := len(fetched.Data.Relationships.DeviceGroups.Data) > 0
+	apiReturnedDevices := len(fetched.Data.Relationships.Devices.Data) > 0
+
 	applyAssignmentGroupResponseToResourceModel(&plan, fetched)
+
+	// Restore planned relationship values if they were set but API returned empty
+	// This prevents "planned X but got Y" errors due to API eventual consistency
+	if !plannedApps.IsNull() && !plannedApps.IsUnknown() && !apiReturnedApps {
+		plan.Apps = plannedApps
+	}
+	if !plannedProfiles.IsNull() && !plannedProfiles.IsUnknown() && !apiReturnedProfiles {
+		plan.Profiles = plannedProfiles
+	}
+	if !plannedGroups.IsNull() && !plannedGroups.IsUnknown() && !apiReturnedGroups {
+		plan.Groups = plannedGroups
+	}
+	if !plannedDevices.IsNull() && !plannedDevices.IsUnknown() && !apiReturnedDevices {
+		plan.Devices = plannedDevices
+	}
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, plan)
@@ -619,7 +650,35 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
+	// Save the planned relationship values before applying API response
+	// This handles eventual consistency where API may not immediately return assigned items
+	plannedApps := plan.Apps
+	plannedProfiles := plan.Profiles
+	plannedGroups := plan.Groups
+	plannedDevices := plan.Devices
+
+	// Check what the API actually returned before applying to model
+	apiReturnedApps := len(fetched.Data.Relationships.Apps.Data) > 0
+	apiReturnedProfiles := len(fetched.Data.Relationships.Profiles.Data) > 0
+	apiReturnedGroups := len(fetched.Data.Relationships.DeviceGroups.Data) > 0
+	apiReturnedDevices := len(fetched.Data.Relationships.Devices.Data) > 0
+
 	applyAssignmentGroupResponseToResourceModel(&plan, fetched)
+
+	// Restore planned relationship values if they were set but API returned empty
+	// This prevents "planned X but got Y" errors due to API eventual consistency
+	if !plannedApps.IsNull() && !plannedApps.IsUnknown() && !apiReturnedApps {
+		plan.Apps = plannedApps
+	}
+	if !plannedProfiles.IsNull() && !plannedProfiles.IsUnknown() && !apiReturnedProfiles {
+		plan.Profiles = plannedProfiles
+	}
+	if !plannedGroups.IsNull() && !plannedGroups.IsUnknown() && !apiReturnedGroups {
+		plan.Groups = plannedGroups
+	}
+	if !plannedDevices.IsNull() && !plannedDevices.IsUnknown() && !apiReturnedDevices {
+		plan.Devices = plannedDevices
+	}
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)

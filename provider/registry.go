@@ -38,7 +38,7 @@ var resourceDefinitions = []ResourceDefinition{
 		Factory:      AttributeResource,
 		DocsPath:     "docs/resources/attribute.md",
 		ExampleDirs:  []string{"examples/resources/simplemdm_attribute"},
-		TestFiles:    []string{"provider/attribute_resourse_test.go"},
+		TestFiles:    []string{"provider/attribute_resource_test.go"},
 		APIEndpoints: []string{"/api/v1/custom_attributes"},
 	},
 	{
@@ -54,7 +54,7 @@ var resourceDefinitions = []ResourceDefinition{
 		Factory:      CustomProfileResource,
 		DocsPath:     "docs/resources/customprofile.md",
 		ExampleDirs:  []string{"examples/resources/simplemdm_customprofile"},
-		TestFiles:    []string{"provider/customProfile_resourse_test.go"},
+		TestFiles:    []string{"provider/customProfile_resource_test.go"},
 		APIEndpoints: []string{"/api/v1/custom_profiles"},
 	},
 	{

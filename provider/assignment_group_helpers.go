@@ -72,13 +72,11 @@ func fetchAssignmentGroup(ctx context.Context, client *simplemdm.Client, id stri
 }
 
 func buildStringSetFromRelationshipItems(items []assignmentGroupRelationshipItem) types.Set {
-	if len(items) == 0 {
-		return types.SetNull(types.StringType)
-	}
-
-	values := make([]attr.Value, len(items))
-	for i, item := range items {
-		values[i] = types.StringValue(strconv.Itoa(item.ID))
+	// Return empty set instead of null for Optional+Computed attributes
+	// This prevents "was X but now null" errors when API doesn't return relationships
+	values := make([]attr.Value, 0, len(items))
+	for _, item := range items {
+		values = append(values, types.StringValue(strconv.Itoa(item.ID)))
 	}
 
 	return types.SetValueMust(types.StringType, values)
@@ -207,11 +205,15 @@ func applyAssignmentGroupResponseToResourceModel(model *assignment_groupResource
 	model.AutoDeploy = types.BoolValue(response.Data.Attributes.AutoDeploy)
 	model.GroupType = types.StringValue(response.Data.Attributes.Type)
 
+	// install_type is only returned by API for munki groups
+	// For standard groups, don't set it (keep existing plan value if any)
 	if response.Data.Attributes.Type == "munki" && response.Data.Attributes.InstallType != "" {
 		model.InstallType = types.StringValue(response.Data.Attributes.InstallType)
-	} else {
+	} else if response.Data.Attributes.Type != "standard" {
+		// For munki groups without install_type, set to null
 		model.InstallType = types.StringNull()
 	}
+	// For standard groups, don't modify InstallType (preserves plan value)
 
 	if response.Data.Attributes.Priority != nil {
 		model.Priority = types.Int64Value(int64(*response.Data.Attributes.Priority))
