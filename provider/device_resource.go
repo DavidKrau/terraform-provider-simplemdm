@@ -193,12 +193,12 @@ func (r *deviceResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-        resp.Diagnostics.Append(r.assignAPIValues(ctx, apiDevice, &plan)...)
-        if resp.Diagnostics.HasError() {
-                return
-        }
+	resp.Diagnostics.Append(r.assignAPIValues(ctx, apiDevice, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-        diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

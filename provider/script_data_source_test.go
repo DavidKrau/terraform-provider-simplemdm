@@ -18,17 +18,17 @@ func TestAccScriptDataSource(t *testing.T) {
 			// Read testing
 			{
 				Config: providerConfig + fmt.Sprintf(`data "simplemdm_script" "test" {id ="%s"}`, scriptID),
-                                Check: resource.ComposeAggregateTestCheckFunc(
-                                        // Verify name of the app
-                                        resource.TestCheckResourceAttr("data.simplemdm_script.test", "id", scriptID),
-                                        resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "name"),
-                                        resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "scriptfile"),
-                                        resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "variablesupport"),
-                                        resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "created_at"),
-                                        resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "updated_at"),
-                                        resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "created_by"),
-                                ),
-                        },
-                },
-        })
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// Verify name of the app
+					resource.TestCheckResourceAttr("data.simplemdm_script.test", "id", scriptID),
+					resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "name"),
+					resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "scriptfile"),
+					resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "variablesupport"),
+					resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "created_at"),
+					resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "updated_at"),
+					resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "created_by"),
+				),
+			},
+		},
+	})
 }
