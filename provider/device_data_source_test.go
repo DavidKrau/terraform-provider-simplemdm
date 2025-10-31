@@ -7,6 +7,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
+// TestAccDeviceDataSource requires an actual enrolled device because devices
+// cannot be created via the SimpleMDM API - they must be enrolled through
+// the normal device enrollment process.
+//
+// To run this test, set SIMPLEMDM_DEVICE_ID to an enrolled device's ID.
 func TestAccDeviceDataSource(t *testing.T) {
 	testAccPreCheck(t)
 

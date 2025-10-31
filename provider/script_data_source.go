@@ -109,7 +109,13 @@ func (d *scriptDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	state.VariableSupport = types.BoolValue(script.Data.Attributes.VariableSupport)
 	state.CreatedAt = types.StringValue(script.Data.Attributes.CreatedAt)
 	state.UpdatedAt = types.StringValue(script.Data.Attributes.UpdatedAt)
-	state.CreatedBy = types.StringValue(script.Data.Attributes.CreateBy)
+	
+	// Handle created_by with null check
+	if script.Data.Attributes.CreateBy != "" {
+		state.CreatedBy = types.StringValue(script.Data.Attributes.CreateBy)
+	} else {
+		state.CreatedBy = types.StringNull()
+	}
 
 	// Set state
 

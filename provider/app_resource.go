@@ -210,28 +210,79 @@ type appAPIResponse struct {
 func newAppResourceModelFromAPI(ctx context.Context, app *appAPIResponse) (appResourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	// Always set string fields from API, even if empty
-	// This ensures Computed fields in data sources are considered "set"
+	// Set computed fields using null for empty values to maintain proper Terraform semantics
 	model := appResourceModel{
-		ID:               types.StringValue(strconv.Itoa(app.Data.ID)),
-		Name:             types.StringValue(app.Data.Attributes.Name),
-		BundleId:         types.StringValue(app.Data.Attributes.BundleIdentifier),
-		BinaryFile:       types.StringNull(),
-		DeployTo:         types.StringValue(app.Data.Attributes.DeployTo),
-		Status:           types.StringValue(app.Data.Attributes.Status),
-		AppType:          types.StringValue(app.Data.Attributes.AppType),
-		Version:          types.StringValue(app.Data.Attributes.Version),
-		PlatformSupport:  types.StringValue(app.Data.Attributes.PlatformSupport),
-		ProcessingStatus: types.StringValue(app.Data.Attributes.ProcessingStatus),
-		CreatedAt:        types.StringValue(app.Data.Attributes.CreatedAt),
-		UpdatedAt:        types.StringValue(app.Data.Attributes.UpdatedAt),
+		ID:         types.StringValue(strconv.Itoa(app.Data.ID)),
+		BinaryFile: types.StringNull(),
+	}
+
+	// Handle optional/computed string fields - use null when empty
+	if app.Data.Attributes.Name != "" {
+		model.Name = types.StringValue(app.Data.Attributes.Name)
+	} else {
+		model.Name = types.StringNull()
+	}
+
+	if app.Data.Attributes.BundleIdentifier != "" {
+		model.BundleId = types.StringValue(app.Data.Attributes.BundleIdentifier)
+	} else {
+		model.BundleId = types.StringNull()
+	}
+
+	// DeployTo has a schema default of "none", so use it when empty
+	if app.Data.Attributes.DeployTo != "" {
+		model.DeployTo = types.StringValue(app.Data.Attributes.DeployTo)
+	} else {
+		model.DeployTo = types.StringValue("none")
+	}
+
+	if app.Data.Attributes.Status != "" {
+		model.Status = types.StringValue(app.Data.Attributes.Status)
+	} else {
+		model.Status = types.StringNull()
+	}
+
+	if app.Data.Attributes.AppType != "" {
+		model.AppType = types.StringValue(app.Data.Attributes.AppType)
+	} else {
+		model.AppType = types.StringNull()
+	}
+
+	if app.Data.Attributes.Version != "" {
+		model.Version = types.StringValue(app.Data.Attributes.Version)
+	} else {
+		model.Version = types.StringNull()
+	}
+
+	if app.Data.Attributes.PlatformSupport != "" {
+		model.PlatformSupport = types.StringValue(app.Data.Attributes.PlatformSupport)
+	} else {
+		model.PlatformSupport = types.StringNull()
+	}
+
+	if app.Data.Attributes.ProcessingStatus != "" {
+		model.ProcessingStatus = types.StringValue(app.Data.Attributes.ProcessingStatus)
+	} else {
+		model.ProcessingStatus = types.StringNull()
+	}
+
+	if app.Data.Attributes.CreatedAt != "" {
+		model.CreatedAt = types.StringValue(app.Data.Attributes.CreatedAt)
+	} else {
+		model.CreatedAt = types.StringNull()
+	}
+
+	if app.Data.Attributes.UpdatedAt != "" {
+		model.UpdatedAt = types.StringValue(app.Data.Attributes.UpdatedAt)
+	} else {
+		model.UpdatedAt = types.StringNull()
 	}
 
 	// Handle AppStoreId which may be nil
 	if storeID := app.Data.Attributes.ITunesStoreID; storeID != nil && *storeID != 0 {
 		model.AppStoreId = types.StringValue(strconv.Itoa(*storeID))
 	} else {
-		model.AppStoreId = types.StringValue("")
+		model.AppStoreId = types.StringNull()
 	}
 
 	// Handle installation channels

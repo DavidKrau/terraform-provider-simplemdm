@@ -1,161 +1,315 @@
-# Test Coverage for Profile and Device Command Resources
+# Test Coverage and Fixture Requirements
 
-## Profile Resource Tests
+## Overview
 
-### Overview
-The profile resource is READ-ONLY because profiles can only be created and managed through the SimpleMDM web UI. The Terraform resource is for state management only.
+This document outlines which tests are fully dynamic (require only `SIMPLEMDM_APIKEY`) and which tests require additional fixtures due to API or operational limitations.
 
-### Test Cases
+---
 
-1. **TestAccProfileResource_ReadOnly**
-   - Reads an existing profile using fixture ID
-   - Verifies all profile attributes are populated correctly
-   - Tests ImportState functionality
-   - Validates that profiles can be managed in Terraform state
+## ✅ Fully Dynamic Tests (No Fixtures Required)
 
-2. **TestAccProfileResource_NonExistent**
-   - Tests error handling for non-existent profile IDs
-   - Verifies appropriate error messages
+These tests can run with only `SIMPLEMDM_APIKEY` and `TF_ACC=1` environment variables. They create all necessary resources dynamically during test execution.
 
-### Running Profile Tests
+### Resources
+- **App Resource** - Creates apps dynamically
+- **Assignment Group Resource** - Creates assignment groups dynamically
+- **Attribute Resource** - Creates custom attributes dynamically
+- **Custom Profile Resource** - Creates custom profiles from test files
+- **Device Group Resource** - Creates device groups dynamically (NOTE: Requires fixture profile IDs for full testing)
+- **Enrollment Resource** - Creates enrollments and device groups dynamically
+- **Managed Config Resource** - Creates managed configs dynamically
+- **Script Resource** - Creates scripts from test files dynamically
+
+### Data Sources
+- **App Data Source** - Uses dynamically created app
+- **Assignment Group Data Source** - Uses dynamically created assignment group
+- **Attribute Data Source** - Uses dynamically created attribute
+- **Custom Profile Data Source** - ✅ **NEWLY DYNAMIC** - Uses dynamically created custom profile
+- **Device Group Data Source** - ✅ **NEWLY DYNAMIC** - Uses dynamically created device group
+- **Enrollment Data Source** - Uses dynamically created enrollment
+- **Managed Config Data Source** - Uses dynamically created managed config
+- **Script Data Source** - Uses dynamically created script
+- **Script Job Data Source** - Uses dynamically created script job
+- **Script Job Resource** - ✅ **NEWLY DYNAMIC** - Creates script and device group dynamically
+
+### Running Dynamic Tests
 
 ```bash
 export SIMPLEMDM_APIKEY="your-api-key"
 export TF_ACC="1"
-export SIMPLEMDM_PROFILE_ID="212749"  # Replace with actual profile ID
 
-go test -v ./provider/ -run "TestAccProfileResource"
+# Run all dynamic tests
+go test -v ./provider/ -timeout 30m
+
+# Run specific dynamic test
+go test -v ./provider/ -run TestAccCustomProfileDataSource
 ```
 
-### Expected Behavior
+---
 
+## 🔒 Tests Requiring Fixtures
+
+These tests require external fixtures because of API or operational limitations.
+
+### Profile Resources (API Limitation)
+
+**Why Fixtures Required:** Profiles can only be created through the SimpleMDM web UI. The API only supports reading and updating existing profiles.
+
+#### Tests Affected:
+- `TestAccProfileResource_ReadOnly`
+- `TestAccProfileResource_NonExistent`
+- `TestAccProfileDataSource`
+
+#### Required Environment Variables:
+```bash
+export SIMPLEMDM_PROFILE_ID="212749"  # Replace with actual profile ID
+```
+
+#### Running Profile Tests:
+```bash
+export SIMPLEMDM_APIKEY="your-api-key"
+export TF_ACC="1"
+export SIMPLEMDM_PROFILE_ID="your-profile-id"
+
+go test -v ./provider/ -run "TestAccProfile"
+```
+
+---
+
+### Device Resources (Operational Limitation)
+
+**Why Fixtures Required:** Devices cannot be created via API. They must be physically enrolled through Apple's Device Enrollment Program (DEP) or manual enrollment.
+
+#### Tests Affected:
+- `TestAccDeviceDataSource` - Requires enrolled device
+- `TestAccDeviceCommandResource_*` - Requires enrolled device for command execution
+- `TestAccDeviceInstalledAppsDataSource` - Requires enrolled device with installed apps (currently skipped)
+- `TestAccDeviceProfilesDataSource` - Requires enrolled device with profiles (currently skipped)
+- `TestAccDeviceUsersDataSource` - Requires enrolled device with user accounts (currently skipped)
+
+#### Required Environment Variables:
+```bash
+export SIMPLEMDM_DEVICE_ID="123456"  # Replace with actual enrolled device ID
+```
+
+#### Running Device Tests:
+```bash
+export SIMPLEMDM_APIKEY="your-api-key"
+export TF_ACC="1"
+export SIMPLEMDM_DEVICE_ID="your-device-id"
+
+# Run device data source test
+go test -v ./provider/ -run "TestAccDeviceDataSource"
+
+# Run device command tests (safe commands)
+go test -v ./provider/ -run "TestAccDeviceCommandResource_PushApps"
+go test -v ./provider/ -run "TestAccDeviceCommandResource_Refresh"
+
+# WARNING: This will lock the device!
+go test -v ./provider/ -run "TestAccDeviceCommandResource_Lock"
+```
+
+---
+
+## 📊 Fixture Requirements Summary
+
+### Minimal Test Setup (Most Tests)
+```bash
+export SIMPLEMDM_APIKEY="your-api-key"
+export TF_ACC="1"
+```
+This runs all dynamic tests including:
+- All resource CRUD operations that support API creation
+- All data sources that use dynamically created resources
+- Script jobs (now fully dynamic)
+- Custom profile data source (now fully dynamic)
+- Device group data source (now fully dynamic)
+
+### Full Test Coverage (All Tests)
+```bash
+export SIMPLEMDM_APIKEY="your-api-key"
+export TF_ACC="1"
+export SIMPLEMDM_PROFILE_ID="your-profile-id"        # For profile tests
+export SIMPLEMDM_DEVICE_ID="your-device-id"          # For device tests
+```
+
+---
+
+## 🔍 Test Categories
+
+### 1. Device Command Tests
+
+**Type:** Fixture-dependent (requires enrolled device)
+
+**Commands Tested:**
+- ✅ `push_assigned_apps` - Safe, commonly used
+- ✅ `refresh` - Safe, triggers device check-in
+- ✅ `lock` - **WARNING:** Will lock device screen
+- ✅ Invalid command - Error handling
+
+**Additional Supported Commands (Not Currently Tested):**
+- `restart`, `shutdown`, `clear_passcode`
+- `rotate_firmware_password`, `rotate_recovery_lock_password`
+- `rotate_filevault_recovery_key`, `rotate_admin_password`
+- `wipe`, `update_os`, `unenroll`
+
+**Expected Behavior:**
+- **Create**: Executes command, returns HTTP 202 status
+- **Read**: Returns stored state (commands can't be read from API)
+- **Update**: Not supported (returns error)
+- **Delete**: No-op (commands can't be undone)
+- **Import**: Supported (imports stored state)
+
+### 2. Profile Tests
+
+**Type:** Fixture-dependent (profiles created in UI only)
+
+**Test Cases:**
+- ✅ Read existing profile
+- ✅ Verify all attributes
+- ✅ ImportState
+- ✅ Error handling (non-existent profile)
+
+**Expected Behavior:**
 - **Create**: Reads existing profile and imports into state
 - **Read**: Refreshes profile data from SimpleMDM
 - **Update**: Refreshes profile data (no actual updates)
 - **Delete**: Removes from state only (doesn't delete from SimpleMDM)
 - **Import**: Supports importing existing profiles by ID
 
----
+### 3. Custom Profile Tests
 
-## Device Command Resource Tests
+**Type:** Fully dynamic ✅
 
-### Overview
-Device commands are "one-shot" resources that execute once during creation. They cannot be read back from the API, and the resource only maintains local state after execution.
-
-### Test Cases
-
-1. **TestAccDeviceCommandResource_PushApps**
-   - Tests the `push_assigned_apps` command
-   - Safe, commonly-used command
-   - Verifies successful execution (HTTP 202)
-
-2. **TestAccDeviceCommandResource_Refresh**
-   - Tests the `refresh` command
-   - Safe command that triggers device check-in
-   - Verifies successful execution (HTTP 202)
-
-3. **TestAccDeviceCommandResource_Lock**
-   - Tests the `lock` command with parameters
-   - Demonstrates parameter passing
-   - **WARNING**: Will lock the device screen
-
-4. **TestAccDeviceCommandResource_InvalidCommand**
-   - Tests error handling for unsupported commands
-   - Verifies appropriate error messages
-
-### Running Device Command Tests
-
-```bash
-export SIMPLEMDM_APIKEY="your-api-key"
-export TF_ACC="1"
-export SIMPLEMDM_DEVICE_ID="123456"  # Replace with actual enrolled device ID
-
-# Run all device command tests
-go test -v ./provider/ -run "TestAccDeviceCommandResource"
-
-# Run specific test (e.g., only safe commands)
-go test -v ./provider/ -run "TestAccDeviceCommandResource_PushApps"
-go test -v ./provider/ -run "TestAccDeviceCommandResource_Refresh"
-```
-
-### Expected Behavior
-
-- **Create**: Executes command against device, returns status code and response
-- **Read**: Returns stored state (commands can't be read back from API)
-- **Update**: Not supported (returns error)
-- **Delete**: No-op (commands can't be undone)
-- **Import**: Supported (imports stored state)
-
-### Supported Commands
-
-The following commands are tested:
-- `push_assigned_apps` - Push assigned apps to device
-- `refresh` - Trigger device to check in
-- `lock` - Lock device screen (with optional message)
-
-Additional supported but untested commands include:
-- `restart`, `shutdown`, `clear_passcode`
-- `rotate_firmware_password`, `rotate_recovery_lock_password`
-- `rotate_filevault_recovery_key`, `rotate_admin_password`
-- `wipe`, `update_os`, `unenroll`
-- And more (see device_command_resource.go)
+**Test Cases:**
+- ✅ Create custom profile from mobileconfig file
+- ✅ Update custom profile attributes
+- ✅ Data source reads dynamically created profile
 
 ---
 
-## Test Requirements
+## 🎯 Recent Improvements
 
-### Environment Variables
+### Made Dynamic (No Longer Require Fixtures)
 
-Both test suites require:
-- `SIMPLEMDM_APIKEY` - Your SimpleMDM API key
-- `TF_ACC=1` - Enable acceptance tests
+1. **Custom Profile Data Source** (`customProfile_data_source_test.go`)
+   - Previously required: `SIMPLEMDM_CUSTOM_PROFILE_ID`
+   - Now: Creates custom profile dynamically, then reads with data source
+   - Pattern: Resource creation → Data source read with reference
 
-Profile tests require:
-- `SIMPLEMDM_PROFILE_ID` - ID of an existing profile in SimpleMDM
+2. **Device Group Data Source** (`deviceGroup_data_source_test.go`)
+   - Previously required: `SIMPLEMDM_DEVICE_GROUP_ID`
+   - Now: Creates device group dynamically, then reads with data source
+   - Pattern: Resource creation → Data source read with reference
 
-Device command tests require:
-- `SIMPLEMDM_DEVICE_ID` - ID of an enrolled, active device
+3. **Script Job Resource** (`scriptJob_resource_test.go`)
+   - Previously required: `SIMPLEMDM_DEVICE_GROUP_ID` and `SIMPLEMDM_SCRIPT_ID`
+   - Now: Creates both script and device group dynamically
+   - Pattern: Create dependencies → Create script job → Test operations
 
-### Test Execution Notes
+### Enhanced Documentation
 
-1. **Fixtures**: Both resources require external fixtures (profiles and devices) that must already exist in SimpleMDM
-2. **Safety**: Device command tests execute real commands - be cautious with destructive commands
-3. **Skip Logic**: Tests automatically skip if required environment variables are not set
-4. **CI/CD**: Configure environment variables in your CI pipeline to enable these tests
+All fixture-dependent tests now include clear comments explaining:
+- Why fixtures are required
+- What environment variables are needed
+- How to run the tests
+- Any safety warnings (e.g., device lock commands)
 
-### Example: Running All Tests
+---
 
-```bash
-# Set up environment
-export SIMPLEMDM_APIKEY="tKgXtjvJkExAVtIjOCBzg5IPvZafweqIKKmiRtFcZEjCv2iJTdk3gn6Uy8Gmb9j7"
-export TF_ACC="1"
-export SIMPLEMDM_PROFILE_ID="212749"
-export SIMPLEMDM_DEVICE_ID="123456"  # Replace with actual device
+## 🚀 CI/CD Configuration
 
-# Run tests
-go test -v ./provider/ -run "TestAccProfileResource|TestAccDeviceCommandResource" -timeout 30m
+### GitHub Actions Example
+
+```yaml
+name: Acceptance Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+      
+      - name: Run Dynamic Tests
+        env:
+          SIMPLEMDM_APIKEY: ${{ secrets.SIMPLEMDM_APIKEY }}
+          TF_ACC: "1"
+        run: go test -v ./provider/ -timeout 30m
+      
+      # Optional: Run fixture-dependent tests if secrets are configured
+      - name: Run Profile Tests
+        if: ${{ secrets.SIMPLEMDM_PROFILE_ID != '' }}
+        env:
+          SIMPLEMDM_APIKEY: ${{ secrets.SIMPLEMDM_APIKEY }}
+          SIMPLEMDM_PROFILE_ID: ${{ secrets.SIMPLEMDM_PROFILE_ID }}
+          TF_ACC: "1"
+        run: go test -v ./provider/ -run "TestAccProfile" -timeout 10m
+      
+      - name: Run Device Tests
+        if: ${{ secrets.SIMPLEMDM_DEVICE_ID != '' }}
+        env:
+          SIMPLEMDM_APIKEY: ${{ secrets.SIMPLEMDM_APIKEY }}
+          SIMPLEMDM_DEVICE_ID: ${{ secrets.SIMPLEMDM_DEVICE_ID }}
+          TF_ACC: "1"
+        run: go test -v ./provider/ -run "TestAccDevice" -timeout 10m
 ```
 
 ---
 
-## Test Coverage Summary
+## 📝 Developer Notes
 
-### Profile Resource
-- ✅ Read existing profile
-- ✅ Verify all attributes
-- ✅ ImportState
-- ✅ Error handling (non-existent profile)
-- ⏭️ Create (N/A - read-only resource)
-- ⏭️ Update (N/A - read-only resource)
-- ⏭️ Delete (removes from state only)
+### Adding New Tests
 
-### Device Command Resource
-- ✅ Execute push_apps command
-- ✅ Execute refresh command
-- ✅ Execute command with parameters (lock)
-- ✅ Error handling (invalid command)
-- ✅ Verify status codes
-- ⏭️ Update (not supported by design)
-- ⏭️ Delete (no-op by design)
+When adding new tests, prefer dynamic resource creation over fixtures:
 
-Both resources now have appropriate test coverage considering their unique characteristics as read-only and one-shot resources respectively.
+**✅ Good (Dynamic):**
+```go
+Config: providerConfig + `
+    resource "simplemdm_script" "test" {
+        name = "Test Script"
+        scriptfile = file("./testfiles/testscript.sh")
+    }
+    
+    resource "simplemdm_scriptjob" "test" {
+        script_id = simplemdm_script.test.id
+        device_ids = []
+        group_ids = []
+    }
+`
+```
+
+**❌ Avoid (Fixtures):**
+```go
+scriptID := testAccRequireEnv(t, "SIMPLEMDM_SCRIPT_ID")
+Config: providerConfig + fmt.Sprintf(`
+    resource "simplemdm_scriptjob" "test" {
+        script_id = "%s"
+        device_ids = []
+        group_ids = []
+    }
+`, scriptID)
+```
+
+### When Fixtures Are Acceptable
+
+Use fixtures only when:
+1. Resources cannot be created via API (e.g., profiles, devices)
+2. Resources require significant setup time (enrolled devices with apps/profiles)
+3. Resources require external configuration (Apple DDM declarations)
+
+Document clearly why fixtures are required and how to obtain them.
+
+---
+
+## 📚 Resources
+
+- [SimpleMDM API Documentation](https://simplemdm.com/docs/api/)
+- [Terraform Plugin Testing](https://developer.hashicorp.com/terraform/plugin/testing)
+- [Test File Locations](./provider/)

@@ -33,6 +33,12 @@ func testAccRequireEnv(t *testing.T, name string) string {
 	return value
 }
 
+// testAccGetEnv fetches an environment variable and returns its value
+// or an empty string if not defined. Does not skip the test.
+func testAccGetEnv(t *testing.T, name string) string {
+	return os.Getenv(name)
+}
+
 // getTestClient returns a SimpleMDM client configured from environment variables
 // for use in test CheckDestroy functions
 func getTestClient() (*simplemdm.Client, error) {

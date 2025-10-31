@@ -206,14 +206,17 @@ func applyAssignmentGroupResponseToResourceModel(model *assignment_groupResource
 	model.GroupType = types.StringValue(response.Data.Attributes.Type)
 
 	// install_type is only returned by API for munki groups
-	// For standard groups, don't set it (keep existing plan value if any)
-	if response.Data.Attributes.Type == "munki" && response.Data.Attributes.InstallType != "" {
-		model.InstallType = types.StringValue(response.Data.Attributes.InstallType)
-	} else if response.Data.Attributes.Type != "standard" {
-		// For munki groups without install_type, set to null
+	// For standard groups, set to null since API doesn't return it
+	if response.Data.Attributes.Type == "munki" {
+		if response.Data.Attributes.InstallType != "" {
+			model.InstallType = types.StringValue(response.Data.Attributes.InstallType)
+		} else {
+			model.InstallType = types.StringNull()
+		}
+	} else {
+		// For standard groups, always set to null
 		model.InstallType = types.StringNull()
 	}
-	// For standard groups, don't modify InstallType (preserves plan value)
 
 	if response.Data.Attributes.Priority != nil {
 		model.Priority = types.Int64Value(int64(*response.Data.Attributes.Priority))

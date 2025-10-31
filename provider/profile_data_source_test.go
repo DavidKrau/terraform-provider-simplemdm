@@ -7,6 +7,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
+// TestAccProfileDataSource requires an existing profile because profiles can only
+// be created through the SimpleMDM web UI, not via API. The API only supports
+// reading and updating existing profiles.
+//
+// To run this test, set SIMPLEMDM_PROFILE_ID to an existing profile's ID from your SimpleMDM account.
 func TestAccProfileDataSource(t *testing.T) {
 	testAccPreCheck(t)
 

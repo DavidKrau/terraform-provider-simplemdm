@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -27,15 +28,31 @@ func testAccCheckAssignmentGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to fetch the resource
-		_, err := fetchAssignmentGroup(context.Background(), client, rs.Primary.ID)
-		if err == nil {
-			return fmt.Errorf("assignment group %s still exists after destroy", rs.Primary.ID)
+		// Try to fetch the resource with retry for eventual consistency
+		// SimpleMDM API may take time to fully delete assignment groups
+		var lastErr error
+		for attempt := 0; attempt < 3; attempt++ {
+			_, lastErr = fetchAssignmentGroup(context.Background(), client, rs.Primary.ID)
+			
+			// If we get a 404, the resource is properly deleted
+			if lastErr != nil && isNotFoundError(lastErr) {
+				break
+			}
+			
+			// If the resource still exists after 3 attempts, it wasn't deleted
+			if lastErr == nil && attempt == 2 {
+				return fmt.Errorf("assignment group %s still exists after destroy", rs.Primary.ID)
+			}
+			
+			// Wait briefly before retrying (only if not last attempt)
+			if attempt < 2 && lastErr == nil {
+				time.Sleep(2 * time.Second)
+			}
 		}
 
-		// If it's a 404, that's expected (resource was destroyed)
-		if !isNotFoundError(err) {
-			return fmt.Errorf("unexpected error checking assignment group %s: %w", rs.Primary.ID, err)
+		// If we got an error that's not a 404, that's unexpected
+		if lastErr != nil && !isNotFoundError(lastErr) {
+			return fmt.Errorf("unexpected error checking assignment group %s: %w", rs.Primary.ID, lastErr)
 		}
 	}
 
@@ -75,7 +92,6 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 						name                  = "Test Assignment Group Resource"
 						auto_deploy           = false
 						group_type            = "standard"
-						install_type          = "managed"
 						priority              = 3
 						app_track_location    = false
 						apps                  = [data.simplemdm_app.fixture_app.id]
@@ -93,6 +109,7 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "priority", "3"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "app_track_location", "false"),
 					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.testgroup2", "devices_remove_others", "true"),
+					// Note: install_type is not returned by API for standard groups, will be null
 					// Note: Due to API eventual consistency, profiles and apps counts may be 0 or 1
 					// Verify dynamic values have any value set in the state
 					resource.TestCheckResourceAttrSet("simplemdm_assignmentgroup.testgroup2", "id"),
@@ -106,7 +123,7 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 				ResourceName:            "simplemdm_assignmentgroup.testgroup2",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apps_update", "apps_push", "auto_deploy", "profiles_sync", "install_type", "profiles", "created_at", "updated_at", "device_count", "group_count", "devices_remove_others"},
+				ImportStateVerifyIgnore: []string{"apps_update", "apps_push", "auto_deploy", "profiles_sync", "install_type", "profiles", "apps", "created_at", "updated_at", "device_count", "group_count", "devices_remove_others"},
 			},
 			// Update and Read testing
 			{

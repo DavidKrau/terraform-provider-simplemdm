@@ -26,7 +26,7 @@ func TestAccScriptDataSource(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "variablesupport"),
 					resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "created_at"),
 					resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "updated_at"),
-					resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "created_by"),
+					// Note: created_by is optional and may be null
 				),
 			},
 		},

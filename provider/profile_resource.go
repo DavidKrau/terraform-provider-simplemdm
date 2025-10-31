@@ -232,9 +232,30 @@ func (r *profileResource) readProfile(ctx context.Context, profileID string) (*p
 		return nil, err
 	}
 
+	// Handle optional/computed string fields - use null when empty
 	typeValue := types.StringNull()
 	if profile.Data.Type != "" {
 		typeValue = types.StringValue(profile.Data.Type)
+	}
+
+	installTypeValue := types.StringNull()
+	if profile.Data.Attributes.InstallType != "" {
+		installTypeValue = types.StringValue(profile.Data.Attributes.InstallType)
+	}
+
+	sourceValue := types.StringNull()
+	if profile.Data.Attributes.Source != "" {
+		sourceValue = types.StringValue(profile.Data.Attributes.Source)
+	}
+
+	createdAtValue := types.StringNull()
+	if profile.Data.Attributes.CreatedAt != "" {
+		createdAtValue = types.StringValue(profile.Data.Attributes.CreatedAt)
+	}
+
+	updatedAtValue := types.StringNull()
+	if profile.Data.Attributes.UpdatedAt != "" {
+		updatedAtValue = types.StringValue(profile.Data.Attributes.UpdatedAt)
 	}
 
 	model := &profileResourceModel{
@@ -242,7 +263,7 @@ func (r *profileResource) readProfile(ctx context.Context, profileID string) (*p
 		Type:                   typeValue,
 		Name:                   types.StringValue(profile.Data.Attributes.Name),
 		AutoDeploy:             types.BoolValue(profile.Data.Attributes.AutoDeploy),
-		InstallType:            types.StringValue(profile.Data.Attributes.InstallType),
+		InstallType:            installTypeValue,
 		ReinstallAfterOSUpdate: types.BoolValue(profile.Data.Attributes.ReinstallAfterOSUpdate),
 		ProfileIdentifier:      types.StringValue(profile.Data.Attributes.ProfileIdentifier),
 		UserScope:              types.BoolValue(profile.Data.Attributes.UserScope),
@@ -252,9 +273,9 @@ func (r *profileResource) readProfile(ctx context.Context, profileID string) (*p
 		DeviceCount:            types.Int64Value(int64(profile.Data.Attributes.DeviceCount)),
 		GroupIDs:               groupIDs,
 		ProfileSHA:             types.StringValue(profile.Data.Attributes.ProfileSHA),
-		Source:                 types.StringValue(profile.Data.Attributes.Source),
-		CreatedAt:              types.StringValue(profile.Data.Attributes.CreatedAt),
-		UpdatedAt:              types.StringValue(profile.Data.Attributes.UpdatedAt),
+		Source:                 sourceValue,
+		CreatedAt:              createdAtValue,
+		UpdatedAt:              updatedAtValue,
 	}
 
 	return model, nil
