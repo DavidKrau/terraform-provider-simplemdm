@@ -76,5 +76,6 @@ skip until the corresponding environment variables are provided.
 
 ## Known Issues
 
+- **Device Groups Deprecated**: Device Groups have been superseded by Assignment Groups in SimpleMDM. While the `simplemdm_devicegroup` resource and data source remain available for backward compatibility, users should migrate to `simplemdm_assignmentgroup` for new implementations. See the [device group documentation](./docs/resources/devicegroup.md) for migration guidance.
 - Device name updates require a workaround via direct PATCH request for API compatibility
 - Custom Profiles and Profiles for Assignment Groups and Devices cannot be updated due to API limitations. They are compared only between the plan and state from the previous apply. Changes made directly in the SimpleMDM web interface will not be detected in subsequent terraform apply operations.

@@ -41,7 +41,10 @@ func (d *deviceGroupDataSource) Metadata(_ context.Context, req datasource.Metad
 // Schema defines the schema for the data source.
 func (d *deviceGroupDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Device Group data source can be used together with Assignment Group(s) to assign group(s) to these objects.",
+		Description: "⚠️ DEPRECATED: Device Groups have been superseded by Assignment Groups in SimpleMDM. " +
+			"Please use the simplemdm_assignmentgroup data source instead. " +
+			"This data source is maintained for backward compatibility only. " +
+			"Device Group data source can be used together with Assignment Group(s) to assign group(s) to these objects.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Computed:    true,

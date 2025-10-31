@@ -21,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecated
 
+- **Device Group Resource and Data Source**: Device Groups have been superseded by Assignment Groups in SimpleMDM
+  - The `simplemdm_devicegroup` resource is deprecated - use `simplemdm_assignmentgroup` instead
+  - The `simplemdm_devicegroup` data source is deprecated - use `simplemdm_assignmentgroup` instead
+  - Both remain available for backward compatibility but may be removed in a future major version
+  - Assignment Groups provide all Device Group functionality plus additional features
+  - See documentation for complete migration guide with examples
+
 - **Assignment Group Resource**: Added deprecation warnings for `group_type` and `install_type` fields
   - `group_type`: This field is deprecated by the SimpleMDM API and may be ignored for accounts using the New Groups Experience
   - `install_type`: The SimpleMDM API recommends setting install_type per-app using the Assign App endpoint instead of at the group level

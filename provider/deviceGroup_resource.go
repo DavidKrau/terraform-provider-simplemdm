@@ -62,7 +62,10 @@ func (r *deviceGroupResource) Metadata(_ context.Context, req resource.MetadataR
 // Schema defines the schema for the resource.
 func (r *deviceGroupResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Device Group resource can be used to manage Device Group. Can be used together with Custom Profile(s), Attribute(s), Assignment Group(s) or Device Group(s) and set addition details regarding Device Group.",
+		Description: "⚠️ DEPRECATED: Device Groups have been superseded by Assignment Groups in SimpleMDM. " +
+			"Please use the simplemdm_assignmentgroup resource instead. " +
+			"This resource is maintained for backward compatibility only. " +
+			"Device Group resource can be used to manage Device Group. Can be used together with Custom Profile(s), Attribute(s), Assignment Group(s) or Device Group(s) and set addition details regarding Device Group.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Required:    true,

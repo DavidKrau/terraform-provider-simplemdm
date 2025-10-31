@@ -3,10 +3,52 @@
 page_title: "simplemdm_devicegroup Resource - simplemdm"
 subcategory: ""
 description: |-
-  Device Group resource can be used to manage Device Group. Can be used together with Custom Profile(s), Attribute(s), Assignment Group(s) or Device Group(s) and set addition details regarding Device Group.
+  ⚠️ DEPRECATED: Device Groups have been superseded by Assignment Groups in SimpleMDM. Please use the simplemdm_assignmentgroup resource instead. This resource is maintained for backward compatibility only. Device Group resource can be used to manage Device Group. Can be used together with Custom Profile(s), Attribute(s), Assignment Group(s) or Device Group(s) and set addition details regarding Device Group.
 ---
 
 # simplemdm_devicegroup (Resource)
+
+## ⚠️ DEPRECATION NOTICE
+
+**This resource is deprecated.** Device Groups have been superseded by Assignment Groups in SimpleMDM.
+
+**Please migrate to:** [`simplemdm_assignmentgroup`](assignmentgroup.md)
+
+This resource is maintained for backward compatibility only and may be removed in a future major version.
+
+### Migration Guide
+
+Assignment Groups provide all the functionality of Device Groups with additional features:
+
+1. Replace `simplemdm_devicegroup` resources with `simplemdm_assignmentgroup`
+2. Update any data source references from `simplemdm_devicegroup` to `simplemdm_assignmentgroup`
+3. Assignment Groups support the same attributes (profiles, customprofiles, attributes) plus additional capabilities
+
+**Before (deprecated):**
+```terraform
+resource "simplemdm_devicegroup" "example" {
+  name           = "My Group"
+  profiles       = [123456]
+  customprofiles = [456123]
+  attributes = {
+    "key" = "value"
+  }
+}
+```
+
+**After (recommended):**
+```terraform
+resource "simplemdm_assignmentgroup" "example" {
+  name     = "My Group"
+  profiles = [123456]
+  # Assignment groups can include both profiles and custom profiles in the profiles attribute
+  # Additional features like auto_deploy, priority, etc. are also available
+}
+```
+
+---
+
+## Original Documentation
 
 Device Group resource can be used to manage Device Group. Can be used together with Custom Profile(s), Attribute(s), Assignment Group(s) or Device Group(s) and set addition details regarding Device Group.
 
