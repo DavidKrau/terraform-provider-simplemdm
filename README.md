@@ -74,8 +74,7 @@ pipelines only need to expose the API key (and any of the optional fixture varia
 tests—no additional feature flags are required. Locally, tests that require extra fixtures will continue to
 skip until the corresponding environment variables are provided.
 
-## Know issues
+## Known Issues
 
-- API current doesnt support Create and Delete for Device Groups
-- API currently doesnt support update of "name" attribute for Device Groups
-- Custom Profiles/Profiles for Assignment group and Devices can no be updated because of API limitation (they are compared only between plan and state from previous plan), aka adding profile via web will not be considered in next apply.
+- Device name updates require a workaround via direct PATCH request for API compatibility
+- Custom Profiles and Profiles for Assignment Groups and Devices cannot be updated due to API limitations. They are compared only between the plan and state from the previous apply. Changes made directly in the SimpleMDM web interface will not be detected in subsequent terraform apply operations.
