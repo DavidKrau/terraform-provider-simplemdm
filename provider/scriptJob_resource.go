@@ -225,11 +225,6 @@ func (r *scriptJobResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 	}
 }
 
-// func (r *scriptJobResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-// 	// Retrieve import ID and save to id attribute
-// 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-// }
-
 // Create a new resource
 func (r *scriptJobResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan scriptJobResourceModel

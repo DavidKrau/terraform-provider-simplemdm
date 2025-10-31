@@ -105,13 +105,6 @@ func (r *attributeResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	// Map response body to schema and populate Computed attribute values
-	//mataDataLink := fmt.Sprintf("%s/%s/%s", r.client.HostName, "private", secret.MetadataKey)
-	//plan.MetaDataLink = types.StringValue(mataDataLink)
-	//plan.SecretValue = types.StringValue(secret.Value)
-
-	//secretLink := fmt.Sprintf("%s/%s/%s", r.client.HostName, "secret", secret.SecretKey)
-	//plan.SecretLink = types.StringValue(secretLink)
-
 	plan.ID = plan.Name
 
 	// Set state to fully populated data

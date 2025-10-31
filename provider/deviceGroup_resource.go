@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -358,7 +357,7 @@ func (r *deviceGroupResource) reconcileAttributes(ctx context.Context, groupID s
 	}
 
 	for planAttribute, planValue := range planElements {
-		trimmed := strings.Replace(planValue.String(), "\"", "", 2)
+		trimmed := planValue.(types.String).ValueString()
 
 		if stateValue, ok := stateElements[planAttribute]; ok {
 			if planValue.Equal(stateValue) {
@@ -463,7 +462,7 @@ func extractStringSet(set types.Set) []string {
 
 	values := []string{}
 	for _, value := range set.Elements() {
-		values = append(values, strings.Replace(value.String(), "\"", "", 2))
+		values = append(values, value.(types.String).ValueString())
 	}
 
 	return values

@@ -241,7 +241,7 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 
 	// Assign all apps in plan
 	for _, appId := range plan.Apps.Elements() {
-		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), strings.Replace(appId.String(), "\"", "", 2), "apps")
+		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), appId.(types.String).ValueString(), "apps")
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group app assignment",
@@ -253,7 +253,7 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 
 	// Assign all profiles in plan
 	for _, profileId := range plan.Profiles.Elements() {
-		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), strings.Replace(profileId.String(), "\"", "", 2), "profiles")
+		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), profileId.(types.String).ValueString(), "profiles")
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group profile assignment",
@@ -265,7 +265,7 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 
 	//assign all groups in plan
 	for _, groupId := range plan.Groups.Elements() {
-		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), strings.Replace(groupId.String(), "\"", "", 2), "device_groups")
+		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), groupId.(types.String).ValueString(), "device_groups")
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group device group assignment",
@@ -277,7 +277,7 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 
 	//assign all devices in plan
 	for _, deviceId := range plan.Devices.Elements() {
-		err := assignmentGroupAssignDevice(ctx, r.client, plan.ID.ValueString(), strings.Replace(deviceId.String(), "\"", "", 2), boolValueOrDefault(plan.DevicesRemoveOthers, false))
+		err := assignmentGroupAssignDevice(ctx, r.client, plan.ID.ValueString(), deviceId.(types.String).ValueString(), boolValueOrDefault(plan.DevicesRemoveOthers, false))
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating assignment group device group assignment",
@@ -456,13 +456,13 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 	//reading assigned apps from simpleMDM
 	stateApps := []string{}
 	for _, appID := range state.Apps.Elements() {
-		stateApps = append(stateApps, strings.Replace(appID.String(), "\"", "", 2))
+		stateApps = append(stateApps, appID.(types.String).ValueString())
 	}
 
 	//reading configured apps from TF file
 	planApps := []string{}
 	for _, appID := range plan.Apps.Elements() {
-		planApps = append(planApps, strings.Replace(appID.String(), "\"", "", 2))
+		planApps = append(planApps, appID.(types.String).ValueString())
 	}
 
 	// creating diff
@@ -496,13 +496,13 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 	//reading assigned profiles from simpleMDM
 	stateProfiles := []string{}
 	for _, profileId := range state.Profiles.Elements() { //<< edit here
-		stateProfiles = append(stateProfiles, strings.Replace(profileId.String(), "\"", "", 2))
+		stateProfiles = append(stateProfiles, profileId.(types.String).ValueString())
 	}
 
 	//reading configured profiles from TF file
 	planProfiles := []string{}
 	for _, profileId := range plan.Profiles.Elements() {
-		planProfiles = append(planProfiles, strings.Replace(profileId.String(), "\"", "", 2))
+		planProfiles = append(planProfiles, profileId.(types.String).ValueString())
 	}
 
 	// creating diff
@@ -536,12 +536,12 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 	// reading currently assigned apps
 	stateGroups := []string{}
 	for _, groupId := range state.Groups.Elements() {
-		stateGroups = append(stateGroups, strings.Replace(groupId.String(), "\"", "", 2))
+		stateGroups = append(stateGroups, groupId.(types.String).ValueString())
 	}
 	//reading configured apps in TF file
 	planGroups := []string{}
 	for _, groupId := range plan.Groups.Elements() {
-		planGroups = append(planGroups, strings.Replace(groupId.String(), "\"", "", 2))
+		planGroups = append(planGroups, groupId.(types.String).ValueString())
 	}
 	//creating diff
 	groupsToAdd, groupsToRemove := diffFunction(stateGroups, planGroups)
@@ -574,12 +574,12 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 	//reading currently assigned devices
 	stateDevices := []string{}
 	for _, device := range state.Devices.Elements() {
-		stateDevices = append(stateDevices, strings.Replace(device.String(), "\"", "", 2))
+		stateDevices = append(stateDevices, device.(types.String).ValueString())
 	}
 	//reading configured apps in TF file
 	planDevices := []string{}
 	for _, device := range plan.Devices.Elements() {
-		planDevices = append(planDevices, strings.Replace(device.String(), "\"", "", 2))
+		planDevices = append(planDevices, device.(types.String).ValueString())
 	}
 	//creating diff
 	devicesToAdd, devicesToRemove := diffFunction(stateDevices, planDevices)

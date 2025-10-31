@@ -152,10 +152,6 @@ func (r *customProfileResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	// h := sha256.New()
-	// h.Write([]byte(plan.MobileConfig.ValueString()))
-	// sha256_hash := hex.EncodeToString(h.Sum(nil))[0:32]
-
 	// Map response body to schema and populate Computed attribute values
 	plan.ID = types.StringValue(strconv.Itoa(Profile.Data.ID))
 	assignCustomProfileAttributes(&plan, Profile.Data.Attributes)
@@ -249,10 +245,6 @@ func (r *customProfileResource) Update(ctx context.Context, req resource.UpdateR
 		)
 		return
 	}
-
-	// h := sha256.New()
-	// h.Write([]byte(plan.MobileConfig.ValueString()))
-	// sha256_hash := hex.EncodeToString(h.Sum(nil))[0:32]
 
 	profile, err := r.client.CustomProfileGet(plan.ID.ValueString())
 	if err != nil {

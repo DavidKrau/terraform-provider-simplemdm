@@ -149,7 +149,7 @@ func (r *deviceResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	//setting attributes
 	for attribute, value := range plan.Attributes.Elements() {
-		err := r.client.AttributeSetAttributeForDevice(plan.ID.ValueString(), attribute, strings.Replace(value.String(), "\"", "", 2))
+		err := r.client.AttributeSetAttributeForDevice(plan.ID.ValueString(), attribute, value.(types.String).ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating device attribute",
@@ -161,7 +161,7 @@ func (r *deviceResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	// Assign all custom profiles in plan
 	for _, profileId := range plan.CustomProfiles.Elements() {
-		err := r.client.CustomProfileAssignToDevice(strings.Replace(profileId.String(), "\"", "", 2), plan.ID.ValueString())
+		err := r.client.CustomProfileAssignToDevice(profileId.(types.String).ValueString(), plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating device profile assignment",
@@ -173,7 +173,7 @@ func (r *deviceResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	// Assign all custom profiles in plan
 	for _, profileId := range plan.Profiles.Elements() {
-		err := r.client.ProfileAssignToDevice(strings.Replace(profileId.String(), "\"", "", 2), plan.ID.ValueString())
+		err := r.client.ProfileAssignToDevice(profileId.(types.String).ValueString(), plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating device profile assignment",
@@ -277,7 +277,7 @@ func (r *deviceResource) Update(ctx context.Context, req resource.UpdateRequest,
 			if planAttribute == stateAttribute {
 				found = true
 				if planValue != stateValue {
-					err := r.client.AttributeSetAttributeForDevice(plan.ID.ValueString(), planAttribute, strings.Replace(planValue.String(), "\"", "", 2))
+					err := r.client.AttributeSetAttributeForDevice(plan.ID.ValueString(), planAttribute, planValue.(types.String).ValueString())
 					if err != nil {
 						resp.Diagnostics.AddError(
 							"Error updating SimpleMDM device attributes value",
@@ -290,7 +290,7 @@ func (r *deviceResource) Update(ctx context.Context, req resource.UpdateRequest,
 			}
 		}
 		if !found {
-			err := r.client.AttributeSetAttributeForDevice(plan.ID.ValueString(), planAttribute, strings.Replace(planValue.String(), "\"", "", 2))
+			err := r.client.AttributeSetAttributeForDevice(plan.ID.ValueString(), planAttribute, planValue.(types.String).ValueString())
 			if err != nil {
 				resp.Diagnostics.AddError(
 					"Error updating SimpleMDM device attributes value",
@@ -326,13 +326,13 @@ func (r *deviceResource) Update(ctx context.Context, req resource.UpdateRequest,
 	//reading assigned profiles from simpleMDM
 	stateProfiles := []string{}
 	for _, profileId := range state.Profiles.Elements() {
-		stateProfiles = append(stateProfiles, strings.Replace(profileId.String(), "\"", "", 2))
+		stateProfiles = append(stateProfiles, profileId.(types.String).ValueString())
 	}
 
 	//reading configured profiles from TF file
 	planProfiles := []string{}
 	for _, profileId := range plan.Profiles.Elements() {
-		planProfiles = append(planProfiles, strings.Replace(profileId.String(), "\"", "", 2))
+		planProfiles = append(planProfiles, profileId.(types.String).ValueString())
 	}
 
 	// // creating diff
@@ -366,13 +366,13 @@ func (r *deviceResource) Update(ctx context.Context, req resource.UpdateRequest,
 	//reading assigned profiles from simpleMDM
 	stateCustomProfiles := []string{}
 	for _, profileId := range state.CustomProfiles.Elements() {
-		stateCustomProfiles = append(stateCustomProfiles, strings.Replace(profileId.String(), "\"", "", 2))
+		stateCustomProfiles = append(stateCustomProfiles, profileId.(types.String).ValueString())
 	}
 
 	//reading configured profiles from TF file
 	planCustomProfiles := []string{}
 	for _, profileId := range plan.CustomProfiles.Elements() {
-		planCustomProfiles = append(planCustomProfiles, strings.Replace(profileId.String(), "\"", "", 2))
+		planCustomProfiles = append(planCustomProfiles, profileId.(types.String).ValueString())
 	}
 
 	// // creating diff
