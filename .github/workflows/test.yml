@@ -54,16 +54,16 @@ jobs:
         id: git-check
         run: |
           git diff --compact-summary --exit-code || echo "has_changes=true" >> $GITHUB_OUTPUT
-      - name: Commit and push changes (main branch only)
-        if: steps.git-check.outputs.has_changes == 'true' && github.ref == 'refs/heads/main' && github.event_name == 'push'
+      - name: Commit and push changes (all push events)
+        if: steps.git-check.outputs.has_changes == 'true' && github.event_name == 'push'
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add -A
           git commit -m "docs: Auto-generate documentation from schema changes"
           git push
-      - name: Fail on uncommitted changes (non-main branches)
-        if: steps.git-check.outputs.has_changes == 'true' && (github.ref != 'refs/heads/main' || github.event_name != 'push')
+      - name: Fail on uncommitted changes (pull requests only)
+        if: steps.git-check.outputs.has_changes == 'true' && github.event_name == 'pull_request'
         run: |
           echo "Unexpected difference in directories after code generation."
           echo "Run 'go generate ./...' command and commit the changes."
