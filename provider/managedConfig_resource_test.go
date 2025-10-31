@@ -1,16 +1,50 @@
 package provider
 
 import (
+	"context"
+	"fmt"
 	"testing"
 
+	simplemdm "github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
+
+func testAccCheckManagedConfigDestroy(s *terraform.State) error {
+	client, err := getTestClient()
+	if err != nil {
+		return fmt.Errorf("failed to create test client: %w", err)
+	}
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "simplemdm_managed_config" {
+			continue
+		}
+
+		appID, configID, err := parseManagedConfigID(rs.Primary.ID)
+		if err != nil {
+			return fmt.Errorf("failed to parse managed config ID %s: %w", rs.Primary.ID, err)
+		}
+
+		_, err = fetchManagedConfig(context.Background(), client, appID, configID)
+		if err == nil {
+			return fmt.Errorf("managed config %s still exists after destroy", rs.Primary.ID)
+		}
+
+		if err != errManagedConfigNotFound && !isNotFoundError(err) {
+			return fmt.Errorf("unexpected error checking managed config %s: %w", rs.Primary.ID, err)
+		}
+	}
+
+	return nil
+}
 
 func TestAccManagedConfigResource_basic(t *testing.T) {
 	testAccPreCheck(t)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckManagedConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: providerConfig + `

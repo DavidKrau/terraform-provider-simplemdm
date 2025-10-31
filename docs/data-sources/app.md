@@ -13,8 +13,15 @@ App data source can be used together with Assignment Group(s) to assign App(s) t
 ## Example Usage
 
 ```terraform
+# Query account-specific app only (default behavior)
 data "simplemdm_app" "myapp" {
   id = "123456"
+}
+
+# Query including shared catalog apps
+data "simplemdm_app" "shared_app" {
+  id             = "789012"
+  include_shared = true
 }
 
 output "app_store_identifier" {
@@ -34,6 +41,10 @@ output "app_installation_channels" {
 ### Required
 
 - `id` (String) The ID of the attribute.
+
+### Optional
+
+- `include_shared` (Boolean) Include apps from the SimpleMDM shared catalog. When set to true, the data source will query apps available in the shared catalog in addition to account-specific apps. Defaults to false.
 
 ### Read-Only
 

@@ -3,14 +3,24 @@ package provider
 import (
 	"testing"
 
+	simplemdm "github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
+
+func testAccCheckScriptDestroy(s *terraform.State) error {
+	return testAccCheckResourceDestroyed("simplemdm_script", func(client *simplemdm.Client, id string) error {
+		_, err := client.ScriptGet(id)
+		return err
+	})(s)
+}
 
 func TestAccScriptResource(t *testing.T) {
 	testAccPreCheck(t)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckScriptDestroy,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{

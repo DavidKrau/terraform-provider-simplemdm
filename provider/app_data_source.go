@@ -2,7 +2,9 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -31,6 +33,7 @@ type appDataSourceModel struct {
 	InstallationChannels types.List   `tfsdk:"installation_channels"`
 	CreatedAt            types.String `tfsdk:"created_at"`
 	UpdatedAt            types.String `tfsdk:"updated_at"`
+	IncludeShared        types.Bool   `tfsdk:"include_shared"`
 }
 
 // appDataSource is a helper function to simplify the provider implementation.
@@ -106,6 +109,10 @@ func (d *appDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, re
 				Required:    true,
 				Description: "The ID of the attribute.",
 			},
+			"include_shared": schema.BoolAttribute{
+				Optional:    true,
+				Description: "Include apps from the SimpleMDM shared catalog. When set to true, the data source will query apps available in the shared catalog in addition to account-specific apps. Defaults to false.",
+			},
 		},
 	}
 }
@@ -116,7 +123,7 @@ func (d *appDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
-	app, err := fetchApp(ctx, d.client, state.ID.ValueString())
+	app, err := fetchAppWithParams(ctx, d.client, state.ID.ValueString(), state.IncludeShared)
 	if err != nil {
 		if isNotFoundError(err) {
 			resp.Diagnostics.AddError(
@@ -152,6 +159,34 @@ func (d *appDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 	state.InstallationChannels = resourceModel.InstallationChannels
 	state.CreatedAt = resourceModel.CreatedAt
 	state.UpdatedAt = resourceModel.UpdatedAt
+
+// fetchAppWithParams fetches an app with optional query parameters
+func fetchAppWithParams(ctx context.Context, client *simplemdm.Client, appID string, includeShared types.Bool) (*appAPIResponse, error) {
+	url := fmt.Sprintf("https://%s/api/v1/apps/%s", client.HostName, appID)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Add query parameters if include_shared is explicitly set to true
+	if !includeShared.IsNull() && includeShared.ValueBool() {
+		q := req.URL.Query()
+		q.Add("include_shared", "true")
+		req.URL.RawQuery = q.Encode()
+	}
+
+	body, err := client.RequestResponse200(req)
+	if err != nil {
+		return nil, err
+	}
+
+	app := appAPIResponse{}
+	if err := json.Unmarshal(body, &app); err != nil {
+		return nil, err
+	}
+
+	return &app, nil
+}
 
 	// Set state
 
