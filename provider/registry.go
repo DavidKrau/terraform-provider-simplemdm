@@ -297,6 +297,30 @@ var dataSourceDefinitions = []DataSourceDefinition{
 		TestFiles:    []string{"provider/managedConfig_data_source_test.go"},
 		APIEndpoints: []string{"/api/v1/apps/{APP_ID}/managed_configs"},
 	},
+	{
+		TypeName:     "simplemdm_apps",
+		Factory:      AppsDataSource,
+		DocsPath:     "docs/data-sources/apps.md",
+		ExampleDirs:  []string{"examples/data-sources/simplemdm_apps"},
+		TestFiles:    []string{"provider/apps_data_source_test.go"},
+		APIEndpoints: []string{"/api/v1/apps"},
+	},
+	{
+		TypeName:     "simplemdm_assignmentgroups",
+		Factory:      AssignmentGroupsDataSource,
+		DocsPath:     "docs/data-sources/assignmentgroups.md",
+		ExampleDirs:  []string{"examples/data-sources/simplemdm_assignmentgroups"},
+		TestFiles:    []string{"provider/assignmentGroups_data_source_test.go"},
+		APIEndpoints: []string{"/api/v1/assignment_groups"},
+	},
+	{
+		TypeName:     "simplemdm_attributes",
+		Factory:      AttributesDataSource,
+		DocsPath:     "docs/data-sources/attributes.md",
+		ExampleDirs:  []string{"examples/data-sources/simplemdm_attributes"},
+		TestFiles:    []string{"provider/attributes_data_source_test.go"},
+		APIEndpoints: []string{"/api/v1/custom_attributes"},
+	},
 }
 
 func ResourceFactories() []func() resource.Resource {

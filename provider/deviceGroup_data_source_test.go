@@ -12,7 +12,7 @@ func TestAccDeviceGroupDataSource(t *testing.T) {
 	// Device groups cannot be created via API - they must exist
 	// This test requires SIMPLEMDM_DEVICE_GROUP_ID or will skip
 	deviceGroupID := testAccGetEnv(t, "SIMPLEMDM_DEVICE_GROUP_ID")
-	
+
 	if deviceGroupID == "" {
 		t.Skip("SIMPLEMDM_DEVICE_GROUP_ID not set - skipping test as device groups cannot be created via API")
 	}

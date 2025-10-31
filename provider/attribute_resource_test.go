@@ -24,7 +24,7 @@ func testAccCheckAttributeDestroy(s *terraform.State) error {
 
 		// The attribute ID is the attribute name
 		attributeName := rs.Primary.ID
-		
+
 		_, err := client.AttributeGet(attributeName)
 		if err == nil {
 			return fmt.Errorf("attribute %s still exists after destroy", attributeName)

@@ -30,10 +30,10 @@ func TestAccDeviceCommandResource_PushApps(t *testing.T) {
 					// Verify the command was set correctly
 					resource.TestCheckResourceAttr("simplemdm_device_command.test", "command", "push_assigned_apps"),
 					resource.TestCheckResourceAttr("simplemdm_device_command.test", "device_id", deviceID),
-					
+
 					// Verify the command executed successfully (202 Accepted)
 					resource.TestCheckResourceAttr("simplemdm_device_command.test", "status_code", "202"),
-					
+
 					// Verify ID was generated
 					resource.TestCheckResourceAttrSet("simplemdm_device_command.test", "id"),
 				),
@@ -139,9 +139,9 @@ resource "simplemdm_device_command" "test" {
   parameters = {
 `, deviceID, command)
 
-        for key, value := range params {
-                config += fmt.Sprintf("    %s = %q\n", key, value)
-        }
+	for key, value := range params {
+		config += fmt.Sprintf("    %s = %q\n", key, value)
+	}
 
 	config += `  }
 }

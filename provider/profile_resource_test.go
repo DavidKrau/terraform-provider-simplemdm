@@ -23,7 +23,7 @@ func TestAccProfileResource_ReadOnly(t *testing.T) {
 	testAccPreCheck(t)
 
 	profileID := testAccGetEnv(t, "SIMPLEMDM_PROFILE_ID")
-	
+
 	if profileID == "" {
 		t.Skip("SIMPLEMDM_PROFILE_ID not set - skipping test as profiles can only be created via SimpleMDM UI")
 	}
@@ -39,20 +39,20 @@ func TestAccProfileResource_ReadOnly(t *testing.T) {
 					resource.TestCheckResourceAttr("simplemdm_profile.test", "id", profileID),
 					resource.TestCheckResourceAttrSet("simplemdm_profile.test", "name"),
 					resource.TestCheckResourceAttrSet("simplemdm_profile.test", "type"),
-					
+
 					// Verify boolean attributes exist
 					resource.TestCheckResourceAttrSet("simplemdm_profile.test", "auto_deploy"),
 					resource.TestCheckResourceAttrSet("simplemdm_profile.test", "user_scope"),
 					resource.TestCheckResourceAttrSet("simplemdm_profile.test", "attribute_support"),
 					resource.TestCheckResourceAttrSet("simplemdm_profile.test", "escape_attributes"),
-					
+
 					// Verify profile_identifier always exists
 					resource.TestCheckResourceAttrSet("simplemdm_profile.test", "profile_identifier"),
-					
+
 					// Verify numeric attributes exist
 					resource.TestCheckResourceAttrSet("simplemdm_profile.test", "group_count"),
 					resource.TestCheckResourceAttrSet("simplemdm_profile.test", "device_count"),
-					
+
 					// Note: install_type, source, created_at, and updated_at are Optional+Computed
 					// and may not be returned by the SimpleMDM API for all profile types.
 					// We don't assert these fields to avoid test failures with different profile types.
@@ -77,7 +77,7 @@ func TestAccProfileResource_NonExistent(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProfileResourceConfig("999999999"),
+				Config:      testAccProfileResourceConfig("999999999"),
 				ExpectError: regexp.MustCompile("Error creating SimpleMDM profile reference|404"),
 			},
 		},

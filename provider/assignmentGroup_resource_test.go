@@ -33,17 +33,17 @@ func testAccCheckAssignmentGroupDestroy(s *terraform.State) error {
 		var lastErr error
 		for attempt := 0; attempt < 3; attempt++ {
 			_, lastErr = fetchAssignmentGroup(context.Background(), client, rs.Primary.ID)
-			
+
 			// If we get a 404, the resource is properly deleted
 			if lastErr != nil && isNotFoundError(lastErr) {
 				break
 			}
-			
+
 			// If the resource still exists after 3 attempts, it wasn't deleted
 			if lastErr == nil && attempt == 2 {
 				return fmt.Errorf("assignment group %s still exists after destroy", rs.Primary.ID)
 			}
-			
+
 			// Wait briefly before retrying (only if not last attempt)
 			if attempt < 2 && lastErr == nil {
 				time.Sleep(2 * time.Second)

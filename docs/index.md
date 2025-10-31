@@ -12,6 +12,14 @@ SimpleMDM terraform provider developed by FreeNow.
 ## Example Usage
 
 ```terraform
+terraform {
+  required_providers {
+    simplemdm = {
+      source = "github.com/DavidKrau/simplemdm"
+    }
+  }
+}
+
 provider "simplemdm" {
   host   = "a.simplemdm.com"
   apikey = "yourapikey"
