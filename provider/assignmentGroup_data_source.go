@@ -144,10 +144,17 @@ func (d *assignmentGroupDataSource) Read(ctx context.Context, req datasource.Rea
 
 	assignmentGroup, err := fetchAssignmentGroup(ctx, d.client, state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Read SimpleMDM assignment group",
-			err.Error(),
-		)
+		if isNotFoundError(err) {
+			resp.Diagnostics.AddError(
+				"SimpleMDM assignment group not found",
+				fmt.Sprintf("The assignment group with ID %s was not found. It may have been deleted.", state.ID.ValueString()),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to Read SimpleMDM assignment group",
+				err.Error(),
+			)
+		}
 		return
 	}
 

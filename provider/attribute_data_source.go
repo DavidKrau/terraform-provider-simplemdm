@@ -62,10 +62,17 @@ func (d *attributeDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	attribute, err := d.client.AttributeGet(state.Name.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Read SimpleMDM attribute",
-			err.Error(),
-		)
+		if isNotFoundError(err) {
+			resp.Diagnostics.AddError(
+				"SimpleMDM attribute not found",
+				fmt.Sprintf("The attribute with name %s was not found. It may have been deleted.", state.Name.ValueString()),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to Read SimpleMDM attribute",
+				err.Error(),
+			)
+		}
 		return
 	}
 

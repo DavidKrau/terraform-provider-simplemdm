@@ -85,10 +85,17 @@ func (d *deviceDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 
 	device, err := simplemdmext.GetDevice(ctx, d.client, state.ID.ValueString(), true)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Read SimpleMDM device",
-			err.Error(),
-		)
+		if isNotFoundError(err) {
+			resp.Diagnostics.AddError(
+				"SimpleMDM device not found",
+				fmt.Sprintf("The device with ID %s was not found. It may have been deleted.", state.ID.ValueString()),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to Read SimpleMDM device",
+				err.Error(),
+			)
+		}
 		return
 	}
 

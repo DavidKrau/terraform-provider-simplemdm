@@ -118,10 +118,17 @@ func (d *appDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 
 	app, err := fetchApp(ctx, d.client, state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Read SimpleMDM app",
-			err.Error(),
-		)
+		if isNotFoundError(err) {
+			resp.Diagnostics.AddError(
+				"SimpleMDM app not found",
+				fmt.Sprintf("The app with ID %s was not found. It may have been deleted.", state.ID.ValueString()),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to Read SimpleMDM app",
+				err.Error(),
+			)
+		}
 		return
 	}
 

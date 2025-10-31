@@ -76,10 +76,17 @@ func (d *deviceUsersDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	users, err := simplemdmext.ListDeviceUsers(ctx, d.client, state.DeviceID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to list device users",
-			err.Error(),
-		)
+		if isNotFoundError(err) {
+			resp.Diagnostics.AddError(
+				"Device not found",
+				fmt.Sprintf("The device with ID %s was not found. It may have been deleted.", state.DeviceID.ValueString()),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to list device users",
+				err.Error(),
+			)
+		}
 		return
 	}
 

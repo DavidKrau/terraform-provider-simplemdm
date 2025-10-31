@@ -187,6 +187,10 @@ func (r *enrollmentResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	enrollment, err := fetchEnrollment(ctx, r.client, state.ID.ValueString())
 	if err != nil {
+		if isNotFoundError(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error reading enrollment",
 			err.Error(),
