@@ -170,3 +170,51 @@ func flattenEnrollment(response *enrollmentResponse) enrollmentFlat {
 		DeviceID:       deviceID,
 	}
 }
+
+type enrollmentsListResponse struct {
+	Data    []enrollmentData `json:"data"`
+	HasMore bool             `json:"has_more"`
+}
+
+func listEnrollments(ctx context.Context, client *simplemdm.Client, startingAfter int) ([]enrollmentResponse, error) {
+	var allEnrollments []enrollmentResponse
+	limit := 100
+
+	for {
+		url := fmt.Sprintf("https://%s/api/v1/enrollments?limit=%d", client.HostName, limit)
+		if startingAfter > 0 {
+			url += fmt.Sprintf("&starting_after=%d", startingAfter)
+		}
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		body, err := client.RequestResponse200(req)
+		if err != nil {
+			return nil, err
+		}
+
+		var response enrollmentsListResponse
+		if err := json.Unmarshal(body, &response); err != nil {
+			return nil, err
+		}
+
+		for _, data := range response.Data {
+			allEnrollments = append(allEnrollments, enrollmentResponse{Data: data})
+		}
+
+		if !response.HasMore {
+			break
+		}
+
+		if len(response.Data) > 0 {
+			startingAfter = response.Data[len(response.Data)-1].ID
+		} else {
+			break
+		}
+	}
+
+	return allEnrollments, nil
+}

@@ -182,3 +182,113 @@ func scriptJobDevicesListValue(ctx context.Context, devices []scriptJobDeviceDet
 func isNotFoundError(err error) bool {
 	return err != nil && strings.Contains(err.Error(), "404")
 }
+
+type scriptJobResponse struct {
+	Data scriptJobData `json:"data"`
+}
+
+type scriptJobData struct {
+	ID            int                    `json:"id"`
+	Type          string                 `json:"type"`
+	Attributes    scriptJobAttributes    `json:"attributes"`
+	Relationships scriptJobRelationships `json:"relationships"`
+}
+
+type scriptJobAttributes struct {
+	Status    string `json:"status"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+type scriptJobRelationships struct {
+	Script          scriptJobRelationshipItem `json:"script"`
+	AssignmentGroup scriptJobRelationshipItem `json:"assignment_group"`
+}
+
+type scriptJobRelationshipItem struct {
+	Data *struct {
+		ID   int    `json:"id"`
+		Type string `json:"type"`
+	} `json:"data"`
+}
+
+type scriptJobFlat struct {
+	ID                  int
+	ScriptID            *int
+	AssignmentGroupID   *int
+	AssignmentGroupName string
+	Status              string
+	CreatedAt           string
+	UpdatedAt           string
+}
+
+type scriptJobsListResponse struct {
+	Data    []scriptJobData `json:"data"`
+	HasMore bool            `json:"has_more"`
+}
+
+func listScriptJobs(ctx context.Context, client *simplemdm.Client, startingAfter int) ([]scriptJobResponse, error) {
+	var allJobs []scriptJobResponse
+	limit := 100
+
+	for {
+		url := fmt.Sprintf("https://%s/api/v1/script_jobs?limit=%d", client.HostName, limit)
+		if startingAfter > 0 {
+			url += fmt.Sprintf("&starting_after=%d", startingAfter)
+		}
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		body, err := client.RequestResponse200(req)
+		if err != nil {
+			return nil, err
+		}
+
+		var response scriptJobsListResponse
+		if err := json.Unmarshal(body, &response); err != nil {
+			return nil, err
+		}
+
+		for _, data := range response.Data {
+			allJobs = append(allJobs, scriptJobResponse{Data: data})
+		}
+
+		if !response.HasMore {
+			break
+		}
+
+		if len(response.Data) > 0 {
+			startingAfter = response.Data[len(response.Data)-1].ID
+		} else {
+			break
+		}
+	}
+
+	return allJobs, nil
+}
+
+func flattenScriptJob(response *scriptJobResponse) scriptJobFlat {
+	flat := scriptJobFlat{
+		ID:        response.Data.ID,
+		Status:    response.Data.Attributes.Status,
+		CreatedAt: response.Data.Attributes.CreatedAt,
+		UpdatedAt: response.Data.Attributes.UpdatedAt,
+	}
+
+	if response.Data.Relationships.Script.Data != nil {
+		scriptID := response.Data.Relationships.Script.Data.ID
+		flat.ScriptID = &scriptID
+	}
+
+	if response.Data.Relationships.AssignmentGroup.Data != nil {
+		groupID := response.Data.Relationships.AssignmentGroup.Data.ID
+		flat.AssignmentGroupID = &groupID
+		// Note: We don't have the name in the list response, so it will be empty
+		flat.AssignmentGroupName = ""
+	}
+
+	return flat
+}
