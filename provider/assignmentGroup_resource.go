@@ -107,7 +107,8 @@ func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRe
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Description: "Optional. Type of assignment group. Must be one of standard (for MDM app/media deployments) or munki for Munki app deployments. Defaults to standard.",
+				Description: "Optional. Type of assignment group. Must be one of standard (for MDM app/media deployments) or munki for Munki app deployments. Defaults to standard. " +
+					"⚠️ DEPRECATED: This field is deprecated by the SimpleMDM API and may be ignored for accounts using the New Groups Experience.",
 			},
 			"install_type": schema.StringAttribute{
 				Optional: true,
@@ -120,7 +121,8 @@ func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRe
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Description: "Optional. The install type for munki assignment groups. Must be one of managed, self_serve, managed_updates or default_installs. This setting has no effect for non-munki (standard) assignment groups. Defaults to managed.",
+				Description: "Optional. The install type for munki assignment groups. Must be one of managed, self_serve, managed_updates or default_installs. This setting has no effect for non-munki (standard) assignment groups. Defaults to managed. " +
+					"⚠️ DEPRECATED: The SimpleMDM API recommends setting install_type per-app using the Assign App endpoint instead of at the group level.",
 			},
 			"priority": schema.Int64Attribute{
 				Optional: true,

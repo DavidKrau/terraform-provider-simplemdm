@@ -4,9 +4,17 @@ import (
 	"fmt"
 	"testing"
 
+	simplemdm "github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
+
+func testAccCheckDeviceGroupDestroy(s *terraform.State) error {
+	return testAccCheckResourceDestroyed("simplemdm_devicegroup", func(client *simplemdm.Client, id string) error {
+		_, err := client.DeviceGroupGet(id)
+		return err
+	})(s)
+}
 
 func TestAccDeviceGroupResource(t *testing.T) {
 	testAccPreCheck(t)
@@ -23,6 +31,7 @@ func TestAccDeviceGroupResource(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDeviceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: providerConfig + testAccDeviceGroupResourceConfig(name, attributeKey, attributeValue, profileID, customProfileID, cloneSourceID),

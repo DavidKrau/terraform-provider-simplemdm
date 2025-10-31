@@ -1,16 +1,27 @@
 package provider
 
 import (
+	"context"
 	"testing"
 
+	simplemdm "github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
+
+func testAccCheckAppDestroy(s *terraform.State) error {
+	return testAccCheckResourceDestroyed("simplemdm_app", func(client *simplemdm.Client, id string) error {
+		_, err := fetchApp(context.Background(), client, id)
+		return err
+	})(s)
+}
 
 func TestAccAppResourceWithAppStoreIdAttr(t *testing.T) {
 	testAccPreCheck(t)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -75,8 +86,9 @@ func TestAccAppResourceWithBundleIdAttr(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
-			// Update without deploy_to in tf code but use bundle_id insted of app_store_id
+			// Update without deploy_to in tf code but use bundle_id instead of app_store_id
 			{
 				Config: providerConfig + `
 				resource "simplemdm_app" "testapp" {

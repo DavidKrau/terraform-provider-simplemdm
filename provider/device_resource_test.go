@@ -1,11 +1,22 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
+	simplemdm "github.com/DavidKrau/simplemdm-go-client"
+	"github.com/DavidKrau/terraform-provider-simplemdm/internal/simplemdmext"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
+
+func testAccCheckDeviceDestroy(s *terraform.State) error {
+	return testAccCheckResourceDestroyed("simplemdm_device", func(client *simplemdm.Client, id string) error {
+		_, err := simplemdmext.GetDevice(context.Background(), client, id, false)
+		return err
+	})(s)
+}
 
 func TestAccDeviceResource(t *testing.T) {
 	testAccPreCheck(t)
@@ -18,6 +29,7 @@ func TestAccDeviceResource(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDeviceDestroy,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{

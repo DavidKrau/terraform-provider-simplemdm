@@ -3,14 +3,24 @@ package provider
 import (
 	"testing"
 
+	simplemdm "github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
+
+func testAccCheckCustomProfileDestroy(s *terraform.State) error {
+	return testAccCheckResourceDestroyed("simplemdm_customprofile", func(client *simplemdm.Client, id string) error {
+		_, err := client.CustomProfileGet(id)
+		return err
+	})(s)
+}
 
 func TestAccCustomProfileResource(t *testing.T) {
 	testAccPreCheck(t)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCustomProfileDestroy,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{

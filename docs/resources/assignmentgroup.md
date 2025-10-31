@@ -10,6 +10,15 @@ description: |-
 
 Assignment Group resource is used to manage group, you can assign App(s), Custom Profile(s), Device(s), Device Group(s) and set addition details regarding Assignemtn Group.
 
+## ⚠️ Deprecated Fields Notice
+
+The following fields are deprecated by the SimpleMDM API and may not function correctly depending on your account configuration:
+
+- **`group_type`** - This field is deprecated for accounts using the New Groups Experience. The API may ignore this field for newer accounts.
+- **`install_type`** - This field is deprecated for assignment group creation. SimpleMDM recommends setting install_type per-app using the Assign App endpoint instead of at the group level.
+
+For best compatibility and future-proofing, avoid relying on these fields for new configurations. See the [Migration from Deprecated Fields](#migration-from-deprecated-fields) section below for guidance.
+
 ## Example Usage
 
 ```terraform
@@ -50,9 +59,9 @@ resource "simplemdm_assignmentgroup" "myfirstgroup" {
 - `auto_deploy` (Boolean) Optional. Whether the Apps should be automatically pushed to device(s) when they join this Assignment Group. Defaults to true
 - `devices` (Set of String) Optional. List of Devices assigned to this Assignment Group
 - `devices_remove_others` (Boolean) Optional. When true, devices assigned through Terraform will be removed from other assignment groups before being added to this one.
-- `group_type` (String) Optional. Type of assignment group. Must be one of standard (for MDM app/media deployments) or munki for Munki app deployments. Defaults to standard.
+- `group_type` (String) Optional. Type of assignment group. Must be one of standard (for MDM app/media deployments) or munki for Munki app deployments. Defaults to standard. **⚠️ DEPRECATED**: This field is deprecated by the SimpleMDM API and may be ignored for accounts using the New Groups Experience.
 - `groups` (Set of String) Optional. List of Device Groups assigned to this Assignment Group
-- `install_type` (String) Optional. The install type for munki assignment groups. Must be one of managed, self_serve, managed_updates or default_installs. This setting has no effect for non-munki (standard) assignment groups. Defaults to managed.
+- `install_type` (String) Optional. The install type for munki assignment groups. Must be one of managed, self_serve, managed_updates or default_installs. This setting has no effect for non-munki (standard) assignment groups. Defaults to managed. **⚠️ DEPRECATED**: The SimpleMDM API recommends setting install_type per-app using the Assign App endpoint instead of at the group level.
 - `priority` (Number) Optional. Sets the priority order in which assignment groups are evaluated when devices are part of multiple groups.
 - `profiles` (Set of String) Optional. List of Configuration Profiles (both Custom and predefined Profiles) assigned to this assignment group
 - `profiles_sync` (Boolean) Optional. Set true if you would like to send Sync Profiles command after Assignment Group creation or changes. Defaults to false.
@@ -64,6 +73,39 @@ resource "simplemdm_assignmentgroup" "myfirstgroup" {
 - `group_count` (Number) Number of device groups currently assigned to the assignment group.
 - `id` (String) ID of the Assignment Group in SimpleMDM
 - `updated_at` (String) Timestamp when the assignment group was last updated.
+
+## Migration from Deprecated Fields
+
+If you're currently using the deprecated fields in your configuration, please note:
+
+### `install_type` Field
+
+The `install_type` field currently only applies to Munki-type assignment groups and may not function as expected on all accounts. For new implementations, SimpleMDM recommends configuring install behavior per-app rather than at the group level.
+
+**Current Behavior:**
+- The field is still supported for backward compatibility
+- Behavior may vary by account type (especially for accounts using the New Groups Experience)
+- May be ignored by the API for newer account configurations
+
+**Alternative Approach:**
+
+Instead of setting install_type at the group level, consider managing install behavior through:
+- Individual app assignments using the SimpleMDM Assign App endpoint
+- Assignment group `auto_deploy` settings to control automatic deployment
+- Device group configurations for more granular control
+
+### `group_type` Field
+
+The `group_type` field is deprecated for accounts opted into the New Groups Experience. While this provider will continue to support the field for backward compatibility, the SimpleMDM API may ignore it depending on your account configuration.
+
+**Current Behavior:**
+- The field triggers a resource replacement when changed (destroy and recreate)
+- May be ignored by the API for accounts using the New Groups Experience
+- Standard value is the recommended default for most use cases
+
+**Recommendation:**
+
+For new configurations, it's recommended to use the default value (`standard`) and avoid explicitly setting this field unless you have a specific requirement for Munki-type groups and have confirmed your account supports this functionality.
 
 ## Import
 

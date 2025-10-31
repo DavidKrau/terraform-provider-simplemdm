@@ -1,16 +1,41 @@
 package provider
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
 	"testing"
 
+	simplemdm "github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
+
+func testAccCheckCustomDeclarationDestroy(s *terraform.State) error {
+	return testAccCheckResourceDestroyed("simplemdm_customdeclaration", func(client *simplemdm.Client, id string) error {
+		url := fmt.Sprintf("https://%s/api/v1/custom_declarations/%s", client.HostName, id)
+		httpReq, err := http.NewRequest(http.MethodGet, url, nil)
+		if err != nil {
+			return err
+		}
+
+		responseBody, err := client.RequestResponse200(httpReq)
+		if err != nil {
+			return err
+		}
+
+		var declaration customDeclarationResponse
+		return json.Unmarshal(responseBody, &declaration)
+	})(s)
+}
 
 func TestAccCustomDeclarationResource(t *testing.T) {
 	testAccPreCheck(t)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCustomDeclarationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: providerConfig + `
