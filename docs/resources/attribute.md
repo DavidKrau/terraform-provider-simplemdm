@@ -3,12 +3,12 @@
 page_title: "simplemdm_attribute Resource - simplemdm"
 subcategory: ""
 description: |-
-  Attribute resourse can be used to manage SimpleMDM Attribute. Can be used together with Device(s) or Device Group(s) to set values or in lifecycle management.
+  Attribute resource can be used to manage SimpleMDM Attribute. Can be used together with Device(s) or Device Group(s) to set values or in lifecycle management.
 ---
 
 # simplemdm_attribute (Resource)
 
-Attribute resourse can be used to manage SimpleMDM Attribute. Can be used together with Device(s) or Device Group(s) to set values or in lifecycle management.
+Attribute resource can be used to manage SimpleMDM Attribute. Can be used together with Device(s) or Device Group(s) to set values or in lifecycle management.
 
 ## Example Usage
 
@@ -37,6 +37,8 @@ resource "simplemdm_attribute" "myattribute" {
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 # Attribute can be imported by specifying the name of attribute.

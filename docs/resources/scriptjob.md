@@ -69,6 +69,8 @@ Read-Only:
 
 Import is supported using the following syntax:
 
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
 ```shell
 # Script Jobs can be imported by specifying the job ID.
 terraform import simplemdm_scriptjob.example  123456
