@@ -117,6 +117,9 @@ func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRe
 					// Validate string value must be "managed", "self_serve" or "munki"
 					stringvalidator.OneOf([]string{"managed", "self_serve", "managed_updates", "default_installs"}...),
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Optional. The install type for munki assignment groups. Must be one of managed, self_serve, managed_updates or default_installs. This setting has no effect for non-munki (standard) assignment groups. Defaults to managed.",
 			},
 			"priority": schema.Int64Attribute{
@@ -283,7 +286,7 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 		err := r.client.AssignmentGroupUpdateInstalledApps(plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
-				"Error when sending command to Update Apps, deleting group to prevent issus next run.",
+				"Error when sending command to Update Apps, deleting group to prevent issues next run.",
 				"Could not send Apps Update command, unexpected error: "+err.Error(),
 			)
 			err := r.client.AssignmentGroupDelete(plan.ID.ValueString())
@@ -302,7 +305,7 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 		err := r.client.AssignmentGroupPushApps(plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
-				"Error when sending command to Push Apps, deleting group to prevent issus next run.",
+				"Error when sending command to Push Apps, deleting group to prevent issues next run.",
 				"Could not send Push Apps command, unexpected error: "+err.Error(),
 			)
 			err := r.client.AssignmentGroupDelete(plan.ID.ValueString())
@@ -321,7 +324,7 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 		err := r.client.AssignmentGroupSyncProfiles(plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
-				"Error when sending command to Sync Profiles, deleting group to prevent issus next run.",
+				"Error when sending command to Sync Profiles, deleting group to prevent issues next run.",
 				"Could not send Sync Profiles command, unexpected error: "+err.Error(),
 			)
 			err := r.client.AssignmentGroupDelete(plan.ID.ValueString())

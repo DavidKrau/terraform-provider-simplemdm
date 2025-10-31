@@ -88,10 +88,17 @@ func (d *scriptDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 
 	script, err := d.client.ScriptGet(state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Read SimpleMDM Script",
-			err.Error(),
-		)
+		if isNotFoundError(err) {
+			resp.Diagnostics.AddError(
+				"SimpleMDM script not found",
+				fmt.Sprintf("The script with ID %s was not found. It may have been deleted.", state.ID.ValueString()),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to Read SimpleMDM Script",
+				err.Error(),
+			)
+		}
 		return
 	}
 

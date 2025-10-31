@@ -54,7 +54,7 @@ func (r *attributeResource) Metadata(_ context.Context, req resource.MetadataReq
 // Schema defines the schema for the resource.
 func (r *attributeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Attribute resourse can be used to manage SimpleMDM Attribute. Can be used together with Device(s) or Device Group(s) to set values or in lifecycle management.",
+		Description: "Attribute resource can be used to manage SimpleMDM Attribute. Can be used together with Device(s) or Device Group(s) to set values or in lifecycle management.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Required: true,
@@ -172,8 +172,8 @@ func (r *attributeResource) Update(ctx context.Context, req resource.UpdateReque
 	err := r.client.AttributeUpdate(plan.Name.ValueString(), plan.DefaultValue.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating attribute",
-			"Could not create attribute, unexpected error: "+err.Error(),
+			"Error updating attribute",
+			"Could not update attribute, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -198,7 +198,7 @@ func (r *attributeResource) Delete(ctx context.Context, req resource.DeleteReque
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting SimpleMDM attribute",
-			"Could not attribute, unexpected error: "+err.Error(),
+			"Could not delete attribute, unexpected error: "+err.Error(),
 		)
 		return
 	}

@@ -139,10 +139,17 @@ func (d *profileDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 	profile, err := fetchProfile(ctx, d.client, state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Read SimpleMDM profile",
-			err.Error(),
-		)
+		if isNotFoundError(err) {
+			resp.Diagnostics.AddError(
+				"SimpleMDM profile not found",
+				fmt.Sprintf("The profile with ID %s was not found. It may have been deleted.", state.ID.ValueString()),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to Read SimpleMDM profile",
+				err.Error(),
+			)
+		}
 		return
 	}
 

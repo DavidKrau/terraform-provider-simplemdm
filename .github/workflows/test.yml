@@ -57,6 +57,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Only run acceptance tests if API key secret is available (skip for forks)
+    if: github.event.repository.fork == false
     strategy:
       fail-fast: false
       matrix:

@@ -109,10 +109,17 @@ func (d *devicesDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 	devices, err := simplemdmext.ListDevices(ctx, d.client, config.Search.ValueString(), config.IncludeAwaitingEnrollment.ValueBool(), config.IncludeSecretCustomAttributes.ValueBool())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to list SimpleMDM devices",
-			err.Error(),
-		)
+		if isNotFoundError(err) {
+			resp.Diagnostics.AddError(
+				"SimpleMDM devices not found",
+				"No devices were found matching the search criteria.",
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to list SimpleMDM devices",
+				err.Error(),
+			)
+		}
 		return
 	}
 

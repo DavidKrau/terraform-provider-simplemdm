@@ -63,10 +63,17 @@ func (d *deviceGroupDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	devicegroup, err := d.client.DeviceGroupGet(state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Read SimpleMDM device group",
-			err.Error(),
-		)
+		if isNotFoundError(err) {
+			resp.Diagnostics.AddError(
+				"SimpleMDM device group not found",
+				fmt.Sprintf("The device group with ID %s was not found. It may have been deleted.", state.ID.ValueString()),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to Read SimpleMDM device group",
+				err.Error(),
+			)
+		}
 		return
 	}
 

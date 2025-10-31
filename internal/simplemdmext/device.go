@@ -176,23 +176,44 @@ func ListDeviceUsers(ctx context.Context, client *simplemdm.Client, deviceID str
 }
 
 func listRelated(ctx context.Context, client *simplemdm.Client, deviceID, endpoint string) (*DeviceRelatedListResponse, error) {
-	url := fmt.Sprintf("https://%s/api/v1/devices/%s/%s", client.HostName, deviceID, endpoint)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
+	allData := []DeviceRelatedItem{}
+	page := 1
+
+	for {
+		url := fmt.Sprintf("https://%s/api/v1/devices/%s/%s", client.HostName, deviceID, endpoint)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		q := req.URL.Query()
+		q.Set("page", strconv.Itoa(page))
+		req.URL.RawQuery = q.Encode()
+
+		body, err := client.RequestResponse200(req)
+		if err != nil {
+			return nil, err
+		}
+
+		var resp DeviceRelatedListResponse
+		if err := json.Unmarshal(body, &resp); err != nil {
+			return nil, err
+		}
+
+		allData = append(allData, resp.Data...)
+
+		// Stop if there are no more pages or no data returned
+		if !resp.HasMore || len(resp.Data) == 0 {
+			break
+		}
+
+		page++
 	}
 
-	body, err := client.RequestResponse200(req)
-	if err != nil {
-		return nil, err
-	}
-
-	var resp DeviceRelatedListResponse
-	if err := json.Unmarshal(body, &resp); err != nil {
-		return nil, err
-	}
-
-	return &resp, nil
+	return &DeviceRelatedListResponse{
+		Data:    allData,
+		HasMore: false,
+	}, nil
 }
 
 // FlattenAttributes normalises an arbitrary map of attributes into a map of Terraform strings.

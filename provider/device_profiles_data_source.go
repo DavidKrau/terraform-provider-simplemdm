@@ -82,10 +82,17 @@ func (d *deviceProfilesDataSource) Read(ctx context.Context, req datasource.Read
 
 	profiles, err := simplemdmext.ListDeviceProfiles(ctx, d.client, state.DeviceID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to list device profiles",
-			err.Error(),
-		)
+		if isNotFoundError(err) {
+			resp.Diagnostics.AddError(
+				"Device not found",
+				fmt.Sprintf("The device with ID %s was not found. It may have been deleted.", state.DeviceID.ValueString()),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to list device profiles",
+				err.Error(),
+			)
+		}
 		return
 	}
 

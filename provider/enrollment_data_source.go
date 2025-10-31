@@ -107,10 +107,17 @@ func (d *enrollmentDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 	enrollment, err := fetchEnrollment(ctx, d.client, state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to read enrollment",
-			err.Error(),
-		)
+		if isNotFoundError(err) {
+			resp.Diagnostics.AddError(
+				"SimpleMDM enrollment not found",
+				fmt.Sprintf("The enrollment with ID %s was not found. It may have been deleted.", state.ID.ValueString()),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Unable to read enrollment",
+				err.Error(),
+			)
+		}
 		return
 	}
 

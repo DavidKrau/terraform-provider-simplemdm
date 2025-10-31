@@ -437,6 +437,9 @@ func convertSetToSlice(ctx context.Context, set types.Set) ([]string, error) {
 	}
 
 	var result []string
-	set.ElementsAs(ctx, &result, false)
+	diags := set.ElementsAs(ctx, &result, false)
+	if diags.HasError() {
+		return nil, fmt.Errorf("failed to convert set to slice: %s", diags.Errors()[0].Detail())
+	}
 	return result, nil
 }
