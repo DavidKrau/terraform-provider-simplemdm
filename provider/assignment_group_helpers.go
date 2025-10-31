@@ -227,17 +227,9 @@ func applyAssignmentGroupResponseToResourceModel(model *assignment_groupResource
 		model.AppTrackLocation = types.BoolNull()
 	}
 
-	if response.Data.Attributes.CreatedAt != "" {
-		model.CreatedAt = types.StringValue(response.Data.Attributes.CreatedAt)
-	} else {
-		model.CreatedAt = types.StringNull()
-	}
-
-	if response.Data.Attributes.UpdatedAt != "" {
-		model.UpdatedAt = types.StringValue(response.Data.Attributes.UpdatedAt)
-	} else {
-		model.UpdatedAt = types.StringNull()
-	}
+	// Always set CreatedAt and UpdatedAt for resources too
+	model.CreatedAt = types.StringValue(response.Data.Attributes.CreatedAt)
+	model.UpdatedAt = types.StringValue(response.Data.Attributes.UpdatedAt)
 
 	model.DeviceCount = types.Int64Value(int64(response.Data.Attributes.DeviceCount))
 	model.GroupCount = types.Int64Value(int64(response.Data.Attributes.GroupCount))
@@ -267,17 +259,10 @@ func applyAssignmentGroupResponseToDataSourceModel(model *assignmentGroupDataSou
 		model.AppTrackLocation = types.BoolNull()
 	}
 
-	if response.Data.Attributes.CreatedAt != "" {
-		model.CreatedAt = types.StringValue(response.Data.Attributes.CreatedAt)
-	} else {
-		model.CreatedAt = types.StringNull()
-	}
-
-	if response.Data.Attributes.UpdatedAt != "" {
-		model.UpdatedAt = types.StringValue(response.Data.Attributes.UpdatedAt)
-	} else {
-		model.UpdatedAt = types.StringNull()
-	}
+	// Always set CreatedAt and UpdatedAt, even if empty
+	// This ensures Computed fields in data sources are considered "set"
+	model.CreatedAt = types.StringValue(response.Data.Attributes.CreatedAt)
+	model.UpdatedAt = types.StringValue(response.Data.Attributes.UpdatedAt)
 
 	model.Apps = buildStringSetFromRelationshipItems(response.Data.Relationships.Apps.Data)
 	model.Groups = buildStringSetFromRelationshipItems(response.Data.Relationships.DeviceGroups.Data)

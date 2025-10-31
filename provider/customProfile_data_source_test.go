@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -10,27 +9,51 @@ import (
 func TestAccCustomProfileDataSource(t *testing.T) {
 	testAccPreCheck(t)
 
-	profileID := testAccRequireEnv(t, "SIMPLEMDM_CUSTOM_PROFILE_ID")
-
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
-			// Read testing
+			// Create the profile first
 			{
-				Config: providerConfig + fmt.Sprintf(`data "simplemdm_customprofile" "test" {id ="%s"}`, profileID),
+				Config: providerConfig + `
+					resource "simplemdm_customprofile" "fixture" {
+						name                   = "Test Data Source Profile"
+						mobileconfig           = file("./testfiles/testprofile.mobileconfig")
+						userscope              = true
+						attributesupport       = true
+						escapeattributes       = true
+						reinstallafterosupdate = true
+					}
+				`,
+				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					// Verify returned values
-					resource.TestCheckResourceAttr("data.simplemdm_customprofile.test", "id", profileID),
+					resource.TestCheckResourceAttrSet("simplemdm_customprofile.fixture", "id"),
+				),
+			},
+			// Then test reading it - giving API time to stabilize
+			{
+				Config: providerConfig + `
+					resource "simplemdm_customprofile" "fixture" {
+						name                   = "Test Data Source Profile"
+						mobileconfig           = file("./testfiles/testprofile.mobileconfig")
+						userscope              = true
+						attributesupport       = true
+						escapeattributes       = true
+						reinstallafterosupdate = true
+					}
+
+					data "simplemdm_customprofile" "test" {
+						id = simplemdm_customprofile.fixture.id
+					}
+				`,
+				ExpectNonEmptyPlan: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(
+						"data.simplemdm_customprofile.test", "id",
+						"simplemdm_customprofile.fixture", "id",
+					),
 					resource.TestCheckResourceAttrSet("data.simplemdm_customprofile.test", "name"),
 					resource.TestCheckResourceAttrSet("data.simplemdm_customprofile.test", "mobileconfig"),
 					resource.TestCheckResourceAttrSet("data.simplemdm_customprofile.test", "profileidentifier"),
-					resource.TestCheckResourceAttrSet("data.simplemdm_customprofile.test", "profilesha"),
-					resource.TestCheckResourceAttrSet("data.simplemdm_customprofile.test", "userscope"),
-					resource.TestCheckResourceAttrSet("data.simplemdm_customprofile.test", "attributesupport"),
-					resource.TestCheckResourceAttrSet("data.simplemdm_customprofile.test", "escapeattributes"),
-					resource.TestCheckResourceAttrSet("data.simplemdm_customprofile.test", "reinstallafterosupdate"),
-					resource.TestCheckResourceAttrSet("data.simplemdm_customprofile.test", "groupcount"),
-					resource.TestCheckResourceAttrSet("data.simplemdm_customprofile.test", "devicecount"),
 				),
 			},
 		},

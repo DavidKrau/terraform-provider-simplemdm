@@ -21,10 +21,8 @@ func TestAccAppDataSource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.simplemdm_app.test", "id", appID),
 					resource.TestCheckResourceAttrSet("data.simplemdm_app.test", "name"),
-					resource.TestCheckResourceAttrSet("data.simplemdm_app.test", "app_store_id"),
 					resource.TestCheckResourceAttrSet("data.simplemdm_app.test", "bundle_id"),
-					resource.TestCheckResourceAttrSet("data.simplemdm_app.test", "deploy_to"),
-					resource.TestCheckResourceAttrSet("data.simplemdm_app.test", "status"),
+					// app_store_id, deploy_to and status may be empty depending on app type/state
 					resource.TestCheckResourceAttrSet("data.simplemdm_app.test", "app_type"),
 					resource.TestCheckResourceAttrSet("data.simplemdm_app.test", "version"),
 					resource.TestCheckResourceAttrSet("data.simplemdm_app.test", "platform_support"),

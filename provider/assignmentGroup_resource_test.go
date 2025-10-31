@@ -3,18 +3,43 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
-	simplemdm "github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func testAccCheckAssignmentGroupDestroy(s *terraform.State) error {
-	return testAccCheckResourceDestroyed("simplemdm_assignmentgroup", func(client *simplemdm.Client, id string) error {
-		_, err := fetchAssignmentGroup(context.Background(), client, id)
-		return err
-	})(s)
+	client, err := getTestClient()
+	if err != nil {
+		return fmt.Errorf("failed to create test client: %w", err)
+	}
+
+	for name, rs := range s.RootModule().Resources {
+		// Skip if not our resource type
+		if rs.Type != "simplemdm_assignmentgroup" {
+			continue
+		}
+
+		// Skip data sources - they start with "data."
+		if strings.HasPrefix(name, "data.") {
+			continue
+		}
+
+		// Try to fetch the resource
+		_, err := fetchAssignmentGroup(context.Background(), client, rs.Primary.ID)
+		if err == nil {
+			return fmt.Errorf("assignment group %s still exists after destroy", rs.Primary.ID)
+		}
+
+		// If it's a 404, that's expected (resource was destroyed)
+		if !isNotFoundError(err) {
+			return fmt.Errorf("unexpected error checking assignment group %s: %w", rs.Primary.ID, err)
+		}
+	}
+
+	return nil
 }
 
 func TestAccAssignmentGroupResource(t *testing.T) {

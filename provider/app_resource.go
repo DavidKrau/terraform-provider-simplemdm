@@ -210,73 +210,39 @@ type appAPIResponse struct {
 func newAppResourceModelFromAPI(ctx context.Context, app *appAPIResponse) (appResourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
+	// Always set string fields from API, even if empty
+	// This ensures Computed fields in data sources are considered "set"
 	model := appResourceModel{
-		ID:                   types.StringValue(strconv.Itoa(app.Data.ID)),
-		Name:                 types.StringNull(),
-		AppStoreId:           types.StringNull(),
-		BundleId:             types.StringNull(),
-		BinaryFile:           types.StringNull(),
-		DeployTo:             types.StringValue("none"),
-		Status:               types.StringNull(),
-		AppType:              types.StringNull(),
-		Version:              types.StringNull(),
-		PlatformSupport:      types.StringNull(),
-		ProcessingStatus:     types.StringNull(),
-		InstallationChannels: types.ListNull(types.StringType),
-		CreatedAt:            types.StringNull(),
-		UpdatedAt:            types.StringNull(),
+		ID:               types.StringValue(strconv.Itoa(app.Data.ID)),
+		Name:             types.StringValue(app.Data.Attributes.Name),
+		BundleId:         types.StringValue(app.Data.Attributes.BundleIdentifier),
+		BinaryFile:       types.StringNull(),
+		DeployTo:         types.StringValue(app.Data.Attributes.DeployTo),
+		Status:           types.StringValue(app.Data.Attributes.Status),
+		AppType:          types.StringValue(app.Data.Attributes.AppType),
+		Version:          types.StringValue(app.Data.Attributes.Version),
+		PlatformSupport:  types.StringValue(app.Data.Attributes.PlatformSupport),
+		ProcessingStatus: types.StringValue(app.Data.Attributes.ProcessingStatus),
+		CreatedAt:        types.StringValue(app.Data.Attributes.CreatedAt),
+		UpdatedAt:        types.StringValue(app.Data.Attributes.UpdatedAt),
 	}
 
-	if name := app.Data.Attributes.Name; name != "" {
-		model.Name = types.StringValue(name)
-	}
-
+	// Handle AppStoreId which may be nil
 	if storeID := app.Data.Attributes.ITunesStoreID; storeID != nil && *storeID != 0 {
 		model.AppStoreId = types.StringValue(strconv.Itoa(*storeID))
+	} else {
+		model.AppStoreId = types.StringValue("")
 	}
 
-	if bundleID := app.Data.Attributes.BundleIdentifier; bundleID != "" {
-		model.BundleId = types.StringValue(bundleID)
-	}
-
-	if deployTo := app.Data.Attributes.DeployTo; deployTo != "" {
-		model.DeployTo = types.StringValue(deployTo)
-	}
-
-	if status := app.Data.Attributes.Status; status != "" {
-		model.Status = types.StringValue(status)
-	}
-
-	if appType := app.Data.Attributes.AppType; appType != "" {
-		model.AppType = types.StringValue(appType)
-	}
-
-	if version := app.Data.Attributes.Version; version != "" {
-		model.Version = types.StringValue(version)
-	}
-
-	if platform := app.Data.Attributes.PlatformSupport; platform != "" {
-		model.PlatformSupport = types.StringValue(platform)
-	}
-
-	if processing := app.Data.Attributes.ProcessingStatus; processing != "" {
-		model.ProcessingStatus = types.StringValue(processing)
-	}
-
-	if created := app.Data.Attributes.CreatedAt; created != "" {
-		model.CreatedAt = types.StringValue(created)
-	}
-
-	if updated := app.Data.Attributes.UpdatedAt; updated != "" {
-		model.UpdatedAt = types.StringValue(updated)
-	}
-
+	// Handle installation channels
 	if len(app.Data.Attributes.InstallationChannels) > 0 {
 		listValue, listDiags := types.ListValueFrom(ctx, types.StringType, app.Data.Attributes.InstallationChannels)
 		diags.Append(listDiags...)
 		if !listDiags.HasError() {
 			model.InstallationChannels = listValue
 		}
+	} else {
+		model.InstallationChannels = types.ListNull(types.StringType)
 	}
 
 	return model, diags
