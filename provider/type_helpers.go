@@ -42,21 +42,3 @@ func boolValueOrDefault(value types.Bool, fallback bool) bool {
 
 	return value.ValueBool()
 }
-
-// stringValueOrDefault returns the string value if it exists, otherwise returns the fallback
-func stringValueOrDefault(value types.String, fallback string) string {
-	if value.IsNull() || value.IsUnknown() {
-		return fallback
-	}
-
-	return value.ValueString()
-}
-
-// int64ValueOrDefault returns the int64 value if it exists, otherwise returns the fallback
-func int64ValueOrDefault(value types.Int64, fallback int64) int64 {
-	if value.IsNull() || value.IsUnknown() {
-		return fallback
-	}
-
-	return value.ValueInt64()
-}
