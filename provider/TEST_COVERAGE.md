@@ -4,6 +4,39 @@
 
 This document outlines which tests are fully dynamic (require only `SIMPLEMDM_APIKEY`) and which tests require additional fixtures due to API or operational limitations.
 
+## GitHub Secrets Setup (2025-10-31)
+
+**📖 Quick Start**: See [`GITHUB_SECRETS_GUIDE.md`](../GITHUB_SECRETS_GUIDE.md) for setting up missing test fixtures
+
+Four GitHub secrets are configured in the workflow but need values added:
+- `SIMPLEMDM_DEVICE_ID` - Enables 5 device-related tests
+- `SIMPLEMDM_DEVICE_GROUP_CLONE_SOURCE_ID` - Enables device group cloning tests
+- `SIMPLEMDM_SCRIPT_JOB_ID` - Enables script job data source tests
+- `SIMPLEMDM_CUSTOM_DECLARATION_DEVICE_ID` - Enables DDM assignment tests
+
+**Impact**: Adding these secrets will increase acceptance test coverage from ~70% to ~80% (+8 tests)
+
+**Auto-Discovery**: Run `./scripts/discover-test-fixtures.sh` to automatically find fixture IDs from your SimpleMDM account
+
+See also: [`TESTING_SETUP.md`](../TESTING_SETUP.md) for detailed setup documentation
+
+---
+
+## Recent Coverage Improvement Effort (2025-10-31)
+
+An attempt was made to increase unit test coverage from 2.4% to 60%+. See [`TEST_COVERAGE_IMPROVEMENT_REPORT.md`](./TEST_COVERAGE_IMPROVEMENT_REPORT.md) for:
+- Detailed analysis of current architecture
+- Why 60% coverage is challenging without refactoring
+- Three approaches to achieve 60%+ coverage
+- Recommended path forward
+
+**Current Unit Test Coverage**: 2.7%
+- Added comprehensive data transformation tests
+- Identified architectural limitations
+- Documented pragmatic testing strategy
+
+**Key Finding**: For Terraform providers, acceptance test coverage is more valuable than unit test coverage percentage.
+
 ---
 
 ## ✅ Fully Dynamic Tests (No Fixtures Required)

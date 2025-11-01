@@ -275,3 +275,135 @@ func applyAssignmentGroupResponseToDataSourceModel(model *assignmentGroupDataSou
 	model.DeviceCount = types.Int64Value(int64(response.Data.Attributes.DeviceCount))
 	model.GroupCount = types.Int64Value(int64(response.Data.Attributes.GroupCount))
 }
+
+// setElementsToStringSlice converts a types.Set to a []string slice
+func setElementsToStringSlice(set types.Set) []string {
+	result := make([]string, 0, len(set.Elements()))
+	for _, element := range set.Elements() {
+		result = append(result, element.(types.String).ValueString())
+	}
+	return result
+}
+
+// assignObjectsToGroup assigns multiple objects to an assignment group
+// Used during Create operations to assign apps, profiles, groups, or devices
+func assignObjectsToGroup(
+	ctx context.Context,
+	client *simplemdm.Client,
+	groupID string,
+	objects types.Set,
+	objectType string,
+	removeOthers bool,
+) error {
+	for _, objectID := range objects.Elements() {
+		idString := objectID.(types.String).ValueString()
+
+		var err error
+		if objectType == "devices" {
+			// Devices use special assignment function with removeOthers parameter
+			err = assignmentGroupAssignDevice(ctx, client, groupID, idString, removeOthers)
+		} else {
+			// Apps, profiles, and device_groups use standard assignment
+			err = client.AssignmentGroupAssignObject(groupID, idString, objectType)
+		}
+
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// updateAssignmentGroupObjects updates assignments by computing diff and applying changes
+// Used during Update operations to sync state with plan
+func updateAssignmentGroupObjects(
+	ctx context.Context,
+	client *simplemdm.Client,
+	groupID string,
+	stateObjects types.Set,
+	planObjects types.Set,
+	objectType string,
+	removeOthers bool,
+) error {
+	// Convert sets to string slices
+	stateSlice := setElementsToStringSlice(stateObjects)
+	planSlice := setElementsToStringSlice(planObjects)
+
+	// Compute diff
+	toAdd, toRemove := diffFunction(stateSlice, planSlice)
+
+	// Add new objects
+	for _, objectID := range toAdd {
+		var err error
+		if objectType == "devices" {
+			err = assignmentGroupAssignDevice(ctx, client, groupID, objectID, removeOthers)
+		} else {
+			err = client.AssignmentGroupAssignObject(groupID, objectID, objectType)
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	// Remove old objects
+	for _, objectID := range toRemove {
+		err := client.AssignmentGroupUnAssignObject(groupID, objectID, objectType)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// diffFunction computes the difference between state and plan lists
+// Returns items to add and items to remove
+// Optimized to O(n) complexity using map lookups instead of nested loops
+func diffFunction(state []string, plan []string) (add []string, remove []string) {
+	// Create map of state items for O(1) lookups
+	stateMap := make(map[string]bool, len(state))
+	for _, s := range state {
+		stateMap[s] = true
+	}
+
+	// Create map of plan items and identify additions
+	planMap := make(map[string]bool, len(plan))
+	for _, p := range plan {
+		planMap[p] = true
+		if !stateMap[p] {
+			add = append(add, p)
+		}
+	}
+
+	// Identify removals
+	for _, s := range state {
+		if !planMap[s] {
+			remove = append(remove, s)
+		}
+	}
+
+	return add, remove
+}
+
+// preservePlannedRelationships handles eventual consistency by preserving planned values
+// when the API doesn't immediately return assigned relationships
+func preservePlannedRelationships(
+	model *assignment_groupResourceModel,
+	plannedApps, plannedProfiles, plannedGroups, plannedDevices types.Set,
+	apiReturnedApps, apiReturnedProfiles, apiReturnedGroups, apiReturnedDevices bool,
+) {
+	// Restore planned relationship values if they were set but API returned empty
+	// This prevents "planned X but got Y" errors due to API eventual consistency
+	if !plannedApps.IsNull() && !plannedApps.IsUnknown() && !apiReturnedApps {
+		model.Apps = plannedApps
+	}
+	if !plannedProfiles.IsNull() && !plannedProfiles.IsUnknown() && !apiReturnedProfiles {
+		model.Profiles = plannedProfiles
+	}
+	if !plannedGroups.IsNull() && !plannedGroups.IsUnknown() && !apiReturnedGroups {
+		model.Groups = plannedGroups
+	}
+	if !plannedDevices.IsNull() && !plannedDevices.IsUnknown() && !apiReturnedDevices {
+		model.Devices = plannedDevices
+	}
+}

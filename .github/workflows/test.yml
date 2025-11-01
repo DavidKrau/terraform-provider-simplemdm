@@ -76,8 +76,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Only run acceptance tests if API key secret is available (skip for forks)
-    if: github.event.repository.fork == false
+    # Fork check removed to enable acceptance tests on all branches.
+    # Tests will run when secrets are configured in the repository settings.
+    # If secrets are not available, the test steps will gracefully skip or fail.
     strategy:
       fail-fast: false
       matrix:

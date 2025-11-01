@@ -240,51 +240,39 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 	plan.ID = types.StringValue(strconv.Itoa(assignmentgroup.Data.ID))
 
 	// Assign all apps in plan
-	for _, appId := range plan.Apps.Elements() {
-		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), appId.(types.String).ValueString(), "apps")
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating assignment group app assignment",
-				"Could not update assignment group app assignment, unexpected error: "+err.Error(),
-			)
-			return
-		}
+	if err := assignObjectsToGroup(ctx, r.client, plan.ID.ValueString(), plan.Apps, "apps", false); err != nil {
+		resp.Diagnostics.AddError(
+			"Error assigning apps to assignment group",
+			"Could not assign apps to assignment group, unexpected error: "+err.Error(),
+		)
+		return
 	}
 
 	// Assign all profiles in plan
-	for _, profileId := range plan.Profiles.Elements() {
-		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), profileId.(types.String).ValueString(), "profiles")
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating assignment group profile assignment",
-				"Could not update assignment group profile assignment, unexpected error: "+err.Error(),
-			)
-			return
-		}
+	if err := assignObjectsToGroup(ctx, r.client, plan.ID.ValueString(), plan.Profiles, "profiles", false); err != nil {
+		resp.Diagnostics.AddError(
+			"Error assigning profiles to assignment group",
+			"Could not assign profiles to assignment group, unexpected error: "+err.Error(),
+		)
+		return
 	}
 
-	//assign all groups in plan
-	for _, groupId := range plan.Groups.Elements() {
-		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), groupId.(types.String).ValueString(), "device_groups")
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating assignment group device group assignment",
-				"Could not update assignment group device group, unexpected error: "+err.Error(),
-			)
-			return
-		}
+	// Assign all groups in plan
+	if err := assignObjectsToGroup(ctx, r.client, plan.ID.ValueString(), plan.Groups, "device_groups", false); err != nil {
+		resp.Diagnostics.AddError(
+			"Error assigning device groups to assignment group",
+			"Could not assign device groups to assignment group, unexpected error: "+err.Error(),
+		)
+		return
 	}
 
-	//assign all devices in plan
-	for _, deviceId := range plan.Devices.Elements() {
-		err := assignmentGroupAssignDevice(ctx, r.client, plan.ID.ValueString(), deviceId.(types.String).ValueString(), boolValueOrDefault(plan.DevicesRemoveOthers, false))
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating assignment group device group assignment",
-				"Could not update assignment group device group, unexpected error: "+err.Error(),
-			)
-			return
-		}
+	// Assign all devices in plan
+	if err := assignObjectsToGroup(ctx, r.client, plan.ID.ValueString(), plan.Devices, "devices", boolValueOrDefault(plan.DevicesRemoveOthers, false)); err != nil {
+		resp.Diagnostics.AddError(
+			"Error assigning devices to assignment group",
+			"Could not assign devices to assignment group, unexpected error: "+err.Error(),
+		)
+		return
 	}
 
 	if plan.AppsUpdate.ValueBool() {
@@ -368,20 +356,9 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 
 	applyAssignmentGroupResponseToResourceModel(&plan, fetched)
 
-	// Restore planned relationship values if they were set but API returned empty
-	// This prevents "planned X but got Y" errors due to API eventual consistency
-	if !plannedApps.IsNull() && !plannedApps.IsUnknown() && !apiReturnedApps {
-		plan.Apps = plannedApps
-	}
-	if !plannedProfiles.IsNull() && !plannedProfiles.IsUnknown() && !apiReturnedProfiles {
-		plan.Profiles = plannedProfiles
-	}
-	if !plannedGroups.IsNull() && !plannedGroups.IsUnknown() && !apiReturnedGroups {
-		plan.Groups = plannedGroups
-	}
-	if !plannedDevices.IsNull() && !plannedDevices.IsUnknown() && !apiReturnedDevices {
-		plan.Devices = plannedDevices
-	}
+	// Preserve planned relationships if API hasn't returned them yet (eventual consistency)
+	preservePlannedRelationships(&plan, plannedApps, plannedProfiles, plannedGroups, plannedDevices,
+		apiReturnedApps, apiReturnedProfiles, apiReturnedGroups, apiReturnedDevices)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, plan)
@@ -452,160 +429,40 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
-	//Handling assigned apps
-	//reading assigned apps from simpleMDM
-	stateApps := []string{}
-	for _, appID := range state.Apps.Elements() {
-		stateApps = append(stateApps, appID.(types.String).ValueString())
+	// Update all assigned apps
+	if err := updateAssignmentGroupObjects(ctx, r.client, plan.ID.ValueString(), state.Apps, plan.Apps, "apps", false); err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating assignment group app assignments",
+			"Could not update assignment group app assignments, unexpected error: "+err.Error(),
+		)
+		return
 	}
 
-	//reading configured apps from TF file
-	planApps := []string{}
-	for _, appID := range plan.Apps.Elements() {
-		planApps = append(planApps, appID.(types.String).ValueString())
+	// Update all assigned profiles
+	if err := updateAssignmentGroupObjects(ctx, r.client, plan.ID.ValueString(), state.Profiles, plan.Profiles, "profiles", false); err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating assignment group profile assignments",
+			"Could not update assignment group profile assignments, unexpected error: "+err.Error(),
+		)
+		return
 	}
 
-	// creating diff
-	appsToAdd, appsToRemove := diffFunction(stateApps, planApps)
-
-	//adding apps
-	for _, appId := range appsToAdd {
-		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), appId, "apps")
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating assignment group app assignment",
-				"Could not update assignment group app assignment, unexpected error: "+err.Error(),
-			)
-			return
-		}
+	// Update all assigned groups
+	if err := updateAssignmentGroupObjects(ctx, r.client, plan.ID.ValueString(), state.Groups, plan.Groups, "device_groups", false); err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating assignment group device group assignments",
+			"Could not update assignment group device group assignments, unexpected error: "+err.Error(),
+		)
+		return
 	}
 
-	//removing apps
-	for _, appId := range appsToRemove {
-		err := r.client.AssignmentGroupUnAssignObject(plan.ID.ValueString(), appId, "apps")
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating assignment group app assignment",
-				"Could not update assignment group app assignment, unexpected error: "+err.Error(),
-			)
-			return
-		}
-	}
-
-	//Handling assigned profiles
-	//reading assigned profiles from simpleMDM
-	stateProfiles := []string{}
-	for _, profileId := range state.Profiles.Elements() { //<< edit here
-		stateProfiles = append(stateProfiles, profileId.(types.String).ValueString())
-	}
-
-	//reading configured profiles from TF file
-	planProfiles := []string{}
-	for _, profileId := range plan.Profiles.Elements() {
-		planProfiles = append(planProfiles, profileId.(types.String).ValueString())
-	}
-
-	// creating diff
-	profilesToAdd, profilesToRemove := diffFunction(stateProfiles, planProfiles)
-
-	//adding profiles
-	for _, profileId := range profilesToAdd {
-		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), profileId, "profiles")
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating assignment group profile assignment",
-				"Could not update assignment group profile assignment, unexpected error: "+err.Error(),
-			)
-			return
-		}
-	}
-
-	//removing profiles
-	for _, profileId := range profilesToRemove {
-		err := r.client.AssignmentGroupUnAssignObject(plan.ID.ValueString(), profileId, "profiles")
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating assignment group app assignment",
-				"Could not update assignment group app assignment, unexpected error: "+err.Error(),
-			)
-			return
-		}
-	}
-
-	//handling assigned groups
-	// reading currently assigned apps
-	stateGroups := []string{}
-	for _, groupId := range state.Groups.Elements() {
-		stateGroups = append(stateGroups, groupId.(types.String).ValueString())
-	}
-	//reading configured apps in TF file
-	planGroups := []string{}
-	for _, groupId := range plan.Groups.Elements() {
-		planGroups = append(planGroups, groupId.(types.String).ValueString())
-	}
-	//creating diff
-	groupsToAdd, groupsToRemove := diffFunction(stateGroups, planGroups)
-
-	//groups to add
-	for _, groupId := range groupsToAdd {
-		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), groupId, "device_groups")
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating assignment group device group assignment",
-				"Could not update assignment group device group, unexpected error: "+err.Error(),
-			)
-			return
-		}
-	}
-
-	//groups to remove
-	for _, groupId := range groupsToRemove {
-		err := r.client.AssignmentGroupUnAssignObject(plan.ID.ValueString(), groupId, "device_groups")
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating assignment group device group assignment",
-				"Could not update assignment group device group, unexpected error: "+err.Error(),
-			)
-			return
-		}
-	}
-
-	//handling assigned devices
-	//reading currently assigned devices
-	stateDevices := []string{}
-	for _, device := range state.Devices.Elements() {
-		stateDevices = append(stateDevices, device.(types.String).ValueString())
-	}
-	//reading configured apps in TF file
-	planDevices := []string{}
-	for _, device := range plan.Devices.Elements() {
-		planDevices = append(planDevices, device.(types.String).ValueString())
-	}
-	//creating diff
-	devicesToAdd, devicesToRemove := diffFunction(stateDevices, planDevices)
-
-	//groups to add
-	for _, deviceId := range devicesToAdd {
-		err := assignmentGroupAssignDevice(ctx, r.client, plan.ID.ValueString(), deviceId, boolValueOrDefault(plan.DevicesRemoveOthers, false))
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating assignment group device group assignment",
-				"Could not update assignment group device group, unexpected error: "+err.Error(),
-			)
-			return
-		}
-	}
-
-	//groups to remove
-	for _, deviceId := range devicesToRemove {
-		err := r.client.AssignmentGroupUnAssignObject(plan.ID.ValueString(), deviceId, "devices")
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating assignment group device group assignment",
-				"Could not update assignment group device group, unexpected error: "+err.Error(),
-			)
-			return
-		}
+	// Update all assigned devices
+	if err := updateAssignmentGroupObjects(ctx, r.client, plan.ID.ValueString(), state.Devices, plan.Devices, "devices", boolValueOrDefault(plan.DevicesRemoveOthers, false)); err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating assignment group device assignments",
+			"Could not update assignment group device assignments, unexpected error: "+err.Error(),
+		)
+		return
 	}
 
 	if plan.AppsUpdate.ValueBool() {
@@ -665,20 +522,9 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 
 	applyAssignmentGroupResponseToResourceModel(&plan, fetched)
 
-	// Restore planned relationship values if they were set but API returned empty
-	// This prevents "planned X but got Y" errors due to API eventual consistency
-	if !plannedApps.IsNull() && !plannedApps.IsUnknown() && !apiReturnedApps {
-		plan.Apps = plannedApps
-	}
-	if !plannedProfiles.IsNull() && !plannedProfiles.IsUnknown() && !apiReturnedProfiles {
-		plan.Profiles = plannedProfiles
-	}
-	if !plannedGroups.IsNull() && !plannedGroups.IsUnknown() && !apiReturnedGroups {
-		plan.Groups = plannedGroups
-	}
-	if !plannedDevices.IsNull() && !plannedDevices.IsUnknown() && !apiReturnedDevices {
-		plan.Devices = plannedDevices
-	}
+	// Preserve planned relationships if API hasn't returned them yet (eventual consistency)
+	preservePlannedRelationships(&plan, plannedApps, plannedProfiles, plannedGroups, plannedDevices,
+		apiReturnedApps, apiReturnedProfiles, apiReturnedGroups, apiReturnedDevices)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -705,72 +551,4 @@ func (r *assignment_groupResource) Delete(ctx context.Context, req resource.Dele
 		)
 		return
 	}
-}
-
-// helper function to get diff between two groups
-func diffFunction(state []string, plan []string) (add []string, remove []string) {
-	IDsToAdd := []string{}
-	IDsToRemove := []string{}
-	for _, planObject := range plan {
-		ispresent := false
-		for _, stateObject := range state {
-			if planObject == stateObject {
-				ispresent = true
-				break
-			}
-		}
-
-		if !ispresent {
-			IDsToAdd = append(IDsToAdd, planObject)
-		}
-	}
-
-	for _, stateObject := range state {
-		ispresent := false
-		for _, planObject := range plan {
-			if stateObject == planObject {
-				ispresent = true
-				break
-			}
-		}
-		if !ispresent {
-			IDsToRemove = append(IDsToRemove, stateObject)
-		}
-	}
-	return IDsToAdd, IDsToRemove
-}
-
-func boolPointerFromType(value types.Bool) *bool {
-	if value.IsNull() || value.IsUnknown() {
-		return nil
-	}
-
-	v := value.ValueBool()
-	return &v
-}
-
-func stringPointerFromType(value types.String) *string {
-	if value.IsNull() || value.IsUnknown() {
-		return nil
-	}
-
-	v := value.ValueString()
-	return &v
-}
-
-func int64PointerFromType(value types.Int64) *int64 {
-	if value.IsNull() || value.IsUnknown() {
-		return nil
-	}
-
-	v := value.ValueInt64()
-	return &v
-}
-
-func boolValueOrDefault(value types.Bool, fallback bool) bool {
-	if value.IsNull() || value.IsUnknown() {
-		return fallback
-	}
-
-	return value.ValueBool()
 }
