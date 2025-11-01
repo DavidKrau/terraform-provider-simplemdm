@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/DavidKrau/simplemdm-go-client"
@@ -99,30 +100,7 @@ func createAssignmentGroup(ctx context.Context, client *simplemdm.Client, payloa
 		return nil, err
 	}
 
-	q := req.URL.Query()
-	q.Add("name", payload.Name)
-
-	if payload.AutoDeploy != nil {
-		q.Add("auto_deploy", strconv.FormatBool(*payload.AutoDeploy))
-	}
-
-	if payload.GroupType != nil && *payload.GroupType != "" {
-		q.Add("type", *payload.GroupType)
-	}
-
-	if payload.InstallType != nil && *payload.InstallType != "" {
-		q.Add("install_type", *payload.InstallType)
-	}
-
-	if payload.Priority != nil {
-		q.Add("priority", strconv.FormatInt(*payload.Priority, 10))
-	}
-
-	if payload.AppTrackLocation != nil {
-		q.Add("app_track_location", strconv.FormatBool(*payload.AppTrackLocation))
-	}
-
-	req.URL.RawQuery = q.Encode()
+	req.URL.RawQuery = buildAssignmentGroupQuery(payload, true).Encode()
 
 	body, err := client.RequestResponse201(req)
 	if err != nil {
@@ -145,35 +123,47 @@ func updateAssignmentGroup(ctx context.Context, client *simplemdm.Client, id str
 		return err
 	}
 
-	q := req.URL.Query()
-	if payload.Name != "" {
-		q.Add("name", payload.Name)
-	}
-
-	if payload.AutoDeploy != nil {
-		q.Add("auto_deploy", strconv.FormatBool(*payload.AutoDeploy))
-	}
-
-	if payload.GroupType != nil && *payload.GroupType != "" {
-		q.Add("type", *payload.GroupType)
-	}
-
-	if payload.InstallType != nil && *payload.InstallType != "" {
-		q.Add("install_type", *payload.InstallType)
-	}
-
-	if payload.Priority != nil {
-		q.Add("priority", strconv.FormatInt(*payload.Priority, 10))
-	}
-
-	if payload.AppTrackLocation != nil {
-		q.Add("app_track_location", strconv.FormatBool(*payload.AppTrackLocation))
-	}
-
-	req.URL.RawQuery = q.Encode()
+	req.URL.RawQuery = buildAssignmentGroupQuery(payload, false).Encode()
 
 	_, err = client.RequestResponse204(req)
 	return err
+}
+
+// buildAssignmentGroupQuery constructs the query parameters shared by the create and update operations.
+// When includeName is true the "name" parameter is always sent, mirroring the API requirement for creation requests.
+// For updates, the name is only provided when it has a non-empty value so partial updates remain possible.
+func buildAssignmentGroupQuery(payload assignmentGroupUpsertRequest, includeName bool) url.Values {
+	values := url.Values{}
+
+	if includeName || payload.Name != "" {
+		values.Set("name", payload.Name)
+	}
+
+	setOptionalBool(values, "auto_deploy", payload.AutoDeploy)
+	setOptionalString(values, "type", payload.GroupType)
+	setOptionalString(values, "install_type", payload.InstallType)
+
+	if payload.Priority != nil {
+		values.Set("priority", strconv.FormatInt(*payload.Priority, 10))
+	}
+
+	setOptionalBool(values, "app_track_location", payload.AppTrackLocation)
+
+	return values
+}
+
+// setOptionalBool adds the given key to the query values when the pointer contains a value.
+func setOptionalBool(values url.Values, key string, value *bool) {
+	if value != nil {
+		values.Set(key, strconv.FormatBool(*value))
+	}
+}
+
+// setOptionalString adds the given key to the query values when the pointer contains a non-empty string.
+func setOptionalString(values url.Values, key string, value *string) {
+	if value != nil && *value != "" {
+		values.Set(key, *value)
+	}
 }
 
 func assignmentGroupAssignDevice(ctx context.Context, client *simplemdm.Client, groupID string, deviceID string, removeOthers bool) error {
