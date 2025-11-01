@@ -42,6 +42,12 @@ type deviceCommandSpec struct {
 	expectedStatus int
 }
 
+const (
+	deviceCommandEndpointFormat   = "https://%s/api/v1/devices/%s/%s"
+	contentTypeFormURLEncoded     = "application/x-www-form-urlencoded"
+	deviceCommandIDFormatTemplate = "%s:%s:%d"
+)
+
 var deviceCommandCatalog = map[string]deviceCommandSpec{
 	"push_assigned_apps":            {method: http.MethodPost, pathTemplate: "push_apps", expectedStatus: http.StatusAccepted},
 	"refresh":                       {method: http.MethodPost, pathTemplate: "refresh", expectedStatus: http.StatusAccepted},
@@ -126,30 +132,25 @@ func (r *deviceCommandResource) Configure(_ context.Context, req resource.Config
 }
 
 func (r *deviceCommandResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan deviceCommandResourceModel
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+	if r.client == nil {
+		resp.Diagnostics.AddError("Provider not configured", "Unable to create device command because the client was not configured")
+		return
+	}
+
+	plan, ok := r.readCreatePlan(ctx, req, resp)
+	if !ok {
 		return
 	}
 
 	commandKey := plan.Command.ValueString()
-	spec, ok := deviceCommandCatalog[commandKey]
+	spec, ok := resolveDeviceCommandSpec(commandKey, resp)
 	if !ok {
-		resp.Diagnostics.AddError(
-			"Unsupported device command",
-			fmt.Sprintf("Command %q is not currently supported by the provider", commandKey),
-		)
 		return
 	}
 
-	params := map[string]string{}
-	if !plan.Parameters.IsNull() && plan.Parameters.Elements() != nil {
-		for key, value := range plan.Parameters.Elements() {
-			if strVal, ok := value.(types.String); ok && !strVal.IsNull() && !strVal.IsUnknown() {
-				params[key] = strVal.ValueString()
-			}
-		}
+	params, ok := decodeCommandParameters(ctx, plan.Parameters, resp)
+	if !ok {
+		return
 	}
 
 	pathFragment, consumedKeys, err := expandCommandPath(spec.pathTemplate, params)
@@ -158,61 +159,21 @@ func (r *deviceCommandResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	for _, key := range consumedKeys {
-		delete(params, key)
-	}
+	removeConsumedParameters(params, consumedKeys)
 
-	endpoint := fmt.Sprintf("https://%s/api/v1/devices/%s/%s", r.client.HostName, plan.DeviceID.ValueString(), pathFragment)
-	method := spec.method
-
-	var requestBody url.Values
-	if method == http.MethodPost && len(params) > 0 {
-		requestBody = url.Values{}
-		for key, value := range params {
-			requestBody.Set(key, value)
-		}
-	}
-
-	var bodyReader *strings.Reader
-	if requestBody != nil {
-		bodyReader = strings.NewReader(encodeValues(requestBody))
-	}
-
-	reqObj, err := http.NewRequestWithContext(ctx, method, endpoint, bodyReader)
+	reqObj, err := r.buildCommandRequest(ctx, spec.method, plan.DeviceID.ValueString(), pathFragment, params)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating request", err.Error())
 		return
 	}
 
-	if requestBody != nil {
-		reqObj.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	}
-
-	var body []byte
-	switch spec.expectedStatus {
-	case http.StatusAccepted:
-		body, err = r.client.RequestResponse202(reqObj)
-	case http.StatusNoContent:
-		body, err = r.client.RequestResponse204(reqObj)
-	default:
-		body, err = r.client.RequestResponse200(reqObj)
-	}
+	body, err := r.executeCommand(reqObj, spec.expectedStatus)
 	if err != nil {
 		resp.Diagnostics.AddError("Error executing device command", err.Error())
 		return
 	}
 
-	plan.StatusCode = types.Int64Value(int64(spec.expectedStatus))
-	if len(body) > 0 {
-		plan.Response = types.StringValue(string(body))
-	} else {
-		plan.Response = types.StringNull()
-	}
-
-	plan.ID = types.StringValue(fmt.Sprintf("%s:%s:%d", plan.DeviceID.ValueString(), commandKey, time.Now().Unix()))
-
-	diags = resp.State.Set(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+	r.updateCreateState(ctx, plan, commandKey, spec.expectedStatus, body, resp)
 }
 
 func (r *deviceCommandResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -258,10 +219,108 @@ func expandCommandPath(template string, params map[string]string) (string, []str
 	return expanded, consumed, nil
 }
 
-func encodeValues(values url.Values) string {
-	if values == nil {
-		return ""
+func (r *deviceCommandResource) readCreatePlan(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) (*deviceCommandResourceModel, bool) {
+	var plan deviceCommandResourceModel
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return nil, false
 	}
 
-	return values.Encode()
+	return &plan, true
+}
+
+func resolveDeviceCommandSpec(commandKey string, resp *resource.CreateResponse) (deviceCommandSpec, bool) {
+	spec, ok := deviceCommandCatalog[commandKey]
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unsupported device command",
+			fmt.Sprintf("Command %q is not currently supported by the provider", commandKey),
+		)
+		return deviceCommandSpec{}, false
+	}
+
+	return spec, true
+}
+
+func decodeCommandParameters(ctx context.Context, parameters types.Map, resp *resource.CreateResponse) (map[string]string, bool) {
+	if parameters.IsNull() || parameters.IsUnknown() {
+		return map[string]string{}, true
+	}
+
+	result := make(map[string]string)
+	diags := parameters.ElementsAs(ctx, &result, false)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return nil, false
+	}
+
+	for key, value := range result {
+		if strings.TrimSpace(key) == "" || value == "" {
+			delete(result, key)
+		}
+	}
+
+	return result, true
+}
+
+func removeConsumedParameters(params map[string]string, keys []string) {
+	for _, key := range keys {
+		delete(params, key)
+	}
+}
+
+func (r *deviceCommandResource) buildCommandRequest(ctx context.Context, method, deviceID, pathFragment string, params map[string]string) (*http.Request, error) {
+	endpoint := fmt.Sprintf(deviceCommandEndpointFormat, r.client.HostName, deviceID, pathFragment)
+
+	bodyReader, hasBody := prepareCommandBody(method, params)
+
+	req, err := http.NewRequestWithContext(ctx, method, endpoint, bodyReader)
+	if err != nil {
+		return nil, err
+	}
+
+	if hasBody {
+		req.Header.Set("Content-Type", contentTypeFormURLEncoded)
+	}
+
+	return req, nil
+}
+
+func prepareCommandBody(method string, params map[string]string) (*strings.Reader, bool) {
+	if method != http.MethodPost || len(params) == 0 {
+		return nil, false
+	}
+
+	requestBody := url.Values{}
+	for key, value := range params {
+		requestBody.Set(key, value)
+	}
+
+	return strings.NewReader(requestBody.Encode()), true
+}
+
+func (r *deviceCommandResource) executeCommand(req *http.Request, expectedStatus int) ([]byte, error) {
+	switch expectedStatus {
+	case http.StatusAccepted:
+		return r.client.RequestResponse202(req)
+	case http.StatusNoContent:
+		return r.client.RequestResponse204(req)
+	default:
+		return r.client.RequestResponse200(req)
+	}
+}
+
+func (r *deviceCommandResource) updateCreateState(ctx context.Context, plan *deviceCommandResourceModel, commandKey string, expectedStatus int, body []byte, resp *resource.CreateResponse) {
+	plan.StatusCode = types.Int64Value(int64(expectedStatus))
+	if len(body) > 0 {
+		plan.Response = types.StringValue(string(body))
+	} else {
+		plan.Response = types.StringNull()
+	}
+
+	plan.ID = types.StringValue(fmt.Sprintf(deviceCommandIDFormatTemplate, plan.DeviceID.ValueString(), commandKey, time.Now().UTC().Unix()))
+
+	diags := resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
 }
