@@ -268,9 +268,19 @@ func applyAssignmentGroupResponseToDataSourceModel(model *assignmentGroupDataSou
 
 // setElementsToStringSlice converts a types.Set to a []string slice
 func setElementsToStringSlice(set types.Set) []string {
-	result := make([]string, 0, len(set.Elements()))
-	for _, element := range set.Elements() {
-		result = append(result, element.(types.String).ValueString())
+	if set.IsNull() || set.IsUnknown() {
+		return []string{}
+	}
+
+	elements := set.Elements()
+	result := make([]string, 0, len(elements))
+	for _, element := range elements {
+		stringElement, ok := element.(types.String)
+		if !ok || stringElement.IsNull() || stringElement.IsUnknown() {
+			continue
+		}
+
+		result = append(result, stringElement.ValueString())
 	}
 	return result
 }
@@ -285,6 +295,10 @@ func assignObjectsToGroup(
 	objectType string,
 	removeOthers bool,
 ) error {
+	if objects.IsNull() || objects.IsUnknown() {
+		return nil
+	}
+
 	for _, objectID := range objects.Elements() {
 		idString := objectID.(types.String).ValueString()
 
@@ -315,6 +329,18 @@ func updateAssignmentGroupObjects(
 	objectType string,
 	removeOthers bool,
 ) error {
+	// When the plan set is null or unknown, Terraform cannot determine a desired
+	// target state for the relationship. In these cases we must leave the
+	// existing assignments untouched and bail out early regardless of what the
+	// current state contains.
+	if planObjects.IsNull() || planObjects.IsUnknown() {
+		return nil
+	}
+
+	if stateObjects.IsNull() || stateObjects.IsUnknown() {
+		stateObjects = types.SetNull(types.StringType)
+	}
+
 	// Convert sets to string slices
 	stateSlice := setElementsToStringSlice(stateObjects)
 	planSlice := setElementsToStringSlice(planObjects)
