@@ -75,6 +75,20 @@ golangci-lint run
 go test ./...
 ```
 
+### Pre-commit hooks
+
+Formatting expectations are codified via
+[`pre-commit`](https://pre-commit.com/). The configured hooks run `gofmt` and a
+few general hygiene checks before each commit. Install and enable the hooks
+locally with:
+
+```bash
+pip install pre-commit  # once per development environment
+pre-commit install
+```
+
+Run the hooks manually across the entire repository with `pre-commit run --all-files`.
+
 ### Acceptance tests
 
 Acceptance tests are located under [`provider/`](./provider/) and can be run with:

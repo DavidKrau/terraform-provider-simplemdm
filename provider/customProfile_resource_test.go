@@ -32,7 +32,7 @@ func TestAccCustomProfileResource(t *testing.T) {
 			attributesupport = true
 			escapeattributes = true
 			reinstallafterosupdate = true
-			
+
 		  }
 `,
 				ExpectNonEmptyPlan: true,
@@ -70,7 +70,7 @@ resource "simplemdm_customprofile" "test" {
 					attributesupport = false
 					escapeattributes = false
 					reinstallafterosupdate = false
-					
+
 				  }
 `,
 				ExpectNonEmptyPlan: true,

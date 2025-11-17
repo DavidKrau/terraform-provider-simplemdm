@@ -264,18 +264,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: '1.21'
-      
+
       - name: Run Dynamic Tests
         env:
           SIMPLEMDM_APIKEY: ${{ secrets.SIMPLEMDM_APIKEY }}
           TF_ACC: "1"
         run: go test -v ./provider/ -timeout 30m
-      
+
       # Optional: Run fixture-dependent tests if secrets are configured
       - name: Run Profile Tests
         if: ${{ secrets.SIMPLEMDM_PROFILE_ID != '' }}
@@ -284,7 +284,7 @@ jobs:
           SIMPLEMDM_PROFILE_ID: ${{ secrets.SIMPLEMDM_PROFILE_ID }}
           TF_ACC: "1"
         run: go test -v ./provider/ -run "TestAccProfile" -timeout 10m
-      
+
       - name: Run Device Tests
         if: ${{ secrets.SIMPLEMDM_DEVICE_ID != '' }}
         env:
@@ -309,7 +309,7 @@ Config: providerConfig + `
         name = "Test Script"
         scriptfile = file("./testfiles/testscript.sh")
     }
-    
+
     resource "simplemdm_scriptjob" "test" {
         script_id = simplemdm_script.test.id
         device_ids = []

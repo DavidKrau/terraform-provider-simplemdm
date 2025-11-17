@@ -57,7 +57,7 @@ func TestAccScriptResource(t *testing.T) {
 				resource "simplemdm_script" "test" {
 					name= "This is test script 2"
 					scriptfile = file("./testfiles/testscript2.sh")
-					variablesupport = false				
+					variablesupport = false
 				  }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(

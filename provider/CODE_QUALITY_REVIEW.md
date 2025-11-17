@@ -221,7 +221,7 @@ func diffFunction(state []string, plan []string) (add []string, remove []string)
     for _, s := range state {
         stateMap[s] = true
     }
-    
+
     planMap := make(map[string]bool, len(plan))
     for _, p := range plan {
         planMap[p] = true
@@ -229,13 +229,13 @@ func diffFunction(state []string, plan []string) (add []string, remove []string)
             add = append(add, p)
         }
     }
-    
+
     for _, s := range state {
         if !planMap[s] {
             remove = append(remove, s)
         }
     }
-    
+
     return add, remove
 }
 ```
@@ -281,7 +281,7 @@ func (r *assignment_groupResource) handleAssignments(
 
 **Problem**: Helper functions duplicated across files:
 - `boolPointerFromType`
-- `stringPointerFromType`  
+- `stringPointerFromType`
 - `int64PointerFromType`
 - `boolValueOrDefault`
 

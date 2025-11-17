@@ -227,7 +227,7 @@ None of the refactoring tasks from CODE_QUALITY_REVIEW.md were completed due to 
 
 **Recommended Refactorings** (from CODE_QUALITY_REVIEW.md):
 1. **Assignment Handling Duplication** (~200 lines)
-2. **diffFunction Performance** (O(n²) to O(n))  
+2. **diffFunction Performance** (O(n²) to O(n))
 3. **Long Methods** (>200 lines in Create/Update)
 4. **Type Helper Consolidation**
 
