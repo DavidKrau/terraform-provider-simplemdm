@@ -1,0 +1,10 @@
+{
+  "Calculator": {
+    "ScientificMode": {
+      "Enabled": false
+    },
+    "ProgrammerMode": {
+      "Enabled": false
+    }
+  }
+}   

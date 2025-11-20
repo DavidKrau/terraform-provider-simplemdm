@@ -149,6 +149,7 @@ func (r *scriptJobResource) Create(ctx context.Context, req resource.CreateReque
 		plan.ScriptId.ValueString(),
 		deviceIDs,
 		assignmentGroupIDs,
+		assignmentGroupIDs,
 		customAttribute,
 		customAttributeRegex,
 	)

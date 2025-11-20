@@ -1,0 +1,14 @@
+{
+  "ManagedBookmarks": [
+    {
+      "GroupIdentifier": "Group1",
+      "Title": "Company Bookmarks",
+      "Bookmarks": [
+        {
+          "Title": "Public Site",
+          "URL": "https://www.example.com"
+        }
+      ]
+    }
+  ]
+}
