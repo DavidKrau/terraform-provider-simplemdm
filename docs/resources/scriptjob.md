@@ -30,7 +30,6 @@ resource "simplemdm_scriptjob" "test" {
 
 - `assignment_group_ids` (Set of String) A comma separated list of assignment group IDs to run the script on. All macOS devices from these assignment groups will be included At least one of `device_ids`, `group_ids`, or `assignment_group_ids` must be provided.
 - `device_ids` (Set of String) A comma separated list of device IDs to run the script on. At least one of `device_ids`, `group_ids`, or `assignment_group_ids` must be provided.
-- `group_ids` (Set of String) A comma separated list of group IDs to run the script on. All macOS devices from these groups will be included. At least one of `device_ids`, `group_ids`, or `assignment_group_ids` must be provided.
 - `script_id` (String) Required. The ID of the script to be run on the devices
 
 ### Optional
@@ -46,6 +45,8 @@ resource "simplemdm_scriptjob" "test" {
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 # Script Jobs can be imported by specifying the job ID.

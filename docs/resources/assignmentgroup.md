@@ -59,6 +59,8 @@ resource "simplemdm_assignmentgroup" "myfirstgroup" {
 
 Import is supported using the following syntax:
 
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
 ```shell
 # Assignment group can be imported by specifying the Assigntment group ID.
 terraform import simplemdm_assigntmentgroup.example 123456
