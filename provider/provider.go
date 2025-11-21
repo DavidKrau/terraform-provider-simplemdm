@@ -151,13 +151,13 @@ func (p *simplemdmProvider) Configure(ctx context.Context, req provider.Configur
 // DataSources defines the data sources implemented in the provider.
 func (p *simplemdmProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		AppDataSource, AttributeDataSource, DeviceGroupDataSource, CustomProfileDataSource, ProfileDataSource, DeviceDataSource, ScriptDataSource, CustomDeclarationDataSource,
+		AppDataSource, AttributeDataSource, CustomProfileDataSource, ProfileDataSource, DeviceDataSource, ScriptDataSource, CustomDeclarationDataSource,
 	}
 }
 
 // Resources defines the resources implemented in the provider.
 func (p *simplemdmProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		CustomProfileResource, AttributeResource, AssignmentGroupResource, DeviceGroupResource, DeviceResource, ScriptResource, ScriptJobResource, AppResource, CustomDeclarationResource,
+		CustomProfileResource, AttributeResource, AssignmentGroupResource, DeviceResource, ScriptResource, ScriptJobResource, AppResource, CustomDeclarationResource,
 	}
 }
