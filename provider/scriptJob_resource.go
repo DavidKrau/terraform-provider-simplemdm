@@ -149,7 +149,6 @@ func (r *scriptJobResource) Create(ctx context.Context, req resource.CreateReque
 		plan.ScriptId.ValueString(),
 		deviceIDs,
 		assignmentGroupIDs,
-		assignmentGroupIDs,
 		customAttribute,
 		customAttributeRegex,
 	)
@@ -185,10 +184,15 @@ func (r *scriptJobResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	resp.Diagnostics.AddWarning(
-		"Delete Not Supported",
-		"Deleting this resource is not supported.",
-	)
+	// stop script job
+	err := r.client.ScriptCancelJob(state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error stopping SimpleMDM script job",
+			"Could not stop script job, unexpected error: "+err.Error(),
+		)
+		return
+	}
 
 }
 
