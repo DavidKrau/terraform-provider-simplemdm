@@ -3,12 +3,12 @@
 page_title: "simplemdm_assignmentgroup Resource - simplemdm"
 subcategory: ""
 description: |-
-  Assignment Group resource is used to manage group, you can assign App(s), Custom Profile(s), Device(s), Device Group(s) and set addition details regarding Assignemtn Group.
+  Assignment Group resource is used to manage group, you can assign App(s), Profile(s), Custom Profile(s), Custom Declaration(s), Device(s), Device Group(s) and set addition details regarding Group.
 ---
 
 # simplemdm_assignmentgroup (Resource)
 
-Assignment Group resource is used to manage group, you can assign App(s), Custom Profile(s), Device(s), Device Group(s) and set addition details regarding Assignemtn Group.
+Assignment Group resource is used to manage group, you can assign App(s), Profile(s), Custom Profile(s), Custom Declaration(s), Device(s), Device Group(s) and set addition details regarding Group.
 
 ## Example Usage
 
@@ -36,24 +36,32 @@ resource "simplemdm_assignmentgroup" "myfirstgroup" {
 
 ### Required
 
-- `name` (String) The name of the Assignment Group.
+- `name` (String) The name of the Group.
 
 ### Optional
 
-- `apps` (Set of String) Optional. List of Apps assigned to this assignment group
-- `apps_push` (Boolean) Optional. Set true if you would like to send push Apps command after assignment group creation or changes. Defaults to false.
-- `apps_update` (Boolean) Optional. Set true if you would like to send update Apps command after assignment group creation or changes. Defaults to false.
-- `auto_deploy` (Boolean) Optional. Whether the Apps should be automatically pushed to device(s) when they join this Assignment Group. Defaults to true
-- `devices` (Set of String) Optional. List of Devices assigned to this Assignment Group
-- `group_type` (String) Optional. Type of assignment group. Must be one of standard (for MDM app/media deployments) or munki for Munki app deployments. Defaults to standard.
-- `groups` (Set of String) Optional. List of Device Groups assigned to this Assignment Group
-- `install_type` (String) Optional. The install type for munki assignment groups. Must be one of managed, self_serve, managed_updates or default_installs. This setting has no effect for non-munki (standard) assignment groups. Defaults to managed.
-- `profiles` (Set of String) Optional. List of Configuration Profiles (both Custom and predefined Profiles) assigned to this assignment group
-- `profiles_sync` (Boolean) Optional. Set true if you would like to send Sync Profiles command after Assignment Group creation or changes. Defaults to false.
+- `app_track_location` (Boolean) Optional. If true, it tracks the location of IOS device when the SimpleMDM mobile app is installed. Defaults to true.
+- `apps` (Attributes Map) Optional. List of Apps assigned to this group (see [below for nested schema](#nestedatt--apps))
+- `apps_push` (Boolean) Optional. Installs associated apps to associated devices. A munki catalog refresh or MDM install command will be sent to all associated devices. Defaults to true.
+- `apps_update` (Boolean) Optional. Updates associated apps on associated devices. A munki catalog refresh or MDM install command will be sent to all associated devices. Defaults to true
+- `attributes` (Map of String) Optional. Map of Custom Configuration Profiles and values set for this Device Group
+- `auto_deploy` (Boolean) Optional. Whether the Apps should be automatically pushed to device(s) when they join this Group. Defaults to true
+- `devices` (Set of String) Optional. List of Devices assigned to this Group
+- `priority` (String) Optional. The priority (0 to 20) of the assignment group. Default to 0
+- `profiles` (Set of String) Optional. List of Configuration Profiles (Custom or predefined Profiles and Custom Declarations) assigned to this group
+- `profiles_sync` (Boolean) Optional. Set true if you would like to send Sync Profiles command after Group creation or changes. Defaults to true.
 
 ### Read-Only
 
-- `id` (String) ID of the Assignment Group in SimpleMDM
+- `id` (String) ID of the Group in SimpleMDM
+
+<a id="nestedatt--apps"></a>
+### Nested Schema for `apps`
+
+Optional:
+
+- `deployment_type` (String) Optional. Type of assignment group. Must be one of standard (for MDM app/media deployments) or munki for Munki app deployments.
+- `install_type` (String) Optional. The install type for munki assignment groups. Must be one of managed, self_serve, default_installs or managed_updates. This setting has no effect for non-munki (standard) assignment groups. Defaults to managed.
 
 ## Import
 
