@@ -12,11 +12,11 @@ func TestAccCustomeDeclarationDataSource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Read testing
 			{
-				Config: providerConfig + `data "simplemdm_customdeclaration" "test" {id ="214149"}`,
+				Config: providerConfig + `data "simplemdm_customdeclaration" "test" {id = 214709}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify returned values
 					resource.TestCheckResourceAttr("data.simplemdm_customdeclaration.test", "name", "testdeclaration"),
-					resource.TestCheckResourceAttr("data.simplemdm_customdeclaration.test", "id", "214149"),
+					resource.TestCheckResourceAttr("data.simplemdm_customdeclaration.test", "id", "214709"),
 				),
 			},
 		},

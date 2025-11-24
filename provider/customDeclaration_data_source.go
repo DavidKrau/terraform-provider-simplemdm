@@ -61,7 +61,7 @@ func (d *customDeclarationDataSource) Read(ctx context.Context, req datasource.R
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
-	declaration, err := d.client.ProfileGet(state.Name.ValueString())
+	declaration, err := d.client.ProfileGet(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read SimpleMDM custom declaration",
