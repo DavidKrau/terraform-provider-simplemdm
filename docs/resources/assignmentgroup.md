@@ -44,7 +44,7 @@ resource "simplemdm_assignmentgroup" "myfirstgroup" {
 - `apps` (Attributes Map) Optional. List of Apps assigned to this group (see [below for nested schema](#nestedatt--apps))
 - `apps_push` (Boolean) Optional. Installs associated apps to associated devices. A munki catalog refresh or MDM install command will be sent to all associated devices. Defaults to true.
 - `apps_update` (Boolean) Optional. Updates associated apps on associated devices. A munki catalog refresh or MDM install command will be sent to all associated devices. Defaults to true
-- `attributes` (Map of String) Optional. Map of Custom Configuration Profiles and values set for this Device Group
+- `attributes` (Map of String) Optional. Map of Attributes and values set for this Group
 - `auto_deploy` (Boolean) Optional. Whether the Apps should be automatically pushed to device(s) when they join this Group. Defaults to true
 - `devices` (Set of String) Optional. List of Devices assigned to this Group
 - `priority` (String) Optional. The priority (0 to 20) of the assignment group. Default to 0
