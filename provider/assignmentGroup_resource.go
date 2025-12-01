@@ -148,7 +148,7 @@ func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRe
 			"attributes": schema.MapAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
-				Description: "Optional. Map of Custom Configuration Profiles and values set for this Device Group",
+				Description: "Optional. Map of Attributes and values set for this Group",
 			},
 			"priority": schema.StringAttribute{
 				Optional:    true,
