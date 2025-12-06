@@ -23,6 +23,7 @@ type customProfilesDataSource struct {
 }
 
 type customProfilesDataSourceModel struct {
+	Search         types.String                           `tfsdk:"search"`
 	CustomProfiles []customProfilesDataSourceProfileModel `tfsdk:"custom_profiles"`
 }
 
@@ -49,6 +50,12 @@ func (d *customProfilesDataSource) Metadata(_ context.Context, req datasource.Me
 func (d *customProfilesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Fetches the collection of custom configuration profiles from your SimpleMDM account.",
+		Attributes: map[string]schema.Attribute{
+			"search": schema.StringAttribute{
+				Optional:    true,
+				Description: "Filter profiles by name (optional).",
+			},
+		},
 		Blocks: map[string]schema.Block{
 			"custom_profiles": schema.ListNestedBlock{
 				Description: "Collection of custom profile records returned by the API.",
@@ -105,7 +112,7 @@ func (d *customProfilesDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	customProfiles, err := fetchAllCustomProfiles(ctx, d.client)
+	customProfiles, err := fetchAllCustomProfiles(ctx, d.client, config.Search.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to list SimpleMDM custom profiles",
@@ -156,7 +163,7 @@ func (d *customProfilesDataSource) Configure(_ context.Context, req datasource.C
 }
 
 // fetchAllCustomProfiles retrieves all custom profiles with pagination support
-func fetchAllCustomProfiles(ctx context.Context, client *simplemdm.Client) ([]customProfileData, error) {
+func fetchAllCustomProfiles(ctx context.Context, client *simplemdm.Client, search string) ([]customProfileData, error) {
 	var allProfiles []customProfileData
 	startingAfter := 0
 	limit := 100
@@ -166,6 +173,9 @@ func fetchAllCustomProfiles(ctx context.Context, client *simplemdm.Client) ([]cu
 		url := fmt.Sprintf("https://%s/api/v1/custom_configuration_profiles?limit=%d", client.HostName, limit)
 		if startingAfter > 0 {
 			url += fmt.Sprintf("&starting_after=%d", startingAfter)
+		}
+		if search != "" {
+			url += fmt.Sprintf("&search=%s", search)
 		}
 
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
