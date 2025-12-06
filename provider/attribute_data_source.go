@@ -18,6 +18,7 @@ var (
 
 // attributeDataSourceModel maps the data source schema data.
 type attributeDataSourceModel struct {
+	ID           types.String `tfsdk:"id"`
 	DefaultValue types.String `tfsdk:"default_value"`
 	Name         types.String `tfsdk:"name"`
 }
@@ -42,6 +43,10 @@ func (d *attributeDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 	resp.Schema = schema.Schema{
 		Description: "Attribute data source can be used together with Device(s) or Device Group(s) to set values or in lifecycle management.",
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed:    true,
+				Description: "The unique identifier for the custom attribute (same as name).",
+			},
 			"name": schema.StringAttribute{
 				Required:    true,
 				Description: "The name (and ID) of the Attribute.",
@@ -77,11 +82,11 @@ func (d *attributeDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	// Map response body to model
+	state.ID = types.StringValue(attribute.Data.Attributes.Name)
 	state.Name = types.StringValue(attribute.Data.Attributes.Name)
 	state.DefaultValue = types.StringValue(attribute.Data.Attributes.DefaultValue)
 
 	// Set state
-
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
