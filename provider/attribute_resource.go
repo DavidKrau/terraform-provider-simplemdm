@@ -2,14 +2,17 @@ package provider
 
 import (
 	"context"
+	"regexp"
 	"strings"
 
 	"github.com/DavidKrau/simplemdm-go-client"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -58,9 +61,14 @@ func (r *attributeResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Required: true,
-				Optional: false,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(
+						regexp.MustCompile(`^[a-zA-Z0-9_]+$`),
+						"must contain only alphanumeric characters and underscores",
+					),
 				},
 				Description: "Required. The name of the Custom Attribute. This name will be used when referencing the Custom Attribute throughout the provider. Alphanumeric characters and underscores only. Case insensitive. Changing name after plan apply will result in replacement(Destroy and Create of new)",
 			},
@@ -127,7 +135,7 @@ func (r *attributeResource) Read(ctx context.Context, req resource.ReadRequest, 
 	// Get refreshed attribute value from SimpleMDM
 	attribute, err := r.client.AttributeGet(state.Name.ValueString())
 	if err != nil {
-		if strings.Contains(err.Error(), "404") {
+		if isNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -140,9 +148,7 @@ func (r *attributeResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	// Overwrite items with refreshed state
 	state.Name = types.StringValue(attribute.Data.Attributes.Name)
-	if attribute.Data.Attributes.DefaultValue != "" {
-		state.DefaultValue = types.StringValue(attribute.Data.Attributes.DefaultValue)
-	}
+	state.DefaultValue = types.StringValue(attribute.Data.Attributes.DefaultValue)
 	state.ID = types.StringValue(attribute.Data.Attributes.Name)
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
@@ -195,4 +201,9 @@ func (r *attributeResource) Delete(ctx context.Context, req resource.DeleteReque
 		)
 		return
 	}
+}
+
+// isNotFoundError checks if an error is a 404 not found error
+func isNotFoundError(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "404")
 }
