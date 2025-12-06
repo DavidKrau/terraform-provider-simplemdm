@@ -139,6 +139,21 @@ func (p *simplemdmProvider) Configure(ctx context.Context, req provider.Configur
 
 	apiClient := simplemdm.NewClient(host, apikey)
 
+	// Validate API connectivity by attempting to retrieve account information
+	tflog.Debug(ctx, "Validating SimpleMDM API connectivity")
+	_, err := apiClient.GetAccount(ctx)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Connect to SimpleMDM API",
+			"The provider failed to connect to the SimpleMDM API. "+
+				"Please verify your API key and host configuration are correct.\n\n"+
+				"Error: "+err.Error(),
+		)
+		return
+	}
+
+	tflog.Debug(ctx, "SimpleMDM API connectivity validated successfully")
+
 	// Make the SimpleMDM client available during DataSource and Resource
 	// type Configure methods.
 	resp.DataSourceData = apiClient

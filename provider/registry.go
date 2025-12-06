@@ -55,7 +55,7 @@ var resourceDefinitions = []ResourceDefinition{
 		DocsPath:     "docs/resources/customprofile.md",
 		ExampleDirs:  []string{"examples/resources/simplemdm_customprofile"},
 		TestFiles:    []string{"provider/customProfile_resource_test.go"},
-		APIEndpoints: []string{"/api/v1/custom_profiles"},
+		APIEndpoints: []string{"/api/v1/custom_configuration_profiles"},
 	},
 	{
 		TypeName:     "simplemdm_profile",
@@ -199,7 +199,7 @@ var dataSourceDefinitions = []DataSourceDefinition{
 		DocsPath:     "docs/data-sources/customprofile.md",
 		ExampleDirs:  []string{"examples/data-sources/simplemdm_customprofile"},
 		TestFiles:    []string{"provider/customProfile_data_source_test.go"},
-		APIEndpoints: []string{"/api/v1/custom_profiles"},
+		APIEndpoints: []string{"/api/v1/custom_configuration_profiles"},
 	},
 	{
 		TypeName:     "simplemdm_customdeclaration",
@@ -335,7 +335,7 @@ var dataSourceDefinitions = []DataSourceDefinition{
 		DocsPath:     "docs/data-sources/customprofiles.md",
 		ExampleDirs:  []string{"examples/data-sources/simplemdm_customprofiles"},
 		TestFiles:    []string{"provider/customProfiles_data_source_test.go"},
-		APIEndpoints: []string{"/api/v1/custom_profiles"},
+		APIEndpoints: []string{"/api/v1/custom_configuration_profiles"},
 	},
 	{
 		TypeName:     "simplemdm_customdeclarations",
