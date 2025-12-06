@@ -162,7 +162,8 @@ func fetchAllCustomProfiles(ctx context.Context, client *simplemdm.Client) ([]cu
 	limit := 100
 
 	for {
-		url := fmt.Sprintf("https://%s/api/v1/custom_profiles?limit=%d", client.HostName, limit)
+		// Use correct API endpoint: /api/v1/custom_configuration_profiles
+		url := fmt.Sprintf("https://%s/api/v1/custom_configuration_profiles?limit=%d", client.HostName, limit)
 		if startingAfter > 0 {
 			url += fmt.Sprintf("&starting_after=%d", startingAfter)
 		}
