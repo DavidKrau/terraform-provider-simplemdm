@@ -37,6 +37,8 @@ type appsDataSourceAppModel struct {
 	PlatformSupport      types.String `tfsdk:"platform_support"`
 	ProcessingStatus     types.String `tfsdk:"processing_status"`
 	InstallationChannels types.List   `tfsdk:"installation_channels"`
+	CreatedAt            types.String `tfsdk:"created_at"`
+	UpdatedAt            types.String `tfsdk:"updated_at"`
 }
 
 func AppsDataSource() datasource.DataSource {
@@ -98,6 +100,14 @@ func (d *appsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, r
 							ElementType: types.StringType,
 							Description: "The deployment channels supported by the app.",
 						},
+						"created_at": schema.StringAttribute{
+							Computed:    true,
+							Description: "Timestamp when the app was added to SimpleMDM.",
+						},
+						"updated_at": schema.StringAttribute{
+							Computed:    true,
+							Description: "Timestamp when the app was last updated in SimpleMDM.",
+						},
 					},
 				},
 			},
@@ -140,6 +150,8 @@ func (d *appsDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 			PlatformSupport:      stringValueOrNull(app.Attributes.PlatformSupport),
 			ProcessingStatus:     stringValueOrNull(app.Attributes.ProcessingStatus),
 			InstallationChannels: installationChannels,
+			CreatedAt:            stringValueOrNull(app.Attributes.CreatedAt),
+			UpdatedAt:            stringValueOrNull(app.Attributes.UpdatedAt),
 		}
 
 		entries = append(entries, entry)
@@ -249,6 +261,8 @@ type appAttributes struct {
 	PlatformSupport      string   `json:"platform_support"`
 	ProcessingStatus     string   `json:"processing_status"`
 	InstallationChannels []string `json:"installation_channels"`
+	CreatedAt            string   `json:"created_at"`
+	UpdatedAt            string   `json:"updated_at"`
 }
 
 // Helper function to convert int to string value or null
