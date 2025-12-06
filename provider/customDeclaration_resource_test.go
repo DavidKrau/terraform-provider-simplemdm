@@ -43,15 +43,14 @@ func TestAccCustomDeclarationResource(t *testing.T) {
 			{
 				Config: providerConfig + `
 				                            resource "simplemdm_customdeclaration" "test" {
-				                                    name             = "Terraform Custom Declaration"
-				                                    identifier       = "com.example.terraform"
-				                                    declaration_type = "com.apple.configuration.management.test"
-				                                    user_scope       = false
-				                                    attribute_support = true
-				                                    escape_attributes = true
-				                                    activation_predicate = "TRUEPREDICATE"
-				                                    platforms        = ["macos"]
-				                                    data             = jsonencode({
+				                                    name                      = "Terraform Custom Declaration"
+				                                    declaration_type          = "com.apple.configuration.management.test"
+				                                    user_scope                = false
+				                                    attribute_support         = true
+				                                    escape_attributes         = true
+				                                    activation_predicate      = "TRUEPREDICATE"
+				                                    reinstall_after_os_update = false
+				                                    payload = jsonencode({
 				                                            Type       = "com.example.test"
 				                                            Identifier = "com.example.terraform.payload"
 				                                    })
@@ -60,12 +59,11 @@ func TestAccCustomDeclarationResource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("simplemdm_customdeclaration.test", "id"),
 					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "name", "Terraform Custom Declaration"),
-					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "identifier", "com.example.terraform"),
 					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "declaration_type", "com.apple.configuration.management.test"),
 					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "user_scope", "false"),
 					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "attribute_support", "true"),
 					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "escape_attributes", "true"),
-					resource.TestCheckResourceAttrPair("simplemdm_customdeclaration.test", "payload", "simplemdm_customdeclaration.test", "data"),
+					resource.TestCheckResourceAttrSet("simplemdm_customdeclaration.test", "payload"),
 				),
 			},
 			{
@@ -76,17 +74,14 @@ func TestAccCustomDeclarationResource(t *testing.T) {
 			{
 				Config: providerConfig + `
 				                            resource "simplemdm_customdeclaration" "test" {
-				                                    name             = "Terraform Custom Declaration Updated"
-				                                    identifier       = "com.example.terraform"
-				                                    declaration_type = "com.apple.configuration.management.updated"
-				                                    description      = "Updated description"
-				                                    user_scope       = true
-				                                    attribute_support = false
-				                                    escape_attributes = false
-				                                    activation_predicate = "FALSEPREDICATE"
-				                                    platforms        = ["macos", "ios"]
-				                                    active           = false
-				                                    data             = jsonencode({
+				                                    name                      = "Terraform Custom Declaration Updated"
+				                                    declaration_type          = "com.apple.configuration.management.updated"
+				                                    user_scope                = true
+				                                    attribute_support         = false
+				                                    escape_attributes         = false
+				                                    activation_predicate      = "FALSEPREDICATE"
+				                                    reinstall_after_os_update = true
+				                                    payload = jsonencode({
 				                                            Type       = "com.example.updated"
 				                                            Identifier = "com.example.terraform.updated.payload"
 				                                    })
@@ -95,9 +90,8 @@ func TestAccCustomDeclarationResource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "name", "Terraform Custom Declaration Updated"),
 					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "declaration_type", "com.apple.configuration.management.updated"),
-					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "description", "Updated description"),
-					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "active", "false"),
 					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "user_scope", "true"),
+					resource.TestCheckResourceAttr("simplemdm_customdeclaration.test", "reinstall_after_os_update", "true"),
 				),
 			},
 		},

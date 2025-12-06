@@ -17,30 +17,21 @@ Custom Declaration resource manages Declarative Device Management custom declara
 
 ### Required
 
-- `data` (String) JSON payload of the declaration data.
-- `declaration_type` (String) Declaration type reported to Apple devices.
-- `identifier` (String) Unique declaration identifier. Changing forces replacement.
-- `name` (String) Human readable name for the declaration.
-- `platforms` (Set of String) List of platforms that should receive the declaration.
+- `declaration_type` (String) The type of declaration being defined (e.g., com.apple.configuration.management.status-subscriptions).
+- `name` (String) A name for the custom declaration.
+- `payload` (String) The JSON payload for the declaration.
 
 ### Optional
 
-- `activation_predicate` (String) Predicate that controls when the declaration activates on a device.
-- `active` (Boolean) Whether the declaration is active.
-- `attribute_support` (Boolean) Enable variable expansion when processing the declaration payload.
-- `description` (String) Optional description of the declaration.
-- `escape_attributes` (Boolean) Escape the values of custom variables within the payload before delivery.
-- `priority` (Number) Optional priority value used for ordering declarations.
-- `topic` (String) Optional topic used for declarative management payloads.
-- `transport` (String) Optional transport mechanism for the declaration.
+- `activation_predicate` (String) Predicate format string that controls when the declaration activates on a device.
+- `attribute_support` (Boolean) Enable variable expansion when processing the declaration payload. Defaults to false.
+- `escape_attributes` (Boolean) Escape the values of custom variables within the payload before delivery. Defaults to false.
+- `reinstall_after_os_update` (Boolean) Whether to reinstall the declaration after macOS updates. Defaults to false.
 - `user_scope` (Boolean) Whether the declaration is scoped to users (true) or devices (false). Defaults to true.
 
 ### Read-Only
 
-- `created_at` (String) Timestamp when the declaration was created in SimpleMDM.
 - `device_count` (Number) Number of devices currently assigned to the declaration.
 - `group_count` (Number) Number of device groups currently assigned to the declaration.
 - `id` (String) The ID of this resource.
-- `payload` (String) Alias that mirrors the JSON payload returned by the SimpleMDM download endpoint.
 - `profile_identifier` (String) Identifier assigned by SimpleMDM for tracking the declaration profile.
-- `updated_at` (String) Timestamp when the declaration was last updated in SimpleMDM.

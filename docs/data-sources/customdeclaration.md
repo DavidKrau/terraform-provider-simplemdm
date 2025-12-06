@@ -28,9 +28,7 @@ output "declaration_details" {
   value = {
     id                = data.simplemdm_customdeclaration.company_policy.id
     name              = data.simplemdm_customdeclaration.company_policy.name
-    identifier        = data.simplemdm_customdeclaration.company_policy.identifier
     declaration_type  = data.simplemdm_customdeclaration.company_policy.declaration_type
-    platforms         = data.simplemdm_customdeclaration.company_policy.platforms
     user_scope        = data.simplemdm_customdeclaration.company_policy.user_scope
     attribute_support = data.simplemdm_customdeclaration.company_policy.attribute_support
   }
@@ -47,22 +45,13 @@ output "declaration_details" {
 ### Read-Only
 
 - `activation_predicate` (String) Predicate that controls when the declaration activates on a device.
-- `active` (Boolean) Whether the declaration is active.
 - `attribute_support` (Boolean) Whether variable expansion is enabled for the declaration payload.
-- `created_at` (String) Timestamp when the declaration was created in SimpleMDM.
-- `data` (String) JSON payload of the declaration data.
-- `declaration_type` (String) Declaration type reported to Apple devices.
-- `description` (String) Description of the declaration.
+- `declaration_type` (String) The type of declaration being defined.
 - `device_count` (Number) Number of devices currently assigned to the declaration.
 - `escape_attributes` (Boolean) Whether custom variable values are escaped before being delivered.
 - `group_count` (Number) Number of device groups currently assigned to the declaration.
-- `identifier` (String) Unique declaration identifier.
-- `name` (String) Human readable name for the declaration.
-- `payload` (String) Alias that mirrors the JSON payload returned by the SimpleMDM download endpoint.
-- `platforms` (Set of String) List of platforms that receive the declaration.
-- `priority` (Number) Priority value used for ordering declarations.
+- `name` (String) A name for the custom declaration.
+- `payload` (String) The JSON payload for the declaration.
 - `profile_identifier` (String) Identifier assigned by SimpleMDM for tracking the declaration profile.
-- `topic` (String) Topic used for declarative management payloads.
-- `transport` (String) Transport mechanism for the declaration.
-- `updated_at` (String) Timestamp when the declaration was last updated in SimpleMDM.
+- `reinstall_after_os_update` (Boolean) Whether to reinstall the declaration after macOS updates.
 - `user_scope` (Boolean) Whether the declaration is scoped to users (true) or devices (false).
