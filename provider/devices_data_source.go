@@ -126,6 +126,16 @@ func (d *devicesDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	entries := make([]devicesDataSourceDeviceModel, 0, len(devices))
 	for _, item := range devices {
 		attributes := simplemdmext.FlattenAttributes(item.Attributes)
+
+		for _, attribute := range item.Relationships.CustomAttributeValues.Data {
+			if attribute.Attributes.Value == "" {
+				continue
+			}
+
+			key := fmt.Sprintf("custom_attribute_%s", attribute.ID)
+			attributes[key] = attribute.Attributes.Value
+		}
+
 		detailsValue, detailsDiags := types.MapValueFrom(ctx, types.StringType, attributes)
 		resp.Diagnostics.Append(detailsDiags...)
 		if resp.Diagnostics.HasError() {
