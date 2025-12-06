@@ -27,6 +27,67 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+// binaryFileValidator validates that binary file paths exist and have correct extensions
+type binaryFileValidator struct{}
+
+func (v binaryFileValidator) Description(ctx context.Context) string {
+	return "value must be a path to an existing .ipa or .pkg file"
+}
+
+func (v binaryFileValidator) MarkdownDescription(ctx context.Context) string {
+	return "value must be a path to an existing .ipa or .pkg file"
+}
+
+func (v binaryFileValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	path := req.ConfigValue.ValueString()
+
+	// Check file exists
+	info, err := os.Stat(path)
+	if err != nil {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid binary file path",
+			fmt.Sprintf("File does not exist or is not accessible: %s", err),
+		)
+		return
+	}
+
+	// Check it's a file not directory
+	if info.IsDir() {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid binary file path",
+			"Path is a directory, not a file",
+		)
+		return
+	}
+
+	// Check extension
+	ext := strings.ToLower(filepath.Ext(path))
+	if ext != ".ipa" && ext != ".pkg" {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid binary file type",
+			fmt.Sprintf("File must have .ipa or .pkg extension, got: %s", ext),
+		)
+		return
+	}
+
+	// Check file size (warn if > 2GB)
+	const maxSize = 2 * 1024 * 1024 * 1024
+	if info.Size() > maxSize {
+		resp.Diagnostics.AddAttributeWarning(
+			req.Path,
+			"Large binary file",
+			fmt.Sprintf("Binary file is very large (%d MB). Upload may take significant time.", info.Size()/(1024*1024)),
+		)
+	}
+}
+
 var (
 	_ resource.Resource                = &appResource{}
 	_ resource.ResourceWithConfigure   = &appResource{}
@@ -137,6 +198,7 @@ func (r *appResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 						path.MatchRoot("bundle_id"),
 						path.MatchRoot("binary_file"),
 					),
+					binaryFileValidator{},
 				},
 			},
 			"deploy_to": schema.StringAttribute{
@@ -534,21 +596,33 @@ func (r *appResource) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating app",
-			"Could not create app, unexpected error: "+err.Error(),
+			"Failed to create app",
+			fmt.Sprintf("Could not create app: %v", err),
 		)
 		return
 	}
 
 	appID := strconv.Itoa(app.Data.ID)
 
+	// If binary was uploaded, wait for processing to complete
+	if binaryPath != "" {
+		err = waitForProcessingComplete(ctx, r.client, appID, 15*time.Minute)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Failed to complete app processing",
+				fmt.Sprintf("App binary upload succeeded but processing did not complete: %v", err),
+			)
+			return
+		}
+	}
+
 	// If deploy_to specified at creation time, SimpleMDM requires a follow-up update.
 	if !plan.DeployTo.IsNull() && plan.DeployTo.ValueString() != "" && plan.DeployTo.ValueString() != "none" {
 		_, err = r.client.AppUpdate(appID, name, plan.DeployTo.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
-				"Error updating deploy_to",
-				"Failed to configure deploy_to during app creation: "+err.Error(),
+				"Failed to configure deploy_to",
+				fmt.Sprintf("Could not set deploy_to during app creation: %v", err),
 			)
 			return
 		}
@@ -557,8 +631,8 @@ func (r *appResource) Create(ctx context.Context, req resource.CreateRequest, re
 	apiApp, err := fetchApp(ctx, r.client, appID)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading created app",
-			"Could not read newly created app "+appID+": "+err.Error(),
+			"Failed to read created app",
+			fmt.Sprintf("Unable to read app %s after creation: %v", appID, err),
 		)
 		return
 	}
@@ -569,18 +643,12 @@ func (r *appResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	if newState.Name.IsNull() && !plan.Name.IsNull() {
-		newState.Name = plan.Name
-	}
-	if newState.AppStoreId.IsNull() && !plan.AppStoreId.IsNull() {
-		newState.AppStoreId = plan.AppStoreId
-	}
-	if newState.BundleId.IsNull() && !plan.BundleId.IsNull() {
-		newState.BundleId = plan.BundleId
-	}
-	if (newState.DeployTo.IsNull() || newState.DeployTo.ValueString() == "") && !plan.DeployTo.IsNull() {
+	// Preserve input-only fields that API doesn't return
+	// DeployTo is write-only and preserved from plan since API doesn't return it
+	if !plan.DeployTo.IsNull() {
 		newState.DeployTo = plan.DeployTo
 	}
+	// BinaryFile is input-only and should be preserved from plan
 	if !plan.BinaryFile.IsNull() {
 		newState.BinaryFile = plan.BinaryFile
 	}
@@ -602,8 +670,8 @@ func (r *appResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Deleting SimpleMDM app",
-			"Could not delete app, unexpected error: "+err.Error(),
+			"Failed to delete app",
+			fmt.Sprintf("Could not delete app %s: %v", state.ID.ValueString(), err),
 		)
 		return
 	}
@@ -624,8 +692,8 @@ func (r *appResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 			return
 		}
 		resp.Diagnostics.AddError(
-			"Error Reading SimpleMDM App",
-			"Could not read SimpleMDM App "+state.ID.ValueString()+": "+err.Error(),
+			"Failed to read app",
+			fmt.Sprintf("Unable to read app %s: %v", state.ID.ValueString(), err),
 		)
 		return
 	}
@@ -674,8 +742,18 @@ func (r *appResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		err := r.appUpdateWithBinary(ctx, appID, plan.BinaryFile.ValueString(), name, deployTo)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				"Error updating app",
-				"Failed to upload new binary: "+err.Error(),
+				"Failed to update app binary",
+				fmt.Sprintf("Could not upload new binary: %v", err),
+			)
+			return
+		}
+
+		// Wait for binary processing to complete
+		err = waitForProcessingComplete(ctx, r.client, appID, 15*time.Minute)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Failed to complete app processing",
+				fmt.Sprintf("App binary update succeeded but processing did not complete: %v", err),
 			)
 			return
 		}
@@ -687,8 +765,8 @@ func (r *appResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				"Error updating app",
-				"Failed to update app: "+err.Error(),
+				"Failed to update app",
+				fmt.Sprintf("Could not update app: %v", err),
 			)
 			return
 		}
@@ -697,8 +775,8 @@ func (r *appResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	apiApp, err := fetchApp(ctx, r.client, appID)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading updated app",
-			"Failed to refresh app state: "+err.Error(),
+			"Failed to read updated app",
+			fmt.Sprintf("Unable to refresh app %s state after update: %v", appID, err),
 		)
 		return
 	}
@@ -709,18 +787,12 @@ func (r *appResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	if newState.AppStoreId.IsNull() && !state.AppStoreId.IsNull() {
-		newState.AppStoreId = state.AppStoreId
-	}
-	if newState.BundleId.IsNull() && !state.BundleId.IsNull() {
-		newState.BundleId = state.BundleId
-	}
-	if newState.Name.IsNull() && !plan.Name.IsNull() {
-		newState.Name = plan.Name
-	}
-	if (newState.DeployTo.IsNull() || newState.DeployTo.ValueString() == "") && !plan.DeployTo.IsNull() {
+	// Preserve input-only fields that API doesn't return
+	// DeployTo is write-only and preserved from plan since API doesn't return it
+	if !plan.DeployTo.IsNull() {
 		newState.DeployTo = plan.DeployTo
 	}
+	// BinaryFile is input-only and should be preserved from plan
 	if !plan.BinaryFile.IsNull() {
 		newState.BinaryFile = plan.BinaryFile
 	}
