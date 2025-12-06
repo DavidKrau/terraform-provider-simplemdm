@@ -14,30 +14,30 @@ Custom Profile resource can be used to manage Custom Profile. Can be used togeth
 
 ```terraform
 resource "simplemdm_customprofile" "myprofile" {
-  name                   = "My First profiles"
-  mobileconfig           = file("./profiles/profile.mobileconfig")
-  userscope              = true
-  attributesupport       = true
-  escapeattributes       = true
-  reinstallafterosupdate = false
+  name                      = "My First profiles"
+  mobileconfig              = file("./profiles/profile.mobileconfig")
+  user_scope                = true
+  attribute_support         = true
+  escape_attributes         = true
+  reinstall_after_os_update = false
 }
 ```
 
 ```terraform
 resource "simplemdm_customprofile" "myprofile" {
-  name                   = "My First profiles"
-  mobileconfig           = templatefile("./profiles/profile.mobileconfig", { foo = "bar" })
-  userscope              = true
-  attributesupport       = true
-  escapeattributes       = true
-  reinstallafterosupdate = false
+  name                      = "My First profiles"
+  mobileconfig              = templatefile("./profiles/profile.mobileconfig", { foo = "bar" })
+  user_scope                = true
+  attribute_support         = true
+  escape_attributes         = true
+  reinstall_after_os_update = false
 }
 ```
 
 ```terraform
 resource "simplemdm_customprofile" "myprofile" {
-  name                   = "My First profiles"
-  mobileconfig           = <<-EOT
+  name                      = "My First profiles"
+  mobileconfig              = <<-EOT
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -47,10 +47,10 @@ resource "simplemdm_customprofile" "myprofile" {
  </dict>
  </plist>
 EOT
-  userscope              = true
-  attributesupport       = true
-  escapeattributes       = true
-  reinstallafterosupdate = false
+  user_scope                = true
+  attribute_support         = true
+  escape_attributes         = true
+  reinstall_after_os_update = false
 }
 ```
 
@@ -64,18 +64,18 @@ EOT
 
 ### Optional
 
-- `attributesupport` (Boolean) Optional. A boolean true or false. When enabled, SimpleMDM will process variables in the uploaded profile. Defaults to false
-- `escapeattributes` (Boolean) Optional. A boolean true or false. When enabled, SimpleMDM escape the values of the custom variables in the uploaded profile. Defaults to false
-- `reinstallafterosupdate` (Boolean) Optional. A boolean true or false. When enabled, SimpleMDM will re-install the profile automatically after macOS software updates are detected. Defaults to false
-- `userscope` (Boolean) Optional. A boolean true or false. If false, deploy as a device profile instead of a user profile for macOS devices. Defaults to true.
+- `attribute_support` (Boolean) Optional. A boolean true or false. When enabled, SimpleMDM will process variables in the uploaded profile. Defaults to false
+- `escape_attributes` (Boolean) Optional. A boolean true or false. When enabled, SimpleMDM escape the values of the custom variables in the uploaded profile. Defaults to false
+- `reinstall_after_os_update` (Boolean) Optional. A boolean true or false. When enabled, SimpleMDM will re-install the profile automatically after macOS software updates are detected. Defaults to false
+- `user_scope` (Boolean) Optional. A boolean true or false. If false, deploy as a device profile instead of a user profile for macOS devices. Defaults to true.
 
 ### Read-Only
 
-- `devicecount` (Number) Number of devices assigned to this custom configuration profile.
-- `groupcount` (Number) Number of device groups assigned to this custom configuration profile.
+- `device_count` (Number) Number of devices assigned to this custom configuration profile.
+- `group_count` (Number) Number of device groups assigned to this custom configuration profile.
 - `id` (String) ID of a Custom Configuration Profile in SimpleMDM
-- `profileidentifier` (String) Read-only profile identifier assigned by SimpleMDM.
-- `profilesha` (String) SHA-256 checksum reported by SimpleMDM for the current mobileconfig payload.
+- `profile_identifier` (String) Read-only profile identifier assigned by SimpleMDM.
+- `profile_sha` (String) SHA-256 checksum reported by SimpleMDM for the current mobileconfig payload.
 
 ## Import
 

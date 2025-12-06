@@ -26,14 +26,14 @@ var (
 type customProfileResourceModel struct {
 	Name                   types.String `tfsdk:"name"`
 	MobileConfig           types.String `tfsdk:"mobileconfig"`
-	UserScope              types.Bool   `tfsdk:"userscope"`
-	AttributeSupport       types.Bool   `tfsdk:"attributesupport"`
-	EscapeAttributes       types.Bool   `tfsdk:"escapeattributes"`
-	ReinstallAfterOSUpdate types.Bool   `tfsdk:"reinstallafterosupdate"`
-	ProfileIdentifier      types.String `tfsdk:"profileidentifier"`
-	GroupCount             types.Int64  `tfsdk:"groupcount"`
-	DeviceCount            types.Int64  `tfsdk:"devicecount"`
-	ProfileSHA             types.String `tfsdk:"profilesha"`
+	UserScope              types.Bool   `tfsdk:"user_scope"`
+	AttributeSupport       types.Bool   `tfsdk:"attribute_support"`
+	EscapeAttributes       types.Bool   `tfsdk:"escape_attributes"`
+	ReinstallAfterOSUpdate types.Bool   `tfsdk:"reinstall_after_os_update"`
+	ProfileIdentifier      types.String `tfsdk:"profile_identifier"`
+	GroupCount             types.Int64  `tfsdk:"group_count"`
+	DeviceCount            types.Int64  `tfsdk:"device_count"`
+	ProfileSHA             types.String `tfsdk:"profile_sha"`
 	ID                     types.String `tfsdk:"id"`
 }
 
@@ -83,43 +83,43 @@ func (r *customProfileResource) Schema(_ context.Context, _ resource.SchemaReque
 				},
 				Description: "ID of a Custom Configuration Profile in SimpleMDM",
 			},
-			"userscope": schema.BoolAttribute{
+			"user_scope": schema.BoolAttribute{
 				Optional:    true,
 				Default:     booldefault.StaticBool(true),
 				Computed:    true,
 				Description: "Optional. A boolean true or false. If false, deploy as a device profile instead of a user profile for macOS devices. Defaults to true.",
 			},
-			"attributesupport": schema.BoolAttribute{
+			"attribute_support": schema.BoolAttribute{
 				Optional:    true,
 				Default:     booldefault.StaticBool(false),
 				Computed:    true,
 				Description: "Optional. A boolean true or false. When enabled, SimpleMDM will process variables in the uploaded profile. Defaults to false",
 			},
-			"escapeattributes": schema.BoolAttribute{
+			"escape_attributes": schema.BoolAttribute{
 				Optional:    true,
 				Default:     booldefault.StaticBool(false),
 				Computed:    true,
 				Description: "Optional. A boolean true or false. When enabled, SimpleMDM escape the values of the custom variables in the uploaded profile. Defaults to false",
 			},
-			"reinstallafterosupdate": schema.BoolAttribute{
+			"reinstall_after_os_update": schema.BoolAttribute{
 				Optional:    true,
 				Default:     booldefault.StaticBool(false),
 				Computed:    true,
 				Description: "Optional. A boolean true or false. When enabled, SimpleMDM will re-install the profile automatically after macOS software updates are detected. Defaults to false",
 			},
-			"profileidentifier": schema.StringAttribute{
+			"profile_identifier": schema.StringAttribute{
 				Computed:    true,
 				Description: "Read-only profile identifier assigned by SimpleMDM.",
 			},
-			"groupcount": schema.Int64Attribute{
+			"group_count": schema.Int64Attribute{
 				Computed:    true,
 				Description: "Number of device groups assigned to this custom configuration profile.",
 			},
-			"devicecount": schema.Int64Attribute{
+			"device_count": schema.Int64Attribute{
 				Computed:    true,
 				Description: "Number of devices assigned to this custom configuration profile.",
 			},
-			"profilesha": schema.StringAttribute{
+			"profile_sha": schema.StringAttribute{
 				Computed:    true,
 				Description: "SHA-256 checksum reported by SimpleMDM for the current mobileconfig payload.",
 			},

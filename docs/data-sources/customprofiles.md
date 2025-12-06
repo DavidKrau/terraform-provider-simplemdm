@@ -37,12 +37,12 @@ output "custom_profile_names" {
 
 Read-Only:
 
-- `attributesupport` (Boolean) Indicates whether variable substitution is enabled for the profile.
-- `devicecount` (Number) Number of devices currently assigned to this profile.
-- `escapeattributes` (Boolean) Indicates whether custom attribute values are escaped when substituted into the profile.
-- `groupcount` (Number) Number of device groups currently assigned to this profile.
+- `attribute_support` (Boolean) Indicates whether variable substitution is enabled for the profile.
+- `device_count` (Number) Number of devices currently assigned to this profile.
+- `escape_attributes` (Boolean) Indicates whether custom attribute values are escaped when substituted into the profile.
+- `group_count` (Number) Number of device groups currently assigned to this profile.
 - `id` (String) Custom profile identifier.
 - `name` (String) The name of the custom profile.
-- `profileidentifier` (String) Profile identifier assigned by SimpleMDM.
-- `reinstallafterosupdate` (Boolean) Whether the profile reinstalls automatically after macOS updates.
-- `userscope` (Boolean) Whether the profile deploys as a user profile for macOS devices.
+- `profile_identifier` (String) Profile identifier assigned by SimpleMDM.
+- `reinstall_after_os_update` (Boolean) Whether the profile reinstalls automatically after macOS updates.
+- `user_scope` (Boolean) Whether the profile deploys as a user profile for macOS devices.

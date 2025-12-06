@@ -22,14 +22,14 @@ type customProfileDataSourceModel struct {
 	ID                     types.String `tfsdk:"id"`
 	Name                   types.String `tfsdk:"name"`
 	MobileConfig           types.String `tfsdk:"mobileconfig"`
-	UserScope              types.Bool   `tfsdk:"userscope"`
-	AttributeSupport       types.Bool   `tfsdk:"attributesupport"`
-	EscapeAttributes       types.Bool   `tfsdk:"escapeattributes"`
-	ReinstallAfterOSUpdate types.Bool   `tfsdk:"reinstallafterosupdate"`
-	ProfileIdentifier      types.String `tfsdk:"profileidentifier"`
-	GroupCount             types.Int64  `tfsdk:"groupcount"`
-	DeviceCount            types.Int64  `tfsdk:"devicecount"`
-	ProfileSHA             types.String `tfsdk:"profilesha"`
+	UserScope              types.Bool   `tfsdk:"user_scope"`
+	AttributeSupport       types.Bool   `tfsdk:"attribute_support"`
+	EscapeAttributes       types.Bool   `tfsdk:"escape_attributes"`
+	ReinstallAfterOSUpdate types.Bool   `tfsdk:"reinstall_after_os_update"`
+	ProfileIdentifier      types.String `tfsdk:"profile_identifier"`
+	GroupCount             types.Int64  `tfsdk:"group_count"`
+	DeviceCount            types.Int64  `tfsdk:"device_count"`
+	ProfileSHA             types.String `tfsdk:"profile_sha"`
 }
 
 // ProfileDataSource is a helper function to simplify the provider implementation.
@@ -64,35 +64,35 @@ func (d *customProfileDataSource) Schema(_ context.Context, _ datasource.SchemaR
 				Required:    true,
 				Description: "The ID of the custom profile.",
 			},
-			"userscope": schema.BoolAttribute{
+			"user_scope": schema.BoolAttribute{
 				Computed:    true,
 				Description: "Whether the profile deploys as a user profile for macOS devices.",
 			},
-			"attributesupport": schema.BoolAttribute{
+			"attribute_support": schema.BoolAttribute{
 				Computed:    true,
 				Description: "Indicates whether variable substitution is enabled for the profile.",
 			},
-			"escapeattributes": schema.BoolAttribute{
+			"escape_attributes": schema.BoolAttribute{
 				Computed:    true,
 				Description: "Indicates whether custom attribute values are escaped when substituted into the profile.",
 			},
-			"reinstallafterosupdate": schema.BoolAttribute{
+			"reinstall_after_os_update": schema.BoolAttribute{
 				Computed:    true,
 				Description: "Whether the profile reinstalls automatically after macOS updates.",
 			},
-			"profileidentifier": schema.StringAttribute{
+			"profile_identifier": schema.StringAttribute{
 				Computed:    true,
 				Description: "Profile identifier assigned by SimpleMDM.",
 			},
-			"groupcount": schema.Int64Attribute{
+			"group_count": schema.Int64Attribute{
 				Computed:    true,
 				Description: "Number of device groups currently assigned to this profile.",
 			},
-			"devicecount": schema.Int64Attribute{
+			"device_count": schema.Int64Attribute{
 				Computed:    true,
 				Description: "Number of devices currently assigned to this profile.",
 			},
-			"profilesha": schema.StringAttribute{
+			"profile_sha": schema.StringAttribute{
 				Computed:    true,
 				Description: "SHA-256 checksum reported by SimpleMDM for the profile payload.",
 			},
