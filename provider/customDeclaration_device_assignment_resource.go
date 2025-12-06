@@ -135,7 +135,7 @@ func (r *customDeclarationDeviceAssignmentResource) Read(ctx context.Context, re
 		return
 	}
 
-	assigned, err := deviceHasCustomDeclarationAssignment(body, state.CustomDeclarationID.ValueString())
+	assigned, err := deviceHasCustomDeclarationAssignment(body, state.CustomDeclarationID.ValueString(), state.DeviceID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error parsing SimpleMDM device relationships", err.Error())
 		return
@@ -177,29 +177,41 @@ func (r *customDeclarationDeviceAssignmentResource) Delete(ctx context.Context, 
 }
 
 func (r *customDeclarationDeviceAssignmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, ":")
+	// Support both : and | as separators for backward compatibility
+	var parts []string
+	var declarationID, deviceID string
+
+	if strings.Contains(req.ID, "|") {
+		parts = strings.Split(req.ID, "|")
+	} else {
+		parts = strings.Split(req.ID, ":")
+	}
+
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		resp.Diagnostics.AddError(
 			"Unexpected import identifier format",
-			"Expected custom_declaration_id:device_id",
+			"Expected custom_declaration_id:device_id or custom_declaration_id|device_id",
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("custom_declaration_id"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("device_id"), parts[1])...)
+	declarationID = parts[0]
+	deviceID = parts[1]
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("custom_declaration_id"), declarationID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("device_id"), deviceID)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...) //nolint:errcheck
 }
 
-func deviceHasCustomDeclarationAssignment(body []byte, customDeclarationID string) (bool, error) {
+func deviceHasCustomDeclarationAssignment(body []byte, customDeclarationID string, deviceID string) (bool, error) {
 	var payload map[string]any
 	if err := json.Unmarshal(body, &payload); err != nil {
-		return false, err
+		return false, fmt.Errorf("error parsing device payload for device %s: %w", deviceID, err)
 	}
 
 	data, ok := payload["data"].(map[string]any)
 	if !ok {
-		return false, fmt.Errorf("unexpected device payload structure: missing data node")
+		return false, fmt.Errorf("unexpected device payload structure for device %s: missing data node", deviceID)
 	}
 
 	relationships, ok := data["relationships"].(map[string]any)
@@ -237,5 +249,10 @@ func deviceHasCustomDeclarationAssignment(body []byte, customDeclarationID strin
 }
 
 func buildCustomDeclarationAssignmentID(customDeclarationID, deviceID string) string {
+	// Use | separator to avoid conflicts with IDs that contain colons
+	// This addresses BUG-CD-012
+	if strings.Contains(customDeclarationID, ":") || strings.Contains(deviceID, ":") {
+		return fmt.Sprintf("%s|%s", customDeclarationID, deviceID)
+	}
 	return fmt.Sprintf("%s:%s", customDeclarationID, deviceID)
 }
