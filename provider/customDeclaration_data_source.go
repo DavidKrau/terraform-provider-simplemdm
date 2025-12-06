@@ -18,27 +18,18 @@ type customDeclarationDataSource struct {
 }
 
 type customDeclarationDataSourceModel struct {
-	ID                  types.String `tfsdk:"id"`
-	Name                types.String `tfsdk:"name"`
-	Identifier          types.String `tfsdk:"identifier"`
-	DeclarationType     types.String `tfsdk:"declaration_type"`
-	Topic               types.String `tfsdk:"topic"`
-	Transport           types.String `tfsdk:"transport"`
-	Description         types.String `tfsdk:"description"`
-	Platforms           types.Set    `tfsdk:"platforms"`
-	Data                types.String `tfsdk:"data"`
-	Active              types.Bool   `tfsdk:"active"`
-	Priority            types.Int64  `tfsdk:"priority"`
-	Payload             types.String `tfsdk:"payload"`
-	UserScope           types.Bool   `tfsdk:"user_scope"`
-	AttributeSupport    types.Bool   `tfsdk:"attribute_support"`
-	EscapeAttributes    types.Bool   `tfsdk:"escape_attributes"`
-	ActivationPredicate types.String `tfsdk:"activation_predicate"`
-	ProfileIdentifier   types.String `tfsdk:"profile_identifier"`
-	GroupCount          types.Int64  `tfsdk:"group_count"`
-	DeviceCount         types.Int64  `tfsdk:"device_count"`
-	CreatedAt           types.String `tfsdk:"created_at"`
-	UpdatedAt           types.String `tfsdk:"updated_at"`
+	ID                     types.String `tfsdk:"id"`
+	Name                   types.String `tfsdk:"name"`
+	DeclarationType        types.String `tfsdk:"declaration_type"`
+	Payload                types.String `tfsdk:"payload"`
+	UserScope              types.Bool   `tfsdk:"user_scope"`
+	AttributeSupport       types.Bool   `tfsdk:"attribute_support"`
+	EscapeAttributes       types.Bool   `tfsdk:"escape_attributes"`
+	ActivationPredicate    types.String `tfsdk:"activation_predicate"`
+	ReinstallAfterOsUpdate types.Bool   `tfsdk:"reinstall_after_os_update"`
+	ProfileIdentifier      types.String `tfsdk:"profile_identifier"`
+	GroupCount             types.Int64  `tfsdk:"group_count"`
+	DeviceCount            types.Int64  `tfsdk:"device_count"`
 }
 
 var _ datasource.DataSource = &customDeclarationDataSource{}
@@ -62,48 +53,15 @@ func (d *customDeclarationDataSource) Schema(_ context.Context, _ datasource.Sch
 			},
 			"name": schema.StringAttribute{
 				Computed:    true,
-				Description: "Human readable name for the declaration.",
-			},
-			"identifier": schema.StringAttribute{
-				Computed:    true,
-				Description: "Unique declaration identifier.",
+				Description: "A name for the custom declaration.",
 			},
 			"declaration_type": schema.StringAttribute{
 				Computed:    true,
-				Description: "Declaration type reported to Apple devices.",
-			},
-			"topic": schema.StringAttribute{
-				Computed:    true,
-				Description: "Topic used for declarative management payloads.",
-			},
-			"transport": schema.StringAttribute{
-				Computed:    true,
-				Description: "Transport mechanism for the declaration.",
-			},
-			"description": schema.StringAttribute{
-				Computed:    true,
-				Description: "Description of the declaration.",
-			},
-			"platforms": schema.SetAttribute{
-				ElementType: types.StringType,
-				Computed:    true,
-				Description: "List of platforms that receive the declaration.",
-			},
-			"data": schema.StringAttribute{
-				Computed:    true,
-				Description: "JSON payload of the declaration data.",
+				Description: "The type of declaration being defined.",
 			},
 			"payload": schema.StringAttribute{
 				Computed:    true,
-				Description: "Alias that mirrors the JSON payload returned by the SimpleMDM download endpoint.",
-			},
-			"active": schema.BoolAttribute{
-				Computed:    true,
-				Description: "Whether the declaration is active.",
-			},
-			"priority": schema.Int64Attribute{
-				Computed:    true,
-				Description: "Priority value used for ordering declarations.",
+				Description: "The JSON payload for the declaration.",
 			},
 			"user_scope": schema.BoolAttribute{
 				Computed:    true,
@@ -121,6 +79,10 @@ func (d *customDeclarationDataSource) Schema(_ context.Context, _ datasource.Sch
 				Computed:    true,
 				Description: "Predicate that controls when the declaration activates on a device.",
 			},
+			"reinstall_after_os_update": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Whether to reinstall the declaration after macOS updates.",
+			},
 			"profile_identifier": schema.StringAttribute{
 				Computed:    true,
 				Description: "Identifier assigned by SimpleMDM for tracking the declaration profile.",
@@ -132,14 +94,6 @@ func (d *customDeclarationDataSource) Schema(_ context.Context, _ datasource.Sch
 			"device_count": schema.Int64Attribute{
 				Computed:    true,
 				Description: "Number of devices currently assigned to the declaration.",
-			},
-			"created_at": schema.StringAttribute{
-				Computed:    true,
-				Description: "Timestamp when the declaration was created in SimpleMDM.",
-			},
-			"updated_at": schema.StringAttribute{
-				Computed:    true,
-				Description: "Timestamp when the declaration was last updated in SimpleMDM.",
 			},
 		},
 	}
@@ -185,14 +139,14 @@ func (d *customDeclarationDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	if len(declaration.Data.Attributes.Data) == 0 && len(declaration.Data.Attributes.Payload) == 0 {
+	if len(declaration.Data.Attributes.Payload) == 0 {
 		raw, err := downloadCustomDeclarationPayload(ctx, d.client, state.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError("Error downloading SimpleMDM custom declaration payload", err.Error())
 			return
 		}
 
-		declaration.Data.Attributes.Data = raw
+		declaration.Data.Attributes.Payload = raw
 	}
 
 	var model customDeclarationResourceModel
@@ -204,25 +158,16 @@ func (d *customDeclarationDataSource) Read(ctx context.Context, req datasource.R
 	// Copy data from resource model into data source state.
 	state.ID = model.ID
 	state.Name = model.Name
-	state.Identifier = model.Identifier
 	state.DeclarationType = model.DeclarationType
-	state.Topic = model.Topic
-	state.Transport = model.Transport
-	state.Description = model.Description
-	state.Platforms = model.Platforms
-	state.Data = model.Data
-	state.Active = model.Active
-	state.Priority = model.Priority
 	state.Payload = model.Payload
 	state.UserScope = model.UserScope
 	state.AttributeSupport = model.AttributeSupport
 	state.EscapeAttributes = model.EscapeAttributes
 	state.ActivationPredicate = model.ActivationPredicate
+	state.ReinstallAfterOsUpdate = model.ReinstallAfterOsUpdate
 	state.ProfileIdentifier = model.ProfileIdentifier
 	state.GroupCount = model.GroupCount
 	state.DeviceCount = model.DeviceCount
-	state.CreatedAt = model.CreatedAt
-	state.UpdatedAt = model.UpdatedAt
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
