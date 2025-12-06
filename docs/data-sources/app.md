@@ -52,11 +52,11 @@ output "app_installation_channels" {
 - `app_type` (String) The catalog classification of the app, for example app store, enterprise, or custom b2b.
 - `bundle_id` (String) The bundle identifier of the app.
 - `created_at` (String) Timestamp when the app was added to SimpleMDM.
-- `deploy_to` (String) Where the app is deployed (none, outdated, or all).
+- `deploy_to` (String) Where the app is deployed (none, outdated, or all). Note: This is a write-only parameter; API does not return this value.
 - `installation_channels` (List of String) The deployment channels supported by the app.
 - `name` (String) The name of the attribute.
 - `platform_support` (String) The platform supported by the app, such as iOS or macOS.
 - `processing_status` (String) The current processing status of the app binary within SimpleMDM.
-- `status` (String) The current deployment status of the app.
+- `status` (String) The current deployment status of the app. Note: This is a write-only parameter; API does not return this value.
 - `updated_at` (String) Timestamp when the app was last updated in SimpleMDM.
 - `version` (String) The latest version reported by SimpleMDM for the app.

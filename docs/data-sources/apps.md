@@ -63,9 +63,11 @@ Read-Only:
 - `app_store_id` (String) The Apple App Store ID associated with the app.
 - `app_type` (String) The catalog classification of the app (e.g., app store, enterprise, custom b2b).
 - `bundle_id` (String) The bundle identifier of the app.
+- `created_at` (String) Timestamp when the app was added to SimpleMDM.
 - `id` (String) App identifier.
 - `installation_channels` (List of String) The deployment channels supported by the app.
 - `name` (String) Name of the app.
 - `platform_support` (String) The platform supported by the app (iOS, macOS, etc.).
 - `processing_status` (String) The current processing status of the app binary within SimpleMDM.
+- `updated_at` (String) Timestamp when the app was last updated in SimpleMDM.
 - `version` (String) The latest version reported by SimpleMDM for the app.
