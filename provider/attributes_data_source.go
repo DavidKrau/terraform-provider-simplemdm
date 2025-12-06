@@ -94,35 +94,59 @@ func (d *attributesDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	resp.Diagnostics.Append(diags...)
 }
 
-// fetchAllAttributes retrieves all custom attributes using the API
+// fetchAllAttributes retrieves all custom attributes using the API with pagination support
 func fetchAllAttributes(ctx context.Context, client *simplemdm.Client) ([]attributeData, error) {
-	url := fmt.Sprintf("https://%s/api/v1/custom_attributes", client.HostName)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
+	var allAttributes []attributeData
+	startingAfter := ""
+
+	for {
+		url := fmt.Sprintf("https://%s/api/v1/custom_attributes", client.HostName)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		// Add pagination parameter if needed
+		if startingAfter != "" {
+			q := req.URL.Query()
+			q.Add("starting_after", startingAfter)
+			req.URL.RawQuery = q.Encode()
+		}
+
+		body, err := client.RequestResponse200(req)
+		if err != nil {
+			return nil, err
+		}
+
+		var response attributesAPIResponse
+		if err := json.Unmarshal(body, &response); err != nil {
+			return nil, err
+		}
+
+		allAttributes = append(allAttributes, response.Data...)
+
+		// Check if there are more pages
+		if !response.HasMore || len(response.Data) == 0 {
+			break
+		}
+
+		// Use the last attribute's ID for pagination
+		startingAfter = response.Data[len(response.Data)-1].ID
 	}
 
-	body, err := client.RequestResponse200(req)
-	if err != nil {
-		return nil, err
-	}
-
-	var response attributesAPIResponse
-	if err := json.Unmarshal(body, &response); err != nil {
-		return nil, err
-	}
-
-	return response.Data, nil
+	return allAttributes, nil
 }
 
 // attributesAPIResponse represents the API response for attributes list
 type attributesAPIResponse struct {
-	Data []attributeData `json:"data"`
+	Data    []attributeData `json:"data"`
+	HasMore bool            `json:"has_more"`
 }
 
 // attributeData represents a single attribute in the list response
 type attributeData struct {
 	Type       string                  `json:"type"`
+	ID         string                  `json:"id"`
 	Attributes attributeDataAttributes `json:"attributes"`
 }
 
