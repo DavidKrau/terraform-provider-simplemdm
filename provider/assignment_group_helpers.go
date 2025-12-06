@@ -25,7 +25,7 @@ type assignmentGroupResponse struct {
 type assignmentGroupAttributes struct {
 	Name             string `json:"name"`
 	AutoDeploy       bool   `json:"auto_deploy"`
-	Type             string `json:"type"`
+	GroupType        string `json:"group_type"`
 	InstallType      string `json:"install_type"`
 	CreatedAt        string `json:"created_at"`
 	UpdatedAt        string `json:"updated_at"`
@@ -193,11 +193,11 @@ func applyAssignmentGroupResponseToResourceModel(model *assignment_groupResource
 
 	model.Name = types.StringValue(response.Data.Attributes.Name)
 	model.AutoDeploy = types.BoolValue(response.Data.Attributes.AutoDeploy)
-	model.GroupType = types.StringValue(response.Data.Attributes.Type)
+	model.GroupType = types.StringValue(response.Data.Attributes.GroupType)
 
 	// install_type is only returned by API for munki groups
 	// For standard groups, set to null since API doesn't return it
-	if response.Data.Attributes.Type == "munki" {
+	if response.Data.Attributes.GroupType == "munki" {
 		if response.Data.Attributes.InstallType != "" {
 			model.InstallType = types.StringValue(response.Data.Attributes.InstallType)
 		} else {
@@ -232,9 +232,9 @@ func applyAssignmentGroupResponseToDataSourceModel(model *assignmentGroupDataSou
 	model.ID = types.StringValue(strconv.Itoa(response.Data.ID))
 	model.Name = types.StringValue(response.Data.Attributes.Name)
 	model.AutoDeploy = types.BoolValue(response.Data.Attributes.AutoDeploy)
-	model.GroupType = types.StringValue(response.Data.Attributes.Type)
+	model.GroupType = types.StringValue(response.Data.Attributes.GroupType)
 
-	if response.Data.Attributes.Type == "munki" && response.Data.Attributes.InstallType != "" {
+	if response.Data.Attributes.GroupType == "munki" && response.Data.Attributes.InstallType != "" {
 		model.InstallType = types.StringValue(response.Data.Attributes.InstallType)
 	} else {
 		model.InstallType = types.StringNull()
@@ -300,6 +300,11 @@ func assignObjectsToGroup(
 	}
 
 	for _, objectID := range objects.Elements() {
+		// Check for context cancellation
+		if err := ctx.Err(); err != nil {
+			return fmt.Errorf("operation cancelled: %w", err)
+		}
+
 		idString := objectID.(types.String).ValueString()
 
 		var err error
@@ -350,6 +355,11 @@ func updateAssignmentGroupObjects(
 
 	// Add new objects
 	for _, objectID := range toAdd {
+		// Check for context cancellation
+		if err := ctx.Err(); err != nil {
+			return fmt.Errorf("operation cancelled: %w", err)
+		}
+
 		var err error
 		if objectType == "devices" {
 			err = assignmentGroupAssignDevice(ctx, client, groupID, objectID, removeOthers)
@@ -363,6 +373,11 @@ func updateAssignmentGroupObjects(
 
 	// Remove old objects
 	for _, objectID := range toRemove {
+		// Check for context cancellation
+		if err := ctx.Err(); err != nil {
+			return fmt.Errorf("operation cancelled: %w", err)
+		}
+
 		err := client.AssignmentGroupUnAssignObject(groupID, objectID, objectType)
 		if err != nil {
 			return err

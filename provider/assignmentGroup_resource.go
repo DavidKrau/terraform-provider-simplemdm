@@ -2,8 +2,10 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
@@ -76,7 +78,7 @@ func (r *assignment_groupResource) Metadata(_ context.Context, req resource.Meta
 // Schema defines the schema for the resource.
 func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Assignment Group resource is used to manage group, you can assign App(s), Custom Profile(s), Device(s), Device Group(s) and set addition details regarding Assignemtn Group.",
+		Description: "Assignment Group resource is used to manage groups. You can assign apps, custom profiles, devices, and device groups, and configure additional assignment group settings.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Required:    true,
@@ -127,9 +129,9 @@ func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRe
 				Optional: true,
 				Computed: true,
 				Validators: []validator.Int64{
-					int64validator.AtLeast(0),
+					int64validator.Between(0, 999),
 				},
-				Description: "Optional. Sets the priority order in which assignment groups are evaluated when devices are part of multiple groups.",
+				Description: "Optional. Sets the priority order in which assignment groups are evaluated when devices are part of multiple groups. Lower numbers are evaluated first. Valid range: 0-999. If not set, SimpleMDM assigns a default priority.",
 			},
 			"app_track_location": schema.BoolAttribute{
 				Optional:    true,
@@ -147,13 +149,13 @@ func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRe
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
-				Description: "Optional. Set true if you would like to send update Apps command after assignment group creation or changes. Defaults to false.",
+				Description: "Optional. Triggers 'Update Apps' command during apply. This sends an MDM install command to all associated devices for apps with available updates. Set to true when you want to push app updates. This is a one-time action on each apply where it's true. Difference from apps_push: update only installs if newer version available.",
 			},
 			"apps_push": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
-				Description: "Optional. Set true if you would like to send push Apps command after assignment group creation or changes. Defaults to false.",
+				Description: "Optional. Triggers 'Push Apps' command during apply. This sends an MDM install command to all associated devices for all assigned apps, regardless of current version. Set to true when you want to reinstall or push apps. This is a one-time action on each apply where it's true. Difference from apps_update: push installs all apps.",
 			},
 			"profiles": schema.SetAttribute{
 				ElementType: types.StringType,
@@ -165,13 +167,14 @@ func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRe
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
-				Description: "Optional. Set true if you would like to send Sync Profiles command after Assignment Group creation or changes. Defaults to false.",
+				Description: "Optional. Triggers 'Sync Profiles' command during apply. This pushes all assigned profiles to devices in the assignment group. Set to true after profile changes to sync. ⚠️ Rate limited to 1 request per 30 seconds - wait between applies if true. This is a one-time action on each apply where it's true.",
 			},
 			"groups": schema.SetAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
-				Computed:    true,
-				Description: "Optional. List of Device Groups assigned to this Assignment Group",
+				ElementType:        types.StringType,
+				Optional:           true,
+				Computed:           true,
+				DeprecationMessage: "The device_groups assignment API is deprecated by SimpleMDM. This only works with legacy_device_group_id from migrated groups. For accounts using the New Groups Experience, use device assignments instead.",
+				Description:        "Optional. List of Device Groups assigned to this Assignment Group. ⚠️ DEPRECATED: This uses a deprecated API that only works with legacy_device_group_id from previously migrated groups.",
 			},
 			"devices": schema.SetAttribute{
 				ElementType: types.StringType,
@@ -203,6 +206,37 @@ func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRe
 			},
 		},
 	}
+}
+
+// syncProfilesWithRetry handles profile sync with rate limit retry logic
+func (r *assignment_groupResource) syncProfilesWithRetry(ctx context.Context, groupID string) error {
+	maxRetries := 3
+	
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		err := r.client.AssignmentGroupSyncProfiles(groupID)
+		if err == nil {
+			return nil
+		}
+		
+		// Check for rate limit (429 status or rate limit in error message)
+		if strings.Contains(err.Error(), "429") || strings.Contains(strings.ToLower(err.Error()), "rate limit") {
+			if attempt < maxRetries {
+				// Wait 30 seconds before retry
+				select {
+				case <-ctx.Done():
+					return fmt.Errorf("operation cancelled: %w", ctx.Err())
+				case <-time.After(30 * time.Second):
+					continue
+				}
+			}
+			return fmt.Errorf("profile sync rate limited after %d attempts. Please wait 30 seconds between sync operations", maxRetries+1)
+		}
+		
+		// Non-rate-limit error, don't retry
+		return err
+	}
+	
+	return fmt.Errorf("profile sync failed after %d attempts", maxRetries+1)
 }
 
 // Import function
@@ -278,57 +312,30 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 	if plan.AppsUpdate.ValueBool() {
 		err := r.client.AssignmentGroupUpdateInstalledApps(plan.ID.ValueString())
 		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error when sending command to Update Apps, deleting group to prevent issues next run.",
-				"Could not send Apps Update command, unexpected error: "+err.Error(),
+			resp.Diagnostics.AddWarning(
+				"Failed to send Update Apps command",
+				fmt.Sprintf("Assignment group created successfully, but update apps command failed: %s. You may need to trigger manually.", err.Error()),
 			)
-			err := r.client.AssignmentGroupDelete(plan.ID.ValueString())
-			if err != nil {
-				resp.Diagnostics.AddError(
-					"Error Deleting SimpleMDM assignment group",
-					"Could not delete assignment group, unexpected error: "+err.Error(),
-				)
-				return
-			}
-			return
 		}
 	}
 
 	if plan.AppsPush.ValueBool() {
 		err := r.client.AssignmentGroupPushApps(plan.ID.ValueString())
 		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error when sending command to Push Apps, deleting group to prevent issues next run.",
-				"Could not send Push Apps command, unexpected error: "+err.Error(),
+			resp.Diagnostics.AddWarning(
+				"Failed to send Push Apps command",
+				fmt.Sprintf("Assignment group created successfully, but push apps command failed: %s. You may need to trigger manually.", err.Error()),
 			)
-			err := r.client.AssignmentGroupDelete(plan.ID.ValueString())
-			if err != nil {
-				resp.Diagnostics.AddError(
-					"Error Deleting SimpleMDM assignment group",
-					"Could not delete assignment group, unexpected error: "+err.Error(),
-				)
-				return
-			}
-			return
 		}
 	}
 
 	if plan.ProfilesSync.ValueBool() {
-		err := r.client.AssignmentGroupSyncProfiles(plan.ID.ValueString())
+		err := r.syncProfilesWithRetry(ctx, plan.ID.ValueString())
 		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error when sending command to Sync Profiles, deleting group to prevent issues next run.",
-				"Could not send Sync Profiles command, unexpected error: "+err.Error(),
+			resp.Diagnostics.AddWarning(
+				"Failed to sync profiles",
+				fmt.Sprintf("Assignment group created successfully, but profile sync failed: %s. Profiles may need manual sync.", err.Error()),
 			)
-			err := r.client.AssignmentGroupDelete(plan.ID.ValueString())
-			if err != nil {
-				resp.Diagnostics.AddError(
-					"Error Deleting SimpleMDM assignment group",
-					"Could not delete assignment group, unexpected error: "+err.Error(),
-				)
-				return
-			}
-			return
 		}
 	}
 
@@ -468,33 +475,30 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 	if plan.AppsUpdate.ValueBool() {
 		err := r.client.AssignmentGroupUpdateInstalledApps(plan.ID.ValueString())
 		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating assignment group profile assignment",
-				"Could not update assignment group profile assignment, unexpected error: "+err.Error(),
+			resp.Diagnostics.AddWarning(
+				"Failed to send Update Apps command",
+				fmt.Sprintf("Assignment group updated successfully, but update apps command failed: %s. You may need to trigger manually.", err.Error()),
 			)
-			return
 		}
 	}
 
 	if plan.AppsPush.ValueBool() {
 		err := r.client.AssignmentGroupPushApps(plan.ID.ValueString())
 		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating assignment group profile assignment",
-				"Could not update assignment group profile assignment, unexpected error: "+err.Error(),
+			resp.Diagnostics.AddWarning(
+				"Failed to send Push Apps command",
+				fmt.Sprintf("Assignment group updated successfully, but push apps command failed: %s. You may need to trigger manually.", err.Error()),
 			)
-			return
 		}
 	}
 
 	if plan.ProfilesSync.ValueBool() {
-		err := r.client.AssignmentGroupSyncProfiles(plan.ID.ValueString())
+		err := r.syncProfilesWithRetry(ctx, plan.ID.ValueString())
 		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating assignment group profile assignment",
-				"Could not update assignment group profile assignment, unexpected error: "+err.Error(),
+			resp.Diagnostics.AddWarning(
+				"Failed to sync profiles",
+				fmt.Sprintf("Assignment group updated successfully, but profile sync failed: %s. Profiles may need manual sync.", err.Error()),
 			)
-			return
 		}
 	}
 

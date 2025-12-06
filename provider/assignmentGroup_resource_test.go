@@ -170,3 +170,147 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 		},
 	})
 }
+
+// TestAccAssignmentGroupResource_Import tests the import functionality
+func TestAccAssignmentGroupResource_Import(t *testing.T) {
+	testAccPreCheck(t)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					resource "simplemdm_assignmentgroup" "test_import" {
+						name       = "Test Import Group"
+						auto_deploy = true
+						group_type = "standard"
+						priority   = 5
+					}
+				`),
+			},
+			{
+				ResourceName:      "simplemdm_assignmentgroup.test_import",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apps_update", "apps_push", "profiles_sync", "devices_remove_others",
+				},
+			},
+		},
+	})
+}
+
+// TestAccAssignmentGroupResource_RelationshipUpdates tests adding and removing relationships
+func TestAccAssignmentGroupResource_RelationshipUpdates(t *testing.T) {
+	testAccPreCheck(t)
+
+	appID := testAccRequireEnv(t, "SIMPLEMDM_APP_ID")
+	profileID := testAccRequireEnv(t, "SIMPLEMDM_PROFILE_ID")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAssignmentGroupDestroy,
+		Steps: []resource.TestStep{
+			// Create with no apps or profiles
+			{
+				Config: providerConfig + `
+					resource "simplemdm_assignmentgroup" "test_relationships" {
+						name       = "Test Relationships Group"
+						auto_deploy = false
+						group_type = "standard"
+					}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.test_relationships", "name", "Test Relationships Group"),
+					resource.TestCheckResourceAttrSet("simplemdm_assignmentgroup.test_relationships", "id"),
+				),
+			},
+			// Add an app
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					data "simplemdm_app" "test_app" {
+						id = "%s"
+					}
+					
+					resource "simplemdm_assignmentgroup" "test_relationships" {
+						name       = "Test Relationships Group"
+						auto_deploy = false
+						group_type = "standard"
+						apps       = [data.simplemdm_app.test_app.id]
+					}
+				`, appID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.test_relationships", "apps.#", "1"),
+				),
+			},
+			// Add a profile
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					data "simplemdm_app" "test_app" {
+						id = "%s"
+					}
+					
+					data "simplemdm_profile" "test_profile" {
+						id = "%s"
+					}
+					
+					resource "simplemdm_assignmentgroup" "test_relationships" {
+						name       = "Test Relationships Group"
+						auto_deploy = false
+						group_type = "standard"
+						apps       = [data.simplemdm_app.test_app.id]
+						profiles   = [data.simplemdm_profile.test_profile.id]
+					}
+				`, appID, profileID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.test_relationships", "apps.#", "1"),
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.test_relationships", "profiles.#", "1"),
+				),
+			},
+			// Remove the app, keep profile
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					data "simplemdm_profile" "test_profile" {
+						id = "%s"
+					}
+					
+					resource "simplemdm_assignmentgroup" "test_relationships" {
+						name       = "Test Relationships Group"
+						auto_deploy = false
+						group_type = "standard"
+						profiles   = [data.simplemdm_profile.test_profile.id]
+					}
+				`, profileID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.test_relationships", "profiles.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccAssignmentGroupResource_RateLimitHandling tests profile sync rate limiting
+func TestAccAssignmentGroupResource_RateLimitHandling(t *testing.T) {
+	testAccPreCheck(t)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAssignmentGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: providerConfig + `
+					resource "simplemdm_assignmentgroup" "test_ratelimit" {
+						name          = "Test Rate Limit Group"
+						auto_deploy   = false
+						group_type    = "standard"
+						profiles_sync = true
+					}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("simplemdm_assignmentgroup.test_ratelimit", "name", "Test Rate Limit Group"),
+					resource.TestCheckResourceAttrSet("simplemdm_assignmentgroup.test_ratelimit", "id"),
+				),
+			},
+		},
+	})
+}

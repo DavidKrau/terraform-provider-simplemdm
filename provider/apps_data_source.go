@@ -133,7 +133,7 @@ func (d *appsDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		entry := appsDataSourceAppModel{
 			ID:                   types.StringValue(strconv.Itoa(app.ID)),
 			Name:                 types.StringValue(app.Attributes.Name),
-			AppStoreID:           stringValueOrNull(app.Attributes.AppStoreID),
+			AppStoreID:           intToStringValue(app.Attributes.AppStoreID),
 			BundleID:             stringValueOrNull(app.Attributes.BundleIdentifier),
 			AppType:              stringValueOrNull(app.Attributes.AppType),
 			Version:              stringValueOrNull(app.Attributes.Version),
@@ -174,8 +174,20 @@ func fetchAllApps(ctx context.Context, client *simplemdm.Client, includeShared t
 	var allApps []appData
 	startingAfter := 0
 	limit := 100
+	iterations := 0
+	const maxPaginationIterations = 1000 // Safety limit to prevent infinite loops
 
 	for {
+		// Safety check to prevent infinite loops
+		if iterations >= maxPaginationIterations {
+			return nil, fmt.Errorf("exceeded maximum pagination iterations (%d), possibly too many apps or API error", maxPaginationIterations)
+		}
+		iterations++
+
+		// Check context cancellation
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		url := fmt.Sprintf("https://%s/api/v1/apps?limit=%d", client.HostName, limit)
 		if startingAfter > 0 {
 			url += fmt.Sprintf("&starting_after=%d", startingAfter)
@@ -230,11 +242,19 @@ type appData struct {
 
 type appAttributes struct {
 	Name                 string   `json:"name"`
-	AppStoreID           string   `json:"itunes_store_id"`
+	AppStoreID           int      `json:"itunes_store_id"`
 	BundleIdentifier     string   `json:"bundle_identifier"`
 	AppType              string   `json:"app_type"`
 	Version              string   `json:"version"`
 	PlatformSupport      string   `json:"platform_support"`
 	ProcessingStatus     string   `json:"processing_status"`
 	InstallationChannels []string `json:"installation_channels"`
+}
+
+// Helper function to convert int to string value or null
+func intToStringValue(val int) types.String {
+	if val == 0 {
+		return types.StringNull()
+	}
+	return types.StringValue(strconv.Itoa(val))
 }

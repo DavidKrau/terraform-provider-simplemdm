@@ -31,10 +31,17 @@ type assignmentGroupsDataSourceGroupModel struct {
 	Name             types.String `tfsdk:"name"`
 	AutoDeploy       types.Bool   `tfsdk:"auto_deploy"`
 	GroupType        types.String `tfsdk:"group_type"`
+	InstallType      types.String `tfsdk:"install_type"`
 	Priority         types.Int64  `tfsdk:"priority"`
 	AppTrackLocation types.Bool   `tfsdk:"app_track_location"`
+	CreatedAt        types.String `tfsdk:"created_at"`
+	UpdatedAt        types.String `tfsdk:"updated_at"`
 	DeviceCount      types.Int64  `tfsdk:"device_count"`
 	GroupCount       types.Int64  `tfsdk:"group_count"`
+	Apps             types.Set    `tfsdk:"apps"`
+	Profiles         types.Set    `tfsdk:"profiles"`
+	Devices          types.Set    `tfsdk:"devices"`
+	Groups           types.Set    `tfsdk:"groups"`
 }
 
 func AssignmentGroupsDataSource() datasource.DataSource {
@@ -69,6 +76,10 @@ func (d *assignmentGroupsDataSource) Schema(_ context.Context, _ datasource.Sche
 							Computed:    true,
 							Description: "The type of assignment group (standard or munki).",
 						},
+						"install_type": schema.StringAttribute{
+							Computed:    true,
+							Description: "Install type used when the assignment group is of type munki.",
+						},
 						"priority": schema.Int64Attribute{
 							Computed:    true,
 							Description: "The priority of the assignment group.",
@@ -77,6 +88,14 @@ func (d *assignmentGroupsDataSource) Schema(_ context.Context, _ datasource.Sche
 							Computed:    true,
 							Description: "Whether the SimpleMDM app tracks device location when installed for this assignment group.",
 						},
+						"created_at": schema.StringAttribute{
+							Computed:    true,
+							Description: "Timestamp when the assignment group was created.",
+						},
+						"updated_at": schema.StringAttribute{
+							Computed:    true,
+							Description: "Timestamp when the assignment group was last updated.",
+						},
 						"device_count": schema.Int64Attribute{
 							Computed:    true,
 							Description: "Number of devices currently assigned to the assignment group.",
@@ -84,6 +103,26 @@ func (d *assignmentGroupsDataSource) Schema(_ context.Context, _ datasource.Sche
 						"group_count": schema.Int64Attribute{
 							Computed:    true,
 							Description: "Number of device groups currently assigned to the assignment group.",
+						},
+						"apps": schema.SetAttribute{
+							Computed:    true,
+							ElementType: types.StringType,
+							Description: "IDs of apps assigned to the assignment group.",
+						},
+						"profiles": schema.SetAttribute{
+							Computed:    true,
+							ElementType: types.StringType,
+							Description: "IDs of profiles assigned to the assignment group.",
+						},
+						"devices": schema.SetAttribute{
+							Computed:    true,
+							ElementType: types.StringType,
+							Description: "IDs of devices assigned directly to the assignment group.",
+						},
+						"groups": schema.SetAttribute{
+							Computed:    true,
+							ElementType: types.StringType,
+							Description: "IDs of device groups assigned to the assignment group.",
 						},
 					},
 				},
@@ -122,6 +161,31 @@ func (d *assignmentGroupsDataSource) Read(ctx context.Context, req datasource.Re
 			GroupCount:       types.Int64Value(int64(group.Attributes.GroupCount)),
 		}
 
+		// Set install_type if available
+		if group.Attributes.GroupType == "munki" && group.Attributes.InstallType != "" {
+			entry.InstallType = types.StringValue(group.Attributes.InstallType)
+		} else {
+			entry.InstallType = types.StringNull()
+		}
+
+		// Set timestamps if available
+		if group.Attributes.CreatedAt != "" {
+			entry.CreatedAt = types.StringValue(group.Attributes.CreatedAt)
+		} else {
+			entry.CreatedAt = types.StringNull()
+		}
+		if group.Attributes.UpdatedAt != "" {
+			entry.UpdatedAt = types.StringValue(group.Attributes.UpdatedAt)
+		} else {
+			entry.UpdatedAt = types.StringNull()
+		}
+
+		// Set relationships
+		entry.Apps = buildStringSetFromRelationshipItems(group.Relationships.Apps.Data)
+		entry.Profiles = buildStringSetFromRelationshipItems(group.Relationships.Profiles.Data)
+		entry.Devices = buildStringSetFromRelationshipItems(group.Relationships.Devices.Data)
+		entry.Groups = buildStringSetFromRelationshipItems(group.Relationships.DeviceGroups.Data)
+
 		entries = append(entries, entry)
 	}
 
@@ -151,11 +215,24 @@ func (d *assignmentGroupsDataSource) Configure(_ context.Context, req datasource
 
 // fetchAllAssignmentGroups retrieves all assignment groups with pagination support
 func fetchAllAssignmentGroups(ctx context.Context, client *simplemdm.Client) ([]assignmentGroupData, error) {
+	const maxPaginationIterations = 1000
+
 	var allGroups []assignmentGroupData
 	startingAfter := 0
 	limit := 100
+	iterations := 0
 
 	for {
+		if iterations >= maxPaginationIterations {
+			return nil, fmt.Errorf("exceeded maximum pagination iterations (%d), possibly too many groups or API error", maxPaginationIterations)
+		}
+		iterations++
+
+		// Check context cancellation
+		if err := ctx.Err(); err != nil {
+			return nil, fmt.Errorf("operation cancelled: %w", err)
+		}
+
 		url := fmt.Sprintf("https://%s/api/v1/assignment_groups?limit=%d", client.HostName, limit)
 		if startingAfter > 0 {
 			url += fmt.Sprintf("&starting_after=%d", startingAfter)
@@ -200,17 +277,21 @@ type assignmentGroupsAPIResponse struct {
 
 // assignmentGroupData represents a single assignment group in the list response
 type assignmentGroupData struct {
-	ID         int                           `json:"id"`
-	Type       string                        `json:"type"`
-	Attributes assignmentGroupDataAttributes `json:"attributes"`
+	ID            int                           `json:"id"`
+	Type          string                        `json:"type"`
+	Attributes    assignmentGroupDataAttributes `json:"attributes"`
+	Relationships assignmentGroupRelationships  `json:"relationships"`
 }
 
 type assignmentGroupDataAttributes struct {
 	Name             string `json:"name"`
 	AutoDeploy       bool   `json:"auto_deploy"`
 	GroupType        string `json:"group_type"`
+	InstallType      string `json:"install_type"`
 	Priority         int    `json:"priority"`
 	AppTrackLocation bool   `json:"app_track_location"`
+	CreatedAt        string `json:"created_at"`
+	UpdatedAt        string `json:"updated_at"`
 	DeviceCount      int    `json:"device_count"`
 	GroupCount       int    `json:"group_count"`
 }

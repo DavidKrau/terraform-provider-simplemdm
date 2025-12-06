@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/DavidKrau/simplemdm-go-client"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -87,7 +88,7 @@ func (r *appResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 			"name": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "The name that SimpleMDM will use to reference this app. If left blank, SimpleMDM will automatically set this to the app name specified by the binary.",
+				Description: "The name for this app in SimpleMDM. For App Store apps, this is computed from the store. For binary uploads, you may optionally specify a name, otherwise it's extracted from the binary.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -95,7 +96,7 @@ func (r *appResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 			"app_store_id": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Required. The Apple App Store ID of the app to be added. Example: 1090161858.",
+				Description: "The Apple App Store ID. Required when adding App Store apps via store ID. Use either this, bundle_id, or binary_file. Example: '1090161858'",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
@@ -111,7 +112,7 @@ func (r *appResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 			"bundle_id": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Required. The bundle identifier of the Apple App Store app to be added. Example: com.myCompany.MyApp1",
+				Description: "The bundle identifier of the Apple App Store app. Required when adding App Store apps via bundle ID. Use either this, app_store_id, or binary_file. Example: com.myCompany.MyApp1",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
@@ -126,7 +127,7 @@ func (r *appResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 			},
 			"binary_file": schema.StringAttribute{
 				Optional:    true,
-				Description: "Optional. Absolute or relative path to an app binary (ipa or pkg) to upload. Required when managing enterprise, custom B2B, or macOS package apps.",
+				Description: "Path to app binary (ipa or pkg) to upload. Required when managing enterprise, custom B2B, or macOS package apps. Use either this, app_store_id, or bundle_id.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -141,7 +142,7 @@ func (r *appResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 			"deploy_to": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Optional. Deploy the app to associated devices immediately after the app has been uploaded and processed. Possible values are none, outdated or all. Defaults to none.",
+				Description: "Deploy the app after upload. Values: 'none' (default), 'outdated' (devices with older version), 'all' (all devices). Note: Only applies during updates; create operations require subsequent update. API does not return this value, so state shows last configured value.",
 				Default:     stringdefault.StaticString("none"),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -152,7 +153,7 @@ func (r *appResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 			},
 			"status": schema.StringAttribute{
 				Computed:    true,
-				Description: "The current deployment status of the app.",
+				Description: "The current deployment status of the app. Note: This is a write-only parameter; API does not return this value.",
 			},
 			"app_type": schema.StringAttribute{
 				Computed:    true,
@@ -194,13 +195,11 @@ type appAPIResponse struct {
 			Name                 string   `json:"name"`
 			BundleIdentifier     string   `json:"bundle_identifier"`
 			AppType              string   `json:"app_type"`
-			ITunesStoreID        *int     `json:"itunes_store_id"`
+			ITunesStoreID        int      `json:"itunes_store_id"`
 			InstallationChannels []string `json:"installation_channels"`
 			PlatformSupport      string   `json:"platform_support"`
 			ProcessingStatus     string   `json:"processing_status"`
 			Version              string   `json:"version"`
-			DeployTo             string   `json:"deploy_to"`
-			Status               string   `json:"status"`
 			CreatedAt            string   `json:"created_at"`
 			UpdatedAt            string   `json:"updated_at"`
 		} `json:"attributes"`
@@ -227,19 +226,6 @@ func newAppResourceModelFromAPI(ctx context.Context, app *appAPIResponse) (appRe
 		model.BundleId = types.StringValue(app.Data.Attributes.BundleIdentifier)
 	} else {
 		model.BundleId = types.StringNull()
-	}
-
-	// DeployTo has a schema default of "none", so use it when empty
-	if app.Data.Attributes.DeployTo != "" {
-		model.DeployTo = types.StringValue(app.Data.Attributes.DeployTo)
-	} else {
-		model.DeployTo = types.StringValue("none")
-	}
-
-	if app.Data.Attributes.Status != "" {
-		model.Status = types.StringValue(app.Data.Attributes.Status)
-	} else {
-		model.Status = types.StringNull()
 	}
 
 	if app.Data.Attributes.AppType != "" {
@@ -278,11 +264,49 @@ func newAppResourceModelFromAPI(ctx context.Context, app *appAPIResponse) (appRe
 		model.UpdatedAt = types.StringNull()
 	}
 
-	// Handle AppStoreId which may be nil
-	if storeID := app.Data.Attributes.ITunesStoreID; storeID != nil && *storeID != 0 {
-		model.AppStoreId = types.StringValue(strconv.Itoa(*storeID))
+	// Handle AppStoreId
+	if app.Data.Attributes.ITunesStoreID != 0 {
+		model.AppStoreId = types.StringValue(strconv.Itoa(app.Data.Attributes.ITunesStoreID))
 	} else {
 		model.AppStoreId = types.StringNull()
+	}
+
+	// DeployTo and Status are write-only parameters that API does not return
+	// Preserve from plan/state as they are not provided by API
+	model.DeployTo = types.StringValue("none")
+	model.Status = types.StringNull()
+
+	// Validate bundle_identifier is present (should always be returned by API)
+	if app.Data.Attributes.BundleIdentifier == "" {
+		diags.AddWarning(
+			"Missing bundle_identifier",
+			fmt.Sprintf("App %d returned by API without bundle_identifier", app.Data.ID),
+		)
+	}
+
+	// Validate app_type is a known value
+	knownAppTypes := map[string]bool{
+		"app store":  true,
+		"enterprise": true,
+		"custom b2b": true,
+	}
+	if app.Data.Attributes.AppType != "" && !knownAppTypes[app.Data.Attributes.AppType] {
+		diags.AddWarning(
+			"Unknown app type",
+			fmt.Sprintf("App returned unexpected app_type: %s", app.Data.Attributes.AppType),
+		)
+	}
+
+	// Validate platform_support is a known value
+	knownPlatforms := map[string]bool{
+		"iOS":   true,
+		"macOS": true,
+	}
+	if app.Data.Attributes.PlatformSupport != "" && !knownPlatforms[app.Data.Attributes.PlatformSupport] {
+		diags.AddWarning(
+			"Unknown platform",
+			fmt.Sprintf("App returned unexpected platform_support: %s", app.Data.Attributes.PlatformSupport),
+		)
 	}
 
 	// Handle installation channels
@@ -317,6 +341,46 @@ func fetchApp(ctx context.Context, client *simplemdm.Client, appID string) (*app
 	}
 
 	return &app, nil
+}
+
+// isNotFoundError checks if an error is a 404 not found error
+func isNotFoundError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "not found")
+}
+
+// waitForProcessingComplete polls until app processing is complete
+func waitForProcessingComplete(ctx context.Context, client *simplemdm.Client, appID string, timeout time.Duration) error {
+	deadline := time.Now().Add(timeout)
+	ticker := time.NewTicker(10 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-ticker.C:
+			if time.Now().After(deadline) {
+				return fmt.Errorf("timeout waiting for app processing to complete after %v", timeout)
+			}
+
+			app, err := fetchApp(ctx, client, appID)
+			if err != nil {
+				return fmt.Errorf("error checking processing status: %w", err)
+			}
+
+			if app.Data.Attributes.ProcessingStatus == "processed" {
+				return nil
+			}
+
+			// If processing failed, return error
+			if app.Data.Attributes.ProcessingStatus == "failed" {
+				return fmt.Errorf("app processing failed")
+			}
+		}
+	}
 }
 
 func (r *appResource) appCreateWithBinary(ctx context.Context, binaryPath, name string) (_ *simplemdm.SimplemdmDefaultStruct, err error) {

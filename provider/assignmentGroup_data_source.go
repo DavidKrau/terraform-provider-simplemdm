@@ -3,10 +3,13 @@ package provider
 import (
 	"context"
 	"fmt"
+	"regexp"
 
 	"github.com/DavidKrau/simplemdm-go-client"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -52,6 +55,12 @@ func (d *assignmentGroupDataSource) Schema(_ context.Context, _ datasource.Schem
 			"id": schema.StringAttribute{
 				Required:    true,
 				Description: "The ID of the assignment group.",
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(
+						regexp.MustCompile(`^\d+$`),
+						"must be a numeric ID",
+					),
+				},
 			},
 			"name": schema.StringAttribute{
 				Computed:    true,
