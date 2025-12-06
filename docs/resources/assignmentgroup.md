@@ -3,12 +3,12 @@
 page_title: "simplemdm_assignmentgroup Resource - simplemdm"
 subcategory: ""
 description: |-
-  Assignment Group resource is used to manage group, you can assign App(s), Custom Profile(s), Device(s), Device Group(s) and set addition details regarding Assignemtn Group.
+  Assignment Group resource is used to manage groups. You can assign apps, custom profiles, devices, and device groups, and configure additional assignment group settings.
 ---
 
 # simplemdm_assignmentgroup (Resource)
 
-Assignment Group resource is used to manage group, you can assign App(s), Custom Profile(s), Device(s), Device Group(s) and set addition details regarding Assignemtn Group.
+Assignment Group resource is used to manage groups. You can assign apps, custom profiles, devices, and device groups, and configure additional assignment group settings.
 
 ## Example Usage
 
@@ -60,17 +60,17 @@ resource "simplemdm_assignmentgroup" "myfirstgroup" {
 
 - `app_track_location` (Boolean) Optional. Controls whether the SimpleMDM app tracks device location when installed.
 - `apps` (Set of String) Optional. List of Apps assigned to this assignment group
-- `apps_push` (Boolean) Optional. Set true if you would like to send push Apps command after assignment group creation or changes. Defaults to false.
-- `apps_update` (Boolean) Optional. Set true if you would like to send update Apps command after assignment group creation or changes. Defaults to false.
+- `apps_push` (Boolean) Optional. Triggers 'Push Apps' command during apply. This sends an MDM install command to all associated devices for all assigned apps, regardless of current version. Set to true when you want to reinstall or push apps. This is a one-time action on each apply where it's true. Difference from apps_update: push installs all apps.
+- `apps_update` (Boolean) Optional. Triggers 'Update Apps' command during apply. This sends an MDM install command to all associated devices for apps with available updates. Set to true when you want to push app updates. This is a one-time action on each apply where it's true. Difference from apps_push: update only installs if newer version available.
 - `auto_deploy` (Boolean) Optional. Whether the Apps should be automatically pushed to device(s) when they join this Assignment Group. Defaults to true
 - `devices` (Set of String) Optional. List of Devices assigned to this Assignment Group
 - `devices_remove_others` (Boolean) Optional. When true, devices assigned through Terraform will be removed from other assignment groups before being added to this one.
 - `group_type` (String) Optional. Type of assignment group. Must be one of standard (for MDM app/media deployments) or munki for Munki app deployments. Defaults to standard. ⚠️ DEPRECATED: This field is deprecated by the SimpleMDM API and may be ignored for accounts using the New Groups Experience.
-- `groups` (Set of String) Optional. List of Device Groups assigned to this Assignment Group
+- `groups` (Set of String, Deprecated) Optional. List of Device Groups assigned to this Assignment Group. ⚠️ DEPRECATED: This uses a deprecated API that only works with legacy_device_group_id from previously migrated groups.
 - `install_type` (String) Optional. The install type for munki assignment groups. Must be one of managed, self_serve, managed_updates or default_installs. This setting has no effect for non-munki (standard) assignment groups. Defaults to managed for munki groups. ⚠️ DEPRECATED: The SimpleMDM API recommends setting install_type per-app using the Assign App endpoint instead of at the group level.
-- `priority` (Number) Optional. Sets the priority order in which assignment groups are evaluated when devices are part of multiple groups.
+- `priority` (Number) Optional. Sets the priority order in which assignment groups are evaluated when devices are part of multiple groups. Lower numbers are evaluated first. Valid range: 0-999. If not set, SimpleMDM assigns a default priority.
 - `profiles` (Set of String) Optional. List of Configuration Profiles (both Custom and predefined Profiles) assigned to this assignment group
-- `profiles_sync` (Boolean) Optional. Set true if you would like to send Sync Profiles command after Assignment Group creation or changes. Defaults to false.
+- `profiles_sync` (Boolean) Optional. Triggers 'Sync Profiles' command during apply. This pushes all assigned profiles to devices in the assignment group. Set to true after profile changes to sync. ⚠️ Rate limited to 1 request per 30 seconds - wait between applies if true. This is a one-time action on each apply where it's true.
 
 ### Read-Only
 
