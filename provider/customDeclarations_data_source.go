@@ -23,27 +23,22 @@ type customDeclarationsDataSource struct {
 }
 
 type customDeclarationsDataSourceModel struct {
+	Search             types.String                                   `tfsdk:"search"`
 	CustomDeclarations []customDeclarationsDataSourceDeclarationModel `tfsdk:"custom_declarations"`
 }
 
 type customDeclarationsDataSourceDeclarationModel struct {
-	ID                  types.String `tfsdk:"id"`
-	Name                types.String `tfsdk:"name"`
-	Identifier          types.String `tfsdk:"identifier"`
-	DeclarationType     types.String `tfsdk:"declaration_type"`
-	Topic               types.String `tfsdk:"topic"`
-	Transport           types.String `tfsdk:"transport"`
-	Description         types.String `tfsdk:"description"`
-	Platforms           types.Set    `tfsdk:"platforms"`
-	Active              types.Bool   `tfsdk:"active"`
-	Priority            types.Int64  `tfsdk:"priority"`
-	UserScope           types.Bool   `tfsdk:"user_scope"`
-	AttributeSupport    types.Bool   `tfsdk:"attribute_support"`
-	EscapeAttributes    types.Bool   `tfsdk:"escape_attributes"`
-	ActivationPredicate types.String `tfsdk:"activation_predicate"`
-	ProfileIdentifier   types.String `tfsdk:"profile_identifier"`
-	GroupCount          types.Int64  `tfsdk:"group_count"`
-	DeviceCount         types.Int64  `tfsdk:"device_count"`
+	ID                     types.String `tfsdk:"id"`
+	Name                   types.String `tfsdk:"name"`
+	DeclarationType        types.String `tfsdk:"declaration_type"`
+	UserScope              types.Bool   `tfsdk:"user_scope"`
+	AttributeSupport       types.Bool   `tfsdk:"attribute_support"`
+	EscapeAttributes       types.Bool   `tfsdk:"escape_attributes"`
+	ActivationPredicate    types.String `tfsdk:"activation_predicate"`
+	ReinstallAfterOsUpdate types.Bool   `tfsdk:"reinstall_after_os_update"`
+	ProfileIdentifier      types.String `tfsdk:"profile_identifier"`
+	GroupCount             types.Int64  `tfsdk:"group_count"`
+	DeviceCount            types.Int64  `tfsdk:"device_count"`
 }
 
 func CustomDeclarationsDataSource() datasource.DataSource {
@@ -57,6 +52,12 @@ func (d *customDeclarationsDataSource) Metadata(_ context.Context, req datasourc
 func (d *customDeclarationsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Fetches the collection of custom declarations from your SimpleMDM account.",
+		Attributes: map[string]schema.Attribute{
+			"search": schema.StringAttribute{
+				Optional:    true,
+				Description: "Limit response to declarations with matching name.",
+			},
+		},
 		Blocks: map[string]schema.Block{
 			"custom_declarations": schema.ListNestedBlock{
 				Description: "Collection of custom declaration records returned by the API.",
@@ -68,40 +69,11 @@ func (d *customDeclarationsDataSource) Schema(_ context.Context, _ datasource.Sc
 						},
 						"name": schema.StringAttribute{
 							Computed:    true,
-							Description: "Human readable name for the declaration.",
-						},
-						"identifier": schema.StringAttribute{
-							Computed:    true,
-							Description: "Unique declaration identifier.",
+							Description: "A name for the custom declaration.",
 						},
 						"declaration_type": schema.StringAttribute{
 							Computed:    true,
-							Description: "Declaration type reported to Apple devices.",
-						},
-						"topic": schema.StringAttribute{
-							Computed:    true,
-							Description: "Topic used for declarative management payloads.",
-						},
-						"transport": schema.StringAttribute{
-							Computed:    true,
-							Description: "Transport mechanism for the declaration.",
-						},
-						"description": schema.StringAttribute{
-							Computed:    true,
-							Description: "Description of the declaration.",
-						},
-						"platforms": schema.SetAttribute{
-							Computed:    true,
-							ElementType: types.StringType,
-							Description: "List of platforms that should receive the declaration.",
-						},
-						"active": schema.BoolAttribute{
-							Computed:    true,
-							Description: "Whether the declaration is active.",
-						},
-						"priority": schema.Int64Attribute{
-							Computed:    true,
-							Description: "Priority value used for ordering declarations.",
+							Description: "The type of declaration being defined.",
 						},
 						"user_scope": schema.BoolAttribute{
 							Computed:    true,
@@ -118,6 +90,10 @@ func (d *customDeclarationsDataSource) Schema(_ context.Context, _ datasource.Sc
 						"activation_predicate": schema.StringAttribute{
 							Computed:    true,
 							Description: "Predicate controlling when the declaration activates.",
+						},
+						"reinstall_after_os_update": schema.BoolAttribute{
+							Computed:    true,
+							Description: "Whether to reinstall the declaration after macOS updates.",
 						},
 						"profile_identifier": schema.StringAttribute{
 							Computed:    true,
@@ -146,7 +122,12 @@ func (d *customDeclarationsDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	declarations, err := fetchAllCustomDeclarations(ctx, d.client)
+	search := ""
+	if !config.Search.IsNull() {
+		search = config.Search.ValueString()
+	}
+
+	declarations, err := fetchAllCustomDeclarations(ctx, d.client, search)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to list SimpleMDM custom declarations",
@@ -157,39 +138,12 @@ func (d *customDeclarationsDataSource) Read(ctx context.Context, req datasource.
 
 	entries := make([]customDeclarationsDataSourceDeclarationModel, 0, len(declarations))
 	for _, decl := range declarations {
-		platforms := types.SetNull(types.StringType)
-		if len(decl.Attributes.Platforms) > 0 {
-			sort.Strings(decl.Attributes.Platforms)
-			platforms, diags = types.SetValueFrom(ctx, types.StringType, decl.Attributes.Platforms)
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-		}
-
 		entry := customDeclarationsDataSourceDeclarationModel{
-			ID:                  types.StringValue(decl.ID),
-			Name:                types.StringValue(decl.Attributes.Name),
-			Identifier:          types.StringValue(decl.Attributes.Identifier),
-			DeclarationType:     types.StringValue(decl.Attributes.DeclarationType),
-			Topic:               stringValueOrNull(decl.Attributes.Topic),
-			Transport:           stringValueOrNull(decl.Attributes.Transport),
-			Description:         stringValueOrNull(decl.Attributes.Description),
-			Platforms:           platforms,
-			ActivationPredicate: stringValueOrNull(decl.Attributes.ActivationPredicate),
-			ProfileIdentifier:   stringValueOrNull(decl.Attributes.ProfileIdentifier),
-		}
-
-		if decl.Attributes.Active != nil {
-			entry.Active = types.BoolValue(*decl.Attributes.Active)
-		} else {
-			entry.Active = types.BoolNull()
-		}
-
-		if decl.Attributes.Priority != nil {
-			entry.Priority = types.Int64Value(*decl.Attributes.Priority)
-		} else {
-			entry.Priority = types.Int64Null()
+			ID:                     types.StringValue(decl.ID),
+			Name:                   types.StringValue(decl.Attributes.Name),
+			DeclarationType:        types.StringValue(decl.Attributes.DeclarationType),
+			ActivationPredicate:    stringValueOrNull(decl.Attributes.ActivationPredicate),
+			ProfileIdentifier:      stringValueOrNull(decl.Attributes.ProfileIdentifier),
 		}
 
 		if decl.Attributes.UserScope != nil {
@@ -208,6 +162,12 @@ func (d *customDeclarationsDataSource) Read(ctx context.Context, req datasource.
 			entry.EscapeAttributes = types.BoolValue(*decl.Attributes.EscapeAttributes)
 		} else {
 			entry.EscapeAttributes = types.BoolNull()
+		}
+
+		if decl.Attributes.ReinstallAfterOsUpdate != nil {
+			entry.ReinstallAfterOsUpdate = types.BoolValue(*decl.Attributes.ReinstallAfterOsUpdate)
+		} else {
+			entry.ReinstallAfterOsUpdate = types.BoolNull()
 		}
 
 		if decl.Attributes.GroupCount != nil {
@@ -250,13 +210,16 @@ func (d *customDeclarationsDataSource) Configure(_ context.Context, req datasour
 }
 
 // fetchAllCustomDeclarations retrieves all custom declarations with pagination support
-func fetchAllCustomDeclarations(ctx context.Context, client *simplemdm.Client) ([]customDeclarationDataList, error) {
+func fetchAllCustomDeclarations(ctx context.Context, client *simplemdm.Client, search string) ([]customDeclarationDataList, error) {
 	var allDeclarations []customDeclarationDataList
 	startingAfter := ""
 	limit := 100
 
 	for {
 		url := fmt.Sprintf("https://%s/api/v1/custom_declarations?limit=%d", client.HostName, limit)
+		if search != "" {
+			url += fmt.Sprintf("&search=%s", strings.ReplaceAll(search, " ", "+"))
+		}
 		if startingAfter != "" {
 			url += fmt.Sprintf("&starting_after=%s", startingAfter)
 		}
