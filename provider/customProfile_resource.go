@@ -185,6 +185,8 @@ func (r *customProfileResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
+	// NOTE: CustomProfileGet uses GET /api/v1/custom_configuration_profiles/{id}
+	// This endpoint is not documented in the API specification but is functional.
 	profile, err := r.client.CustomProfileGet(state.ID.ValueString())
 	if err != nil {
 		if strings.Contains(err.Error(), "404") {
@@ -202,6 +204,8 @@ func (r *customProfileResource) Read(ctx context.Context, req resource.ReadReque
 	assignCustomProfileAttributes(&state, profile.Data.Attributes)
 	state.ID = types.StringValue(strconv.Itoa(profile.Data.ID))
 
+	// NOTE: CustomProfileSHA downloads the profile using GET /api/v1/custom_configuration_profiles/{id}/download
+	// and computes the SHA-256 checksum locally. The 'profile_sha' field is not returned by the API.
 	sha, body, err := r.client.CustomProfileSHA(state.ID.ValueString())
 	if err != nil {
 		if strings.Contains(err.Error(), "404") {
@@ -237,6 +241,7 @@ func (r *customProfileResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	// Generate API request body from plan
+	// NOTE: The 7th parameter (empty string) is a search parameter not used for single profile updates
 	_, err := r.client.CustomProfileUpdate(plan.Name.ValueString(), plan.MobileConfig.ValueString(), plan.UserScope.ValueBool(), plan.AttributeSupport.ValueBool(), plan.EscapeAttributes.ValueBool(), plan.ReinstallAfterOSUpdate.ValueBool(), "", plan.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(

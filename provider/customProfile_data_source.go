@@ -106,6 +106,8 @@ func (d *customProfileDataSource) Read(ctx context.Context, req datasource.ReadR
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
+	// NOTE: CustomProfileGet uses GET /api/v1/custom_configuration_profiles/{id}
+	// This endpoint is not documented in the API specification but is functional.
 	profile, err := d.client.CustomProfileGet(state.ID.ValueString())
 	if err != nil {
 		if strings.Contains(err.Error(), "404") {
@@ -132,6 +134,8 @@ func (d *customProfileDataSource) Read(ctx context.Context, req datasource.ReadR
 	state.GroupCount = types.Int64Value(int64(profile.Data.Attributes.GroupCount))
 	state.DeviceCount = types.Int64Value(int64(profile.Data.Attributes.DeviceCount))
 
+	// NOTE: CustomProfileSHA downloads the profile using GET /api/v1/custom_configuration_profiles/{id}/download
+	// and computes the SHA-256 checksum locally. The 'profile_sha' field is not returned by the API.
 	sha, body, err := d.client.CustomProfileSHA(state.ID.ValueString())
 	if err != nil {
 		if strings.Contains(err.Error(), "404") {
