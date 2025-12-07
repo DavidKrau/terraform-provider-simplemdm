@@ -110,15 +110,15 @@ func (d *customProfileDataSource) Read(ctx context.Context, req datasource.ReadR
 	if err != nil {
 		if strings.Contains(err.Error(), "404") {
 			resp.Diagnostics.AddError(
-				"Error Reading SimpleMDM custom profile",
+				"Error reading SimpleMDM custom profile",
 				"Custom profile with ID "+state.ID.ValueString()+" was not found.",
 			)
 			return
 		}
 
 		resp.Diagnostics.AddError(
-			"Unable to Read SimpleMDM profile",
-			err.Error(),
+			"Error reading SimpleMDM custom profile",
+			"Could not read custom profile ID "+state.ID.ValueString()+": "+err.Error(),
 		)
 		return
 	}
@@ -136,15 +136,15 @@ func (d *customProfileDataSource) Read(ctx context.Context, req datasource.ReadR
 	if err != nil {
 		if strings.Contains(err.Error(), "404") {
 			resp.Diagnostics.AddError(
-				"Error Reading SimpleMDM custom profile",
+				"Error reading SimpleMDM custom profile",
 				"Custom profile payload for ID "+state.ID.ValueString()+" was not found.",
 			)
 			return
 		}
 
 		resp.Diagnostics.AddError(
-			"Unable to Read SimpleMDM profile",
-			err.Error(),
+			"Error reading SimpleMDM custom profile",
+			"Could not download custom profile ID "+state.ID.ValueString()+": "+err.Error(),
 		)
 		return
 	}

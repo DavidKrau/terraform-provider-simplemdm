@@ -146,8 +146,8 @@ func (r *customProfileResource) Create(ctx context.Context, req resource.CreateR
 	Profile, err := r.client.CustomProfileCreate(plan.Name.ValueString(), plan.MobileConfig.ValueString(), plan.UserScope.ValueBool(), plan.AttributeSupport.ValueBool(), plan.EscapeAttributes.ValueBool(), plan.ReinstallAfterOSUpdate.ValueBool())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating profile",
-			"Could not create profile, unexpected error: "+err.Error(),
+			"Error creating SimpleMDM custom profile",
+			"Could not create custom profile: "+err.Error(),
 		)
 		return
 	}
@@ -159,8 +159,8 @@ func (r *customProfileResource) Create(ctx context.Context, req resource.CreateR
 	sha, body, err := r.client.CustomProfileSHA(plan.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading SimpleMDM custom profile",
-			"Could not read custom profile ID "+plan.ID.ValueString()+": "+err.Error(),
+			"Error reading SimpleMDM custom profile",
+			"Could not download custom profile ID "+plan.ID.ValueString()+": "+err.Error(),
 		)
 		return
 	}
@@ -193,7 +193,7 @@ func (r *customProfileResource) Read(ctx context.Context, req resource.ReadReque
 		}
 
 		resp.Diagnostics.AddError(
-			"Error Reading SimpleMDM custom profile",
+			"Error reading SimpleMDM custom profile",
 			"Could not read custom profile ID "+state.ID.ValueString()+": "+err.Error(),
 		)
 		return
@@ -210,7 +210,7 @@ func (r *customProfileResource) Read(ctx context.Context, req resource.ReadReque
 		}
 
 		resp.Diagnostics.AddError(
-			"Error Reading SimpleMDM custom profile",
+			"Error reading SimpleMDM custom profile",
 			"Could not download custom profile ID "+state.ID.ValueString()+": "+err.Error(),
 		)
 		return
@@ -240,8 +240,8 @@ func (r *customProfileResource) Update(ctx context.Context, req resource.UpdateR
 	_, err := r.client.CustomProfileUpdate(plan.Name.ValueString(), plan.MobileConfig.ValueString(), plan.UserScope.ValueBool(), plan.AttributeSupport.ValueBool(), plan.EscapeAttributes.ValueBool(), plan.ReinstallAfterOSUpdate.ValueBool(), "", plan.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error updating profile",
-			"Could not update profile, unexpected error: "+err.Error(),
+			"Error updating SimpleMDM custom profile",
+			"Could not update custom profile ID "+plan.ID.ValueString()+": "+err.Error(),
 		)
 		return
 	}
@@ -254,7 +254,7 @@ func (r *customProfileResource) Update(ctx context.Context, req resource.UpdateR
 		}
 
 		resp.Diagnostics.AddError(
-			"Error Reading SimpleMDM custom profile",
+			"Error reading SimpleMDM custom profile",
 			"Could not read custom profile ID "+plan.ID.ValueString()+": "+err.Error(),
 		)
 		return
@@ -270,7 +270,7 @@ func (r *customProfileResource) Update(ctx context.Context, req resource.UpdateR
 		}
 
 		resp.Diagnostics.AddError(
-			"Error Reading SimpleMDM custom profile",
+			"Error reading SimpleMDM custom profile",
 			"Could not download custom profile ID "+plan.ID.ValueString()+": "+err.Error(),
 		)
 		return
@@ -298,8 +298,8 @@ func (r *customProfileResource) Delete(ctx context.Context, req resource.DeleteR
 	err := r.client.CustomProfileDelete(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Deleting SimpleMDM custom profile",
-			"Could not delete custom profile, unexpected error: "+err.Error(),
+			"Error deleting SimpleMDM custom profile",
+			"Could not delete custom profile ID "+state.ID.ValueString()+": "+err.Error(),
 		)
 		return
 	}
