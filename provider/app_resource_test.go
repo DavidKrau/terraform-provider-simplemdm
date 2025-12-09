@@ -14,13 +14,13 @@ func TestAccAppResourceWithAppStoreIdAttr(t *testing.T) {
 			{
 				Config: providerConfig + `
 				resource "simplemdm_app" "testapp" {
-					app_store_id = "1477376905"
+					app_store_id = "357852748"
 					deploy_to    = "outdated"
 				}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify attributes
-					resource.TestCheckResourceAttr("simplemdm_app.testapp", "app_store_id", "1477376905"),
+					resource.TestCheckResourceAttr("simplemdm_app.testapp", "app_store_id", "357852748"),
 
 					// Verify dynamic values have any value set in the state.
 					resource.TestCheckResourceAttrSet("simplemdm_app.testapp", "id"),
