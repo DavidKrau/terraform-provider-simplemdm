@@ -41,7 +41,7 @@ resource "simplemdm_assignmentgroup" "myfirstgroup" {
 ### Optional
 
 - `app_track_location` (Boolean) Optional. If true, it tracks the location of IOS device when the SimpleMDM mobile app is installed. Defaults to true.
-- `apps` (Attributes Map) Optional. List of Apps assigned to this group (see [below for nested schema](#nestedatt--apps))
+- `apps` (Attributes List) Optional. List of Apps assigned to this group (see [below for nested schema](#nestedatt--apps))
 - `apps_push` (Boolean) Optional. Installs associated apps to associated devices. A munki catalog refresh or MDM install command will be sent to all associated devices. Defaults to true.
 - `apps_update` (Boolean) Optional. Updates associated apps on associated devices. A munki catalog refresh or MDM install command will be sent to all associated devices. Defaults to true
 - `attributes` (Map of String) Optional. Map of Attributes and values set for this Group
@@ -58,9 +58,13 @@ resource "simplemdm_assignmentgroup" "myfirstgroup" {
 <a id="nestedatt--apps"></a>
 ### Nested Schema for `apps`
 
+Required:
+
+- `app_id` (String) ID of the Application in SimpleMDM
+
 Optional:
 
-- `deployment_type` (String) Optional. Type of assignment group. Must be one of standard (for MDM app/media deployments) or munki for Munki app deployments.
+- `deployment_type` (String) Optional. Type of assignment group. Must be one of standard (for MDM app/media deployments) or munki for Munki app deployments. Defaults to standard
 - `install_type` (String) Optional. The install type for munki assignment groups. Must be one of managed, self_serve, default_installs or managed_updates. This setting has no effect for non-munki (standard) assignment groups. Defaults to managed.
 
 ## Import
