@@ -18,7 +18,6 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 					auto_deploy = false
 					priority= 5
 					app_track_location = false
-					//apps= [577575]
 					profiles = [172801]
 					devices = [1601809]
 					profiles_sync = false
@@ -27,6 +26,7 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 					attributes = {
    					"testAttribute" = "attributevalue"
   					}
+					//apps = [{app_id = "553192", deployment_type = "munki", install_type = "managed"}]
 				  }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -56,7 +56,6 @@ func TestAccAssignmentGroupResource(t *testing.T) {
 				resource "simplemdm_assignmentgroup" "testgroup2" {
 					name= "renamed assignemnt group"
 					auto_deploy = false
-					//apps= [553192]
 					devices = [1601810]
 					profiles_sync = false
 					apps_push = false

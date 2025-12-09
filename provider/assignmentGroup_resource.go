@@ -31,7 +31,7 @@ type assignment_groupResourceModel struct {
 	Name             types.String `tfsdk:"name"`
 	AutoDeploy       types.Bool   `tfsdk:"auto_deploy"`
 	ID               types.String `tfsdk:"id"`
-	Apps             types.Map    `tfsdk:"apps"`
+	Apps             []appModel   `tfsdk:"apps"`
 	AppsUpdate       types.Bool   `tfsdk:"apps_update"`
 	AppsPush         types.Bool   `tfsdk:"apps_push"`
 	Profiles         types.Set    `tfsdk:"profiles"`
@@ -40,6 +40,12 @@ type assignment_groupResourceModel struct {
 	Attributes       types.Map    `tfsdk:"attributes"`
 	Priority         types.String `tfsdk:"priority"`
 	AppTrackLocation types.Bool   `tfsdk:"app_track_location"`
+}
+
+type appModel struct {
+	AppID          types.String `tfsdk:"app_id"`
+	DeploymnetType types.String `tfsdk:"deployment_type"`
+	InstallType    types.String `tfsdk:"install_type"`
 }
 
 // AssignmentGroupResource is a helper function to simplify the provider implementation.
@@ -95,26 +101,40 @@ func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRe
 				Default:     booldefault.StaticBool(true),
 				Description: "Optional. If true, it tracks the location of IOS device when the SimpleMDM mobile app is installed. Defaults to true.",
 			},
-			"apps": schema.MapNestedAttribute{
+			"apps": schema.ListNestedAttribute{
+				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
+						"app_id": schema.StringAttribute{
+							Required:    true,
+							Description: "ID of the Application in SimpleMDM",
+						},
 						"deployment_type": schema.StringAttribute{
 							Optional:    true,
-							Description: "Optional. Type of assignment group. Must be one of standard (for MDM app/media deployments) or munki for Munki app deployments.",
+							Computed:    true,
+							Description: "Optional. Type of assignment group. Must be one of standard (for MDM app/media deployments) or munki for Munki app deployments. Defaults to standard",
+							Default:     stringdefault.StaticString("standard"),
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
 							Validators: []validator.String{
 								stringvalidator.OneOf("standard", "munki"),
 							},
 						},
 						"install_type": schema.StringAttribute{
 							Optional:    true,
+							Computed:    true,
 							Description: "Optional. The install type for munki assignment groups. Must be one of managed, self_serve, default_installs or managed_updates. This setting has no effect for non-munki (standard) assignment groups. Defaults to managed.",
+							Default:     stringdefault.StaticString("managed"),
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
 							Validators: []validator.String{
 								stringvalidator.OneOf("managed", "self_serve", "default_installs", "managed_updates"),
 							},
 						},
 					},
 				},
-				Optional:    true,
 				Description: "Optional. List of Apps assigned to this group",
 			},
 			"apps_update": schema.BoolAttribute{
@@ -203,13 +223,12 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 		}
 	}
 
-	// Assign all apps in plan
-	for _, appId := range plan.Apps.Elements() {
-		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), strings.Replace(appId.String(), "\"", "", 2), "apps")
+	for _, app := range plan.Apps {
+		err := r.client.AssignmentGroupAssignApp(plan.ID.ValueString(), app.AppID.ValueString(), app.DeploymnetType.ValueString(), app.InstallType.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
-				"Error updating assignment group app assignment",
-				"Could not update assignment group app assignment, unexpected error: "+err.Error(),
+				"Error updating device group apps",
+				"Could not assing app to device group, unexpected error: "+err.Error(),
 			)
 			return
 		}
@@ -239,7 +258,6 @@ func (r *assignment_groupResource) Create(ctx context.Context, req resource.Crea
 		}
 	}
 
-	///WTF??
 	if plan.AppsUpdate.ValueBool() {
 		err := r.client.AssignmentGroupUpdateInstalledApps(plan.ID.ValueString())
 		if err != nil {
@@ -366,7 +384,20 @@ func (r *assignment_groupResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	// //read all profiles and put them to slice
+	//read apps and add them to state
+	if len(assignmentGroup.Data.Relationships.Apps.Data) >= 1 {
+		state.Apps = []appModel{}
+		for _, app := range assignmentGroup.Data.Relationships.Apps.Data {
+			state.Apps = append(state.Apps, appModel{
+				AppID:          types.StringValue(strconv.Itoa(app.ID)),
+				DeploymnetType: types.StringValue(app.DeploymnetType),
+				InstallType:    types.StringValue(app.InstallType),
+			})
+		}
+	} else {
+		state.Apps = nil
+	}
+	//read all profiles and put them to slice
 	profilesPresent := false
 	profilesElements := []attr.Value{}
 
@@ -389,22 +420,6 @@ func (r *assignment_groupResource) Read(ctx context.Context, req resource.ReadRe
 		profilesSetValue := types.SetNull(types.StringType)
 		state.Profiles = profilesSetValue
 	}
-
-	// //read apps and put them to slice
-	// appsPresent := false
-	// appsElements := map[string]attr.Value{}
-	// for _, appAssigned := range assignmentGroup.Data.Relationships.Apps.Data {
-	// 	appsElement[appAssigned.ID] = types.StringValue(appAssigned.)
-	// 	appsPresent = true
-	// }
-	// //if there are apps return them to state
-	// if appsPresent {
-	// 	appsSetValue, _ := types.SetValue(types.StringType, appsElements)
-	// 	state.Apps = appsSetValue
-	// } else {
-	// 	appsSetValue := types.SetNull(types.StringType)
-	// 	state.Apps = appsSetValue
-	// }
 
 	//read all devices and put them to slice
 	devicesPresent := false
@@ -445,6 +460,67 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// compare app in state, add missing apps and remove and re-add apps with missmatch in config of the app
+	for _, planApp := range plan.Apps {
+		found := false
+		update := false
+		for _, stateApp := range state.Apps {
+			if stateApp.AppID == planApp.AppID {
+				found = true
+				if stateApp.DeploymnetType != planApp.DeploymnetType {
+					update = true
+				}
+				if stateApp.InstallType != planApp.InstallType {
+					update = true
+				}
+			}
+		}
+		// app needs update remove it first, and later add it again
+		if update {
+			err := r.client.AssignmentGroupUnAssignApp(plan.ID.ValueString(), planApp.AppID.ValueString())
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Error updating device group apps",
+					"Could not un-assing app from device group, unexpected error: "+err.Error(),
+				)
+				return
+			}
+			found = false
+		}
+		if !found {
+			err := r.client.AssignmentGroupAssignApp(plan.ID.ValueString(), planApp.AppID.ValueString(), planApp.DeploymnetType.ValueString(), planApp.InstallType.ValueString())
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Error updating device group apps",
+					"Could not assing app to device group, unexpected error: "+err.Error(),
+				)
+				return
+			}
+		}
+
+	}
+
+	//remove any left over apps in state
+
+	for _, stateApp := range state.Apps {
+		found := false
+		for _, planApp := range plan.Apps {
+			if stateApp.AppID == planApp.AppID {
+				found = true
+			}
+		}
+		if !found {
+			err := r.client.AssignmentGroupUnAssignApp(plan.ID.ValueString(), stateApp.AppID.ValueString())
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Error updating device group apps",
+					"Could not un-assing app from device group, unexpected error: "+err.Error(),
+				)
+				return
+			}
+		}
 	}
 
 	// Generate API request body from plan
@@ -506,46 +582,6 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 				)
 				return
 			}
-		}
-	}
-
-	//Handling assigned apps
-	//reading assigned apps from simpleMDM
-	stateApps := []string{}
-	for _, appID := range state.Apps.Elements() {
-		stateApps = append(stateApps, strings.Replace(appID.String(), "\"", "", 2))
-	}
-
-	//reading configured apps from TF file
-	planApps := []string{}
-	for _, appID := range plan.Apps.Elements() {
-		planApps = append(planApps, strings.Replace(appID.String(), "\"", "", 2))
-	}
-
-	// creating diff
-	appsToAdd, appsToRemove := diffFunction(stateApps, planApps)
-
-	//adding apps
-	for _, appId := range appsToAdd {
-		err := r.client.AssignmentGroupAssignObject(plan.ID.ValueString(), appId, "apps")
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating assignment group app assignment",
-				"Could not update assignment group app assignment, unexpected error: "+err.Error(),
-			)
-			return
-		}
-	}
-
-	//removing apps
-	for _, appId := range appsToRemove {
-		err := r.client.AssignmentGroupUnAssignObject(plan.ID.ValueString(), appId, "apps")
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating assignment group app assignment",
-				"Could not update assignment group app assignment, unexpected error: "+err.Error(),
-			)
-			return
 		}
 	}
 
