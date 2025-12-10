@@ -118,6 +118,57 @@ func TestAccDeviceCommandResource_InvalidCommand(t *testing.T) {
 	})
 }
 
+// TestAccDeviceCommandResource_LostMode tests the enable_lost_mode command.
+// This command enables lost mode on a device with optional message and phone number.
+//
+// Requirements:
+//   - SIMPLEMDM_DEVICE_ID environment variable must be set with an enrolled device ID
+//   - The device must be enrolled, active, and support lost mode
+//   - WARNING: This will enable lost mode on the device
+func TestAccDeviceCommandResource_LostMode(t *testing.T) {
+	testAccPreCheck(t)
+	deviceID := testAccRequireEnv(t, "SIMPLEMDM_DEVICE_ID")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeviceCommandResourceConfigWithParams(
+					deviceID,
+					"enable_lost_mode",
+					map[string]string{
+						"message":      "Test device - lost mode enabled",
+						"phone_number": "+15555551234",
+					},
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("simplemdm_device_command.test", "command", "enable_lost_mode"),
+					resource.TestCheckResourceAttr("simplemdm_device_command.test", "device_id", deviceID),
+					resource.TestCheckResourceAttr("simplemdm_device_command.test", "status_code", "202"),
+					resource.TestCheckResourceAttrSet("simplemdm_device_command.test", "id"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccDeviceCommandResource_RequiredParameter tests that commands with required
+// parameters fail appropriately when the parameter is missing.
+func TestAccDeviceCommandResource_RequiredParameter(t *testing.T) {
+	testAccPreCheck(t)
+	deviceID := testAccRequireEnv(t, "SIMPLEMDM_DEVICE_ID")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDeviceCommandResourceConfig(deviceID, "set_time_zone"),
+				ExpectError: regexp.MustCompile("Missing required parameter|requires parameter"),
+			},
+		},
+	})
+}
+
 // testAccDeviceCommandResourceConfig returns a test configuration for a device command
 // without parameters.
 func testAccDeviceCommandResourceConfig(deviceID, command string) string {
