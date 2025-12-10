@@ -3,16 +3,25 @@
 page_title: "simplemdm_device_command Resource - simplemdm"
 subcategory: ""
 description: |-
-  Executes management commands against a SimpleMDM device.
+  Executes management commands against a SimpleMDM device. Commands are executed immediately during resource creation and cannot be reversed by removing the resource. This is a fire-and-forget operation - removing the resource from Terraform state does not undo the command.
 ---
 
 # simplemdm_device_command (Resource)
 
-Executes management commands against a SimpleMDM device.
+Executes management commands against a SimpleMDM device. Commands are executed immediately during resource creation and cannot be reversed by removing the resource. This is a fire-and-forget operation - removing the resource from Terraform state does not undo the command.
+
+## Important Notes
+
+- **Fire-and-forget**: Commands execute once during creation and cannot be undone by removing the resource
+- **No updates**: Changing any attribute forces replacement (destroys and recreates the resource, executing the command again)
+- **Status codes**: A 202 (Accepted) status indicates the command was queued, not that it completed on the device
+- **Rate limiting**: The `refresh` command may return HTTP 429 if called too frequently; the provider will retry automatically
+- **Import not supported**: Commands cannot be imported as they represent one-time operations
 
 ## Example Usage
 
 ```terraform
+# Basic command - Lock device
 resource "simplemdm_device_command" "lock_device" {
   device_id = "123456"
   command   = "lock"
@@ -25,10 +34,15 @@ resource "simplemdm_device_command" "lock_device" {
 ```
 
 ```terraform
-# Advanced Example - Restart device command
+# Restart device with parameters
 resource "simplemdm_device_command" "restart_device" {
   device_id = "123456"
   command   = "restart"
+
+  parameters = {
+    rebuild_kernel_cache = "true"
+    notify_user         = "false"
+  }
 }
 
 output "restart_command_id" {
@@ -38,23 +52,35 @@ output "restart_command_id" {
 ```
 
 ```terraform
-# Advanced Example - Clear passcode command
+# Enable Lost Mode
+resource "simplemdm_device_command" "enable_lost_mode" {
+  device_id = "123456"
+  command   = "enable_lost_mode"
+
+  parameters = {
+    message      = "This device has been lost. Please contact IT."
+    phone_number = "+15555551234"
+    footnote     = "Reward if found"
+  }
+}
+```
+
+```terraform
+# Clear passcode command
 resource "simplemdm_device_command" "clear_passcode" {
   device_id = "123456"
   command   = "clear_passcode"
 }
+```
 
-# Advanced Example - Update inventory command
-resource "simplemdm_device_command" "update_inventory" {
+```terraform
+# Set time zone
+resource "simplemdm_device_command" "set_timezone" {
   device_id = "789012"
-  command   = "update_inventory"
-}
+  command   = "set_time_zone"
 
-output "command_ids" {
-  description = "IDs of executed commands"
-  value = {
-    clear_passcode   = simplemdm_device_command.clear_passcode.id
-    update_inventory = simplemdm_device_command.update_inventory.id
+  parameters = {
+    time_zone = "America/Los_Angeles"
   }
 }
 ```
@@ -64,15 +90,56 @@ output "command_ids" {
 
 ### Required
 
-- `command` (String) Command to execute. Supported values include push_assigned_apps, refresh, restart, shutdown, lock, clear_passcode, clear_firmware_password, rotate_firmware_password, clear_recovery_lock_password, clear_restrictions_password, rotate_recovery_lock_password, rotate_filevault_recovery_key, set_admin_password, rotate_admin_password, wipe, update_os, enable_remote_desktop, disable_remote_desktop, enable_bluetooth, disable_bluetooth, set_time_zone, unenroll, delete_user.
+- `command` (String) Command to execute. Supported commands:
+
+Basic Commands:
+  - push_assigned_apps: Push all assigned apps to device
+  - refresh: Request device inventory refresh (may be rate limited with HTTP 429)
+  - restart: Restart device (params: rebuild_kernel_cache, notify_user as strings 'true'/'false')
+  - shutdown: Shut down device
+  - unenroll: Unenroll device from MDM
+
+Security Commands:
+  - lock: Lock device (params: message, phone_number, pin [required for macOS])
+  - clear_passcode: Clear device passcode
+  - wipe: Erase device (params: pin [required for macOS without T2 chip])
+  
+Lost Mode Commands:
+  - enable_lost_mode: Enable lost mode (params: message, phone_number, footnote)
+  - disable_lost_mode: Disable lost mode
+  - lost_mode_play_sound: Play sound on device in lost mode
+  - lost_mode_update_location: Update device location in lost mode
+
+Password Management:
+  - clear_firmware_password: Clear firmware password (macOS)
+  - rotate_firmware_password: Rotate firmware password (macOS)
+  - clear_recovery_lock_password: Clear recovery lock password
+  - rotate_recovery_lock_password: Rotate recovery lock password
+  - rotate_filevault_recovery_key: Rotate FileVault key (macOS)
+  - set_admin_password: Set admin password (params: new_password [required])
+  - rotate_admin_password: Rotate admin password
+  - clear_restrictions_password: Clear restrictions password (iOS)
+
+System Configuration:
+  - update_os: Update OS (params: os_update_mode [required for macOS], version_type [optional])
+  - set_time_zone: Set time zone (params: time_zone [required])
+  - enable_remote_desktop: Enable Remote Desktop (macOS 10.14.4+)
+  - disable_remote_desktop: Disable Remote Desktop
+  - enable_bluetooth: Enable Bluetooth
+  - disable_bluetooth: Disable Bluetooth
+  - delete_user: Delete user account (params: user_id [required, used in path])
 - `device_id` (String) Identifier of the target device.
 
 ### Optional
 
-- `parameters` (Map of String) Optional parameters to pass to the API call.
+- `parameters` (Map of String) Optional parameters to pass to the API call. Boolean parameters should be specified as 'true' or 'false' strings. Required parameters vary by command - see command description for details.
 
 ### Read-Only
 
 - `id` (String) Internal identifier for the executed command.
 - `response` (String) Raw response payload, if any, returned by the API.
-- `status_code` (Number) HTTP status code returned by the SimpleMDM API.
+- `status_code` (Number) HTTP status code returned by the SimpleMDM API. Note: A 202 (Accepted) status indicates the command was queued, not that it completed successfully on the device. A 204 (No Content) indicates successful completion of commands like set_time_zone.
+
+## Import
+
+Device commands cannot be imported as they represent fire-and-forget operations that execute once and cannot be read back from the API. Commands must be defined in Terraform configuration to be executed.
