@@ -1,19 +1,51 @@
-# Advanced Example - Clear passcode command
-resource "simplemdm_device_command" "clear_passcode" {
+# Advanced Example - Enable Lost Mode
+resource "simplemdm_device_command" "enable_lost_mode" {
   device_id = "123456"
-  command   = "clear_passcode"
+  command   = "enable_lost_mode"
+
+  parameters = {
+    message      = "This device has been lost. Please contact IT."
+    phone_number = "+15555551234"
+    footnote     = "Reward if found"
+  }
 }
 
-# Advanced Example - Update inventory command
-resource "simplemdm_device_command" "update_inventory" {
-  device_id = "789012"
-  command   = "update_inventory"
+# Advanced Example - Play sound in lost mode
+resource "simplemdm_device_command" "lost_mode_sound" {
+  device_id = "123456"
+  command   = "lost_mode_play_sound"
+
+  # This command depends on lost mode being enabled first
+  depends_on = [simplemdm_device_command.enable_lost_mode]
 }
 
-output "command_ids" {
-  description = "IDs of executed commands"
+# Advanced Example - Update location in lost mode
+resource "simplemdm_device_command" "lost_mode_location" {
+  device_id = "123456"
+  command   = "lost_mode_update_location"
+
+  # This command depends on lost mode being enabled first
+  depends_on = [simplemdm_device_command.enable_lost_mode]
+}
+
+# Advanced Example - Disable Lost Mode
+resource "simplemdm_device_command" "disable_lost_mode" {
+  device_id = "123456"
+  command   = "disable_lost_mode"
+
+  # Only disable after other lost mode operations complete
+  depends_on = [
+    simplemdm_device_command.lost_mode_sound,
+    simplemdm_device_command.lost_mode_location
+  ]
+}
+
+output "lost_mode_command_ids" {
+  description = "IDs of lost mode commands"
   value = {
-    clear_passcode   = simplemdm_device_command.clear_passcode.id
-    update_inventory = simplemdm_device_command.update_inventory.id
+    enable  = simplemdm_device_command.enable_lost_mode.id
+    sound   = simplemdm_device_command.lost_mode_sound.id
+    location = simplemdm_device_command.lost_mode_location.id
+    disable = simplemdm_device_command.disable_lost_mode.id
   }
 }
