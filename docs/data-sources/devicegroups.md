@@ -8,16 +8,31 @@ description: |-
 
 # simplemdm_devicegroups (Data Source)
 
-⚠️ DEPRECATED: Device Groups have been superseded by Assignment Groups in SimpleMDM. Please use the simplemdm_assignmentgroups data source instead. This data source is maintained for backward compatibility only. Fetches the collection of device groups from your SimpleMDM account.
+⚠️ **DEPRECATED**: Device Groups have been superseded by Assignment Groups in SimpleMDM. Please use the `simplemdm_assignmentgroups` data source instead.
+
+**Note**: This data source only returns **legacy device groups** that were migrated from the old system. For modern group functionality, use Assignment Groups.
 
 ## Example Usage
 
 ```terraform
-data "simplemdm_devicegroups" "all" {
+# ⚠️ DEPRECATED: Use simplemdm_assignmentgroups instead
+# This only returns legacy device groups
+
+data "simplemdm_devicegroups" "all_legacy" {
 }
 
-output "device_group_count" {
-  value = length(data.simplemdm_devicegroups.all.device_groups)
+output "legacy_group_count" {
+  description = "Number of legacy device groups (deprecated)"
+  value       = length(data.simplemdm_devicegroups.all_legacy.device_groups)
+}
+
+# Recommended: Use Assignment Groups instead
+data "simplemdm_assignmentgroups" "all_modern" {
+}
+
+output "modern_group_count" {
+  description = "Number of assignment groups"
+  value       = length(data.simplemdm_assignmentgroups.all_modern.assignment_groups)
 }
 ```
 
