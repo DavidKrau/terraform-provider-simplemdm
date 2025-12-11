@@ -11,8 +11,8 @@ resource "simplemdm_scriptjob" "run_maintenance" {
 output "script_details" {
   description = "Details about the maintenance script"
   value = {
-    id              = data.simplemdm_script.maintenance.id
-    name            = data.simplemdm_script.maintenance.name
-    variablesupport = data.simplemdm_script.maintenance.variablesupport
+    id               = data.simplemdm_script.maintenance.id
+    name             = data.simplemdm_script.maintenance.name
+    variable_support = data.simplemdm_script.maintenance.variable_support
   }
 }

@@ -1,8 +1,8 @@
 # Advanced Example - Script with variable support for templating
 resource "simplemdm_script" "device_setup" {
-  name            = "Initial Device Setup"
-  scriptfile      = file("${path.module}/scripts/setup.sh")
-  variablesupport = true
+  name             = "Initial Device Setup"
+  content          = file("${path.module}/scripts/setup.sh")
+  variable_support = true
 }
 
 # Example script that uses variables:
