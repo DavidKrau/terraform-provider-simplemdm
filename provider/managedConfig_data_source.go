@@ -79,7 +79,7 @@ func (d *managedConfigDataSource) Read(ctx context.Context, req datasource.ReadR
 
 	config, err := fetchManagedConfig(ctx, d.client, appID, configID)
 	if err != nil {
-		if isNotFoundError(err) {
+		if isNotFoundError(err) || err.Error() == errManagedConfigNotFound.Error() {
 			resp.Diagnostics.AddError(
 				"SimpleMDM managed config not found",
 				fmt.Sprintf("The managed config %s for app %s was not found. It may have been deleted.", configID, appID),
