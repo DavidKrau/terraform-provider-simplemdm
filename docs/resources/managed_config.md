@@ -10,6 +10,8 @@ description: |-
 
 Managed Config resource manages managed app configurations for a specific app and automatically pushes updates after apply.
 
+**Note:** The SimpleMDM API does not provide an endpoint to retrieve a single managed config by ID. Read operations fetch all configs for the app and filter to find the specific config, which may impact performance for apps with many configurations. Since there is no UPDATE endpoint, all configuration changes require resource replacement.
+
 ## Example Usage
 
 ```terraform

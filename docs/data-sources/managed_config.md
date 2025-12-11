@@ -10,6 +10,8 @@ description: |-
 
 Managed Config data source retrieves the value of a managed app configuration for a given app.
 
+**Note:** The SimpleMDM API does not provide an endpoint to retrieve a single managed config by ID. This data source fetches all configs for the app and filters to find the specific config, which may impact performance for apps with many configurations.
+
 ## Example Usage
 
 ```terraform

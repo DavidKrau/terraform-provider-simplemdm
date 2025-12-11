@@ -10,6 +10,8 @@ description: |-
 
 Retrieves all managed app configurations for a specific app.
 
+**Note:** This data source automatically handles pagination to retrieve all managed configs if the app has more than one page of results.
+
 ## Example Usage
 
 ```terraform
