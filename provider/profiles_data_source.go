@@ -23,16 +23,17 @@ type profilesDataSource struct {
 }
 
 type profilesDataSourceModel struct {
-	Profiles []profilesDataSourceProfileModel `tfsdk:"profiles"`
+	Search    types.String                        `tfsdk:"search"`
+	Direction types.String                        `tfsdk:"direction"`
+	Profiles  []profilesDataSourceProfileModel `tfsdk:"profiles"`
 }
 
 type profilesDataSourceProfileModel struct {
 	ID                     types.String `tfsdk:"id"`
+	Type                   types.String `tfsdk:"type"`
 	Name                   types.String `tfsdk:"name"`
 	ProfileIdentifier      types.String `tfsdk:"profile_identifier"`
 	UserScope              types.Bool   `tfsdk:"user_scope"`
-	AttributeSupport       types.Bool   `tfsdk:"attribute_support"`
-	EscapeAttributes       types.Bool   `tfsdk:"escape_attributes"`
 	ReinstallAfterOSUpdate types.Bool   `tfsdk:"reinstall_after_os_update"`
 	GroupCount             types.Int64  `tfsdk:"group_count"`
 	DeviceCount            types.Int64  `tfsdk:"device_count"`
@@ -49,6 +50,16 @@ func (d *profilesDataSource) Metadata(_ context.Context, req datasource.Metadata
 func (d *profilesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Fetches the collection of configuration profiles from your SimpleMDM account.",
+		Attributes: map[string]schema.Attribute{
+			"search": schema.StringAttribute{
+				Optional:    true,
+				Description: "Filter profiles by name or type.",
+			},
+			"direction": schema.StringAttribute{
+				Optional:    true,
+				Description: "Sort direction for results. Must be 'asc' or 'desc' (default: 'asc').",
+			},
+		},
 		Blocks: map[string]schema.Block{
 			"profiles": schema.ListNestedBlock{
 				Description: "Collection of profile records returned by the API.",
@@ -57,6 +68,10 @@ func (d *profilesDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 						"id": schema.StringAttribute{
 							Computed:    true,
 							Description: "Profile identifier.",
+						},
+						"type": schema.StringAttribute{
+							Computed:    true,
+							Description: "The profile payload type (e.g., 'apn', 'email', 'app_restrictions', 'custom_configuration_profile').",
 						},
 						"name": schema.StringAttribute{
 							Computed:    true,
@@ -69,14 +84,6 @@ func (d *profilesDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 						"user_scope": schema.BoolAttribute{
 							Computed:    true,
 							Description: "Indicates if the profile installs in the user scope.",
-						},
-						"attribute_support": schema.BoolAttribute{
-							Computed:    true,
-							Description: "Whether the profile supports attribute substitution.",
-						},
-						"escape_attributes": schema.BoolAttribute{
-							Computed:    true,
-							Description: "Whether attribute values are escaped during installation.",
 						},
 						"reinstall_after_os_update": schema.BoolAttribute{
 							Computed:    true,
@@ -105,7 +112,7 @@ func (d *profilesDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	profiles, err := fetchAllProfiles(ctx, d.client)
+	profiles, err := fetchAllProfiles(ctx, d.client, config.Search.ValueString(), config.Direction.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to list SimpleMDM profiles",
@@ -116,13 +123,18 @@ func (d *profilesDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	entries := make([]profilesDataSourceProfileModel, 0, len(profiles))
 	for _, profile := range profiles {
+		// Handle type with null checking
+		typeValue := types.StringNull()
+		if profile.Type != "" {
+			typeValue = types.StringValue(profile.Type)
+		}
+
 		entry := profilesDataSourceProfileModel{
 			ID:                     types.StringValue(strconv.Itoa(profile.ID)),
+			Type:                   typeValue,
 			Name:                   types.StringValue(profile.Attributes.Name),
 			ProfileIdentifier:      types.StringValue(profile.Attributes.ProfileIdentifier),
 			UserScope:              types.BoolValue(profile.Attributes.UserScope),
-			AttributeSupport:       types.BoolValue(profile.Attributes.AttributeSupport),
-			EscapeAttributes:       types.BoolValue(profile.Attributes.EscapeAttributes),
 			ReinstallAfterOSUpdate: types.BoolValue(profile.Attributes.ReinstallAfterOSUpdate),
 			GroupCount:             types.Int64Value(int64(profile.Attributes.GroupCount)),
 			DeviceCount:            types.Int64Value(int64(profile.Attributes.DeviceCount)),
@@ -156,7 +168,7 @@ func (d *profilesDataSource) Configure(_ context.Context, req datasource.Configu
 }
 
 // fetchAllProfiles retrieves all profiles with pagination support
-func fetchAllProfiles(ctx context.Context, client *simplemdm.Client) ([]profileDataList, error) {
+func fetchAllProfiles(ctx context.Context, client *simplemdm.Client, search, direction string) ([]profileDataList, error) {
 	var allProfiles []profileDataList
 	startingAfter := 0
 	limit := 100
@@ -165,6 +177,12 @@ func fetchAllProfiles(ctx context.Context, client *simplemdm.Client) ([]profileD
 		url := fmt.Sprintf("https://%s/api/v1/profiles?limit=%d", client.HostName, limit)
 		if startingAfter > 0 {
 			url += fmt.Sprintf("&starting_after=%d", startingAfter)
+		}
+		if search != "" {
+			url += fmt.Sprintf("&search=%s", search)
+		}
+		if direction != "" {
+			url += fmt.Sprintf("&direction=%s", direction)
 		}
 
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -215,8 +233,6 @@ type profileListAttributes struct {
 	Name                   string `json:"name"`
 	ProfileIdentifier      string `json:"profile_identifier"`
 	UserScope              bool   `json:"user_scope"`
-	AttributeSupport       bool   `json:"attribute_support"`
-	EscapeAttributes       bool   `json:"escape_attributes"`
 	ReinstallAfterOSUpdate bool   `json:"reinstall_after_os_update"`
 	GroupCount             int    `json:"group_count"`
 	DeviceCount            int    `json:"device_count"`
