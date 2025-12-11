@@ -3,12 +3,12 @@
 page_title: "simplemdm_device_users Data Source - simplemdm"
 subcategory: ""
 description: |-
-  Retrieves user accounts currently configured on a macOS device.
+  Retrieves user accounts currently configured on a macOS device. This endpoint only works for macOS devices and will fail for iOS/tvOS devices.
 ---
 
 # simplemdm_device_users (Data Source)
 
-Retrieves user accounts currently configured on a macOS device.
+Retrieves user accounts currently configured on a macOS device. This endpoint only works for macOS devices and will fail for iOS/tvOS devices.
 
 ## Example Usage
 
@@ -20,7 +20,7 @@ data "simplemdm_device_users" "users" {
 output "secure_token_users" {
   value = [
     for user in data.simplemdm_device_users.users.users :
-    jsondecode(user.attributes_json).username
+    user.username if user.secure_token
   ]
 }
 ```
@@ -28,19 +28,29 @@ output "secure_token_users" {
 ```terraform
 # Advanced Example - Query device users
 data "simplemdm_device_users" "device_users" {
-  device_id = "123456"
+  device_id = "123456"  # Must be a macOS device
+}
+
+# Filter logged in users
+locals {
+  logged_in_users = [
+    for user in data.simplemdm_device_users.device_users.users :
+    user if user.logged_in
+  ]
 }
 
 output "user_info" {
   description = "User information for the device"
   value = {
-    total_users = length(data.simplemdm_device_users.device_users.users)
+    total_users     = length(data.simplemdm_device_users.device_users.users)
+    logged_in_users = length(local.logged_in_users)
     users = [
       for user in data.simplemdm_device_users.device_users.users : {
-        id        = user.id
-        full_name = user.full_name
-        user_name = user.user_name
-        email     = user.email
+        username       = user.username
+        full_name      = user.full_name
+        secure_token   = user.secure_token
+        logged_in      = user.logged_in
+        mobile_account = user.mobile_account
       }
     ]
   }
@@ -52,7 +62,7 @@ output "user_info" {
 
 ### Required
 
-- `device_id` (String) Identifier of the device.
+- `device_id` (String) Identifier of the device. Note: This endpoint only supports macOS devices.
 
 ### Read-Only
 
@@ -63,6 +73,15 @@ output "user_info" {
 
 Read-Only:
 
-- `attributes_json` (String) Raw attributes payload returned by the API in JSON format.
 - `id` (String) User identifier.
 - `type` (String) User resource type.
+- `username` (String) Username of the account.
+- `full_name` (String) Full name of the user.
+- `uid` (Number) User ID (UID) of the account.
+- `user_guid` (String) User GUID of the account.
+- `data_quota` (Number) Data quota for the user in bytes.
+- `data_used` (Number) Data used by the user in bytes.
+- `data_to_sync` (Boolean) Whether the user has data to sync.
+- `secure_token` (Boolean) Whether the user has a secure token.
+- `logged_in` (Boolean) Whether the user is currently logged in.
+- `mobile_account` (Boolean) Whether the user is a mobile account.

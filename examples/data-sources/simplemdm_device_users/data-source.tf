@@ -5,6 +5,6 @@ data "simplemdm_device_users" "users" {
 output "secure_token_users" {
   value = [
     for user in data.simplemdm_device_users.users.users :
-    jsondecode(user.attributes_json).username
+    user.username if user.secure_token
   ]
 }
