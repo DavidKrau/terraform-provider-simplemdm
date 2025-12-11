@@ -6,6 +6,8 @@ github.com/DavidKrau/simplemdm-go-client v0.2.1 h1:R/SKgDUsGoJjoXaq+mEjguPwwJWCq
 github.com/DavidKrau/simplemdm-go-client v0.2.1/go.mod h1:tIrL/8ckUf4o2nmW9KCK91uDO3477WV+MEP77QYD0R0=
 github.com/DavidKrau/simplemdm-go-client v0.2.2 h1:gmtIqYvXi7aBrpiJfWBHMwHJiNKP0E84TyKOSgwOeiA=
 github.com/DavidKrau/simplemdm-go-client v0.2.2/go.mod h1:tIrL/8ckUf4o2nmW9KCK91uDO3477WV+MEP77QYD0R0=
+github.com/DavidKrau/simplemdm-go-client v0.2.3 h1:x+eCD14uBfKck9SSw0H5WGxLHoeVHKaa2wpHpcZZ0h8=
+github.com/DavidKrau/simplemdm-go-client v0.2.3/go.mod h1:tIrL/8ckUf4o2nmW9KCK91uDO3477WV+MEP77QYD0R0=
 github.com/Kunde21/markdownfmt/v3 v3.1.0 h1:KiZu9LKs+wFFBQKhrZJrFZwtLnCCWJahL+S+E/3VnM0=
 github.com/Kunde21/markdownfmt/v3 v3.1.0/go.mod h1:tPXN1RTyOzJwhfHoon9wUr4HGYmWgVxSQN6VBJDkrVc=
 github.com/Masterminds/goutils v1.1.1 h1:5nUrii3FMTL5diU80unEVvNevw1nH4+ZV4DSLVJLSYI=
