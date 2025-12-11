@@ -45,6 +45,7 @@ func (d *deviceGroupsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 			"Please use the simplemdm_assignmentgroups data source instead. " +
 			"This data source is maintained for backward compatibility only. " +
 			"Fetches the collection of device groups from your SimpleMDM account.",
+		DeprecationMessage: "Device Groups are deprecated. Use simplemdm_assignmentgroups instead.",
 		Blocks: map[string]schema.Block{
 			"device_groups": schema.ListNestedBlock{
 				Description: "Collection of device group records returned by the API.",

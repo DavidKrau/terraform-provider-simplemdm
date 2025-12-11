@@ -45,6 +45,7 @@ func (d *deviceGroupDataSource) Schema(_ context.Context, _ datasource.SchemaReq
 			"Please use the simplemdm_assignmentgroup data source instead. " +
 			"This data source is maintained for backward compatibility only. " +
 			"Device Group data source can be used together with Assignment Group(s) to assign group(s) to these objects.",
+		DeprecationMessage: "Device Groups are deprecated. Use simplemdm_assignmentgroup instead.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Computed:    true,
@@ -69,12 +70,16 @@ func (d *deviceGroupDataSource) Read(ctx context.Context, req datasource.ReadReq
 		if isNotFoundError(err) {
 			resp.Diagnostics.AddError(
 				"SimpleMDM device group not found",
-				fmt.Sprintf("The device group with ID %s was not found. It may have been deleted.", state.ID.ValueString()),
+				fmt.Sprintf("The device group with ID %s was not found. "+
+					"Note: Only legacy device group IDs from migrated groups are supported. "+
+					"Use simplemdm_assignmentgroup for current group functionality.",
+					state.ID.ValueString()),
 			)
 		} else {
 			resp.Diagnostics.AddError(
 				"Unable to Read SimpleMDM device group",
-				err.Error(),
+				"Could not read device group "+state.ID.ValueString()+": "+err.Error()+". "+
+					"Ensure you are using a valid legacy device group ID.",
 			)
 		}
 		return
