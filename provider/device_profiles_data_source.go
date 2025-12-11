@@ -3,11 +3,14 @@ package provider
 import (
 	"context"
 	"fmt"
+	"regexp"
 
 	"github.com/DavidKrau/simplemdm-go-client"
 	"github.com/DavidKrau/terraform-provider-simplemdm/internal/simplemdmext"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -21,8 +24,17 @@ type deviceProfilesDataSource struct {
 }
 
 type deviceProfilesDataSourceModel struct {
-	DeviceID types.String                       `tfsdk:"device_id"`
-	Profiles []deviceRelatedItemDataSourceModel `tfsdk:"profiles"`
+	DeviceID types.String                      `tfsdk:"device_id"`
+	Profiles []deviceProfileDataSourceModel    `tfsdk:"profiles"`
+}
+
+type deviceProfileDataSourceModel struct {
+	ID               types.String `tfsdk:"id"`
+	Type             types.String `tfsdk:"type"`
+	Name             types.String `tfsdk:"name"`
+	ProfileIdentifier types.String `tfsdk:"profile_identifier"`
+	UserScope        types.Bool   `tfsdk:"user_scope"`
+	AttributeSupport types.Bool   `tfsdk:"attribute_support"`
 }
 
 type deviceRelatedItemDataSourceModel struct {
@@ -41,16 +53,22 @@ func (d *deviceProfilesDataSource) Metadata(_ context.Context, req datasource.Me
 
 func (d *deviceProfilesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Retrieves the list of profiles directly assigned to a device.",
+		Description: "Retrieves the list of profiles directly assigned to a device. Note: Profiles assigned through groups are not included.",
 		Attributes: map[string]schema.Attribute{
 			"device_id": schema.StringAttribute{
 				Required:    true,
 				Description: "Identifier of the device.",
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(
+						regexp.MustCompile(`^\d+$`),
+						"device_id must be a numeric string",
+					),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
 			"profiles": schema.ListNestedBlock{
-				Description: "Collection of profiles applied directly to the device.",
+				Description: "Collection of profiles applied directly to the device (excludes profiles assigned through groups).",
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
@@ -61,9 +79,21 @@ func (d *deviceProfilesDataSource) Schema(_ context.Context, _ datasource.Schema
 							Computed:    true,
 							Description: "Profile resource type.",
 						},
-						"attributes_json": schema.StringAttribute{
+						"name": schema.StringAttribute{
 							Computed:    true,
-							Description: "Raw attributes payload returned by the API in JSON format.",
+							Description: "Profile name.",
+						},
+						"profile_identifier": schema.StringAttribute{
+							Computed:    true,
+							Description: "Profile identifier string from the configuration profile.",
+						},
+						"user_scope": schema.BoolAttribute{
+							Computed:    true,
+							Description: "Whether the profile is user-scoped.",
+						},
+						"attribute_support": schema.BoolAttribute{
+							Computed:    true,
+							Description: "Whether the profile supports custom attributes.",
 						},
 					},
 				},
@@ -90,24 +120,42 @@ func (d *deviceProfilesDataSource) Read(ctx context.Context, req datasource.Read
 		} else {
 			resp.Diagnostics.AddError(
 				"Unable to list device profiles",
-				err.Error(),
+				fmt.Sprintf("Failed to retrieve profiles for device %s: %s", state.DeviceID.ValueString(), err.Error()),
 			)
 		}
 		return
 	}
 
-	converted := simplemdmext.ConvertRelatedItems(profiles.Data)
-	items := make([]deviceRelatedItemDataSourceModel, 0, len(converted))
-	for _, item := range converted {
-		profile := deviceRelatedItemDataSourceModel{
-			ID:   types.StringValue(item["id"]),
-			Type: types.StringValue(item["type"]),
+	items := make([]deviceProfileDataSourceModel, 0, len(profiles.Data))
+	for _, item := range profiles.Data {
+		profile := deviceProfileDataSourceModel{
+			ID:   types.StringValue(item.ID.String()),
+			Type: types.StringValue(item.Type),
 		}
 
-		if raw := item["attributes"]; raw != "" {
-			profile.AttributesJSON = types.StringValue(raw)
+		// Parse attributes from the map
+		if name, ok := item.Attributes["name"].(string); ok {
+			profile.Name = types.StringValue(name)
 		} else {
-			profile.AttributesJSON = types.StringNull()
+			profile.Name = types.StringNull()
+		}
+
+		if profileIdentifier, ok := item.Attributes["profile_identifier"].(string); ok {
+			profile.ProfileIdentifier = types.StringValue(profileIdentifier)
+		} else {
+			profile.ProfileIdentifier = types.StringNull()
+		}
+
+		if userScope, ok := item.Attributes["user_scope"].(bool); ok {
+			profile.UserScope = types.BoolValue(userScope)
+		} else {
+			profile.UserScope = types.BoolNull()
+		}
+
+		if attributeSupport, ok := item.Attributes["attribute_support"].(bool); ok {
+			profile.AttributeSupport = types.BoolValue(attributeSupport)
+		} else {
+			profile.AttributeSupport = types.BoolNull()
 		}
 
 		items = append(items, profile)

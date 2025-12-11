@@ -3,5 +3,5 @@ data "simplemdm_device_profiles" "profiles" {
 }
 
 output "direct_profile_names" {
-  value = [for profile in data.simplemdm_device_profiles.profiles : jsondecode(profile.attributes_json).name]
+  value = [for profile in data.simplemdm_device_profiles.profiles.profiles : profile.name]
 }

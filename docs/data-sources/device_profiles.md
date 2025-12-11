@@ -3,12 +3,12 @@
 page_title: "simplemdm_device_profiles Data Source - simplemdm"
 subcategory: ""
 description: |-
-  Retrieves the list of profiles directly assigned to a device.
+  Retrieves the list of profiles directly assigned to a device. Note: Profiles assigned through groups are not included.
 ---
 
 # simplemdm_device_profiles (Data Source)
 
-Retrieves the list of profiles directly assigned to a device.
+Retrieves the list of profiles directly assigned to a device. Note: Profiles assigned through groups are not included.
 
 ## Example Usage
 
@@ -18,7 +18,7 @@ data "simplemdm_device_profiles" "profiles" {
 }
 
 output "direct_profile_names" {
-  value = [for profile in data.simplemdm_device_profiles.profiles : jsondecode(profile.attributes_json).name]
+  value = [for profile in data.simplemdm_device_profiles.profiles.profiles : profile.name]
 }
 ```
 
@@ -28,23 +28,26 @@ data "simplemdm_device_profiles" "device_profiles" {
   device_id = "123456"
 }
 
-# Process profile data
+# Filter user-scoped profiles
 locals {
-  profile_ids = [
+  user_scoped_profiles = [
     for profile in data.simplemdm_device_profiles.device_profiles.profiles :
-    profile.id
+    profile if profile.user_scope
   ]
 }
 
 output "profile_audit" {
   description = "Profile audit information for the device"
   value = {
-    total_profiles = length(data.simplemdm_device_profiles.device_profiles.profiles)
-    profile_ids    = local.profile_ids
+    total_profiles       = length(data.simplemdm_device_profiles.device_profiles.profiles)
+    user_scoped_profiles = length(local.user_scoped_profiles)
     profiles = [
       for profile in data.simplemdm_device_profiles.device_profiles.profiles : {
-        id   = profile.id
-        name = profile.name
+        id                 = profile.id
+        name               = profile.name
+        profile_identifier = profile.profile_identifier
+        user_scope         = profile.user_scope
+        attribute_support  = profile.attribute_support
       }
     ]
   }
@@ -60,13 +63,16 @@ output "profile_audit" {
 
 ### Read-Only
 
-- `profiles` (Block List) Collection of profiles applied directly to the device. (see [below for nested schema](#nestedblock--profiles))
+- `profiles` (Block List) Collection of profiles applied directly to the device (excludes profiles assigned through groups). (see [below for nested schema](#nestedblock--profiles))
 
 <a id="nestedblock--profiles"></a>
 ### Nested Schema for `profiles`
 
 Read-Only:
 
-- `attributes_json` (String) Raw attributes payload returned by the API in JSON format.
 - `id` (String) Profile identifier.
 - `type` (String) Profile resource type.
+- `name` (String) Profile name.
+- `profile_identifier` (String) Profile identifier string from the configuration profile.
+- `user_scope` (Boolean) Whether the profile is user-scoped.
+- `attribute_support` (Boolean) Whether the profile supports custom attributes.
