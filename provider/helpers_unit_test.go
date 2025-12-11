@@ -351,6 +351,7 @@ func TestFlattenScriptJobWithRelationships(t *testing.T) {
 			ID:   123,
 			Type: "script_jobs",
 			Attributes: scriptJobAttributes{
+				JobName:   "Test Job",
 				Status:    "completed",
 				CreatedAt: "2025-01-01T00:00:00Z",
 				UpdatedAt: "2025-01-02T00:00:00Z",
@@ -384,12 +385,12 @@ func TestFlattenScriptJobWithRelationships(t *testing.T) {
 		t.Errorf("expected ID 123, got %d", result.ID)
 	}
 
-	if result.ScriptID == nil || *result.ScriptID != 456 {
-		t.Errorf("expected ScriptID 456, got %v", result.ScriptID)
+	if result.ScriptID == nil || *result.ScriptID != "456" {
+		t.Errorf("expected ScriptID '456', got %v", result.ScriptID)
 	}
 
-	if result.AssignmentGroupID == nil || *result.AssignmentGroupID != 789 {
-		t.Errorf("expected AssignmentGroupID 789, got %v", result.AssignmentGroupID)
+	if result.AssignmentGroupID == nil || *result.AssignmentGroupID != "789" {
+		t.Errorf("expected AssignmentGroupID '789', got %v", result.AssignmentGroupID)
 	}
 
 	if result.Status != "completed" {
@@ -404,6 +405,7 @@ func TestFlattenScriptJobWithoutRelationships(t *testing.T) {
 			ID:   999,
 			Type: "script_jobs",
 			Attributes: scriptJobAttributes{
+				JobName:   "",
 				Status:    "pending",
 				CreatedAt: "2025-01-01T00:00:00Z",
 				UpdatedAt: "2025-01-01T00:00:00Z",
