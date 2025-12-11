@@ -21,11 +21,10 @@ var (
 type scriptDataSourceModel struct {
 	ID              types.String `tfsdk:"id"`
 	Name            types.String `tfsdk:"name"`
-	ScriptFile      types.String `tfsdk:"scriptfile"`
-	VariableSupport types.Bool   `tfsdk:"variablesupport"`
+	Content         types.String `tfsdk:"content"`
+	VariableSupport types.Bool   `tfsdk:"variable_support"`
 	CreatedAt       types.String `tfsdk:"created_at"`
 	UpdatedAt       types.String `tfsdk:"updated_at"`
-	CreatedBy       types.String `tfsdk:"created_by"`
 }
 
 // scriptDataSource is a helper function to simplify the provider implementation.
@@ -52,11 +51,11 @@ func (d *scriptDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 				Computed:    true,
 				Description: "The name of the Script.",
 			},
-			"scriptfile": schema.StringAttribute{
+			"content": schema.StringAttribute{
 				Computed:    true,
 				Description: "The script content.",
 			},
-			"variablesupport": schema.BoolAttribute{
+			"variable_support": schema.BoolAttribute{
 				Computed:    true,
 				Description: "Whether variable support is enabled for this script.",
 			},
@@ -67,10 +66,6 @@ func (d *scriptDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 			"updated_at": schema.StringAttribute{
 				Computed:    true,
 				Description: "Timestamp when the Script was last updated.",
-			},
-			"created_by": schema.StringAttribute{
-				Computed:    true,
-				Description: "User that created the Script in SimpleMDM.",
 			},
 			"id": schema.StringAttribute{
 				Required:    true,
@@ -91,7 +86,7 @@ func (d *scriptDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		if isNotFoundError(err) {
 			resp.Diagnostics.AddError(
 				"SimpleMDM script not found",
-				fmt.Sprintf("The script with ID %s was not found. It may have been deleted.", state.ID.ValueString()),
+				fmt.Sprintf("The script with ID %s does not exist or you do not have permission to access it.", state.ID.ValueString()),
 			)
 		} else {
 			resp.Diagnostics.AddError(
@@ -105,17 +100,10 @@ func (d *scriptDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	// Map response body to model
 	state.Name = types.StringValue(script.Data.Attributes.Name)
 	state.ID = types.StringValue(strconv.Itoa(script.Data.ID))
-	state.ScriptFile = types.StringValue(script.Data.Attributes.Content)
+	state.Content = types.StringValue(script.Data.Attributes.Content)
 	state.VariableSupport = types.BoolValue(script.Data.Attributes.VariableSupport)
 	state.CreatedAt = types.StringValue(script.Data.Attributes.CreatedAt)
 	state.UpdatedAt = types.StringValue(script.Data.Attributes.UpdatedAt)
-
-	// Handle created_by with null check
-	if script.Data.Attributes.CreateBy != "" {
-		state.CreatedBy = types.StringValue(script.Data.Attributes.CreateBy)
-	} else {
-		state.CreatedBy = types.StringNull()
-	}
 
 	// Set state
 

@@ -29,8 +29,8 @@ type scriptsDataSourceModel struct {
 type scriptsDataSourceScriptModel struct {
 	ID              types.String `tfsdk:"id"`
 	Name            types.String `tfsdk:"name"`
+	Content         types.String `tfsdk:"content"`
 	VariableSupport types.Bool   `tfsdk:"variable_support"`
-	CreatedBy       types.String `tfsdk:"created_by"`
 	CreatedAt       types.String `tfsdk:"created_at"`
 	UpdatedAt       types.String `tfsdk:"updated_at"`
 }
@@ -59,13 +59,13 @@ func (d *scriptsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 							Computed:    true,
 							Description: "The name of the script.",
 						},
+						"content": schema.StringAttribute{
+							Computed:    true,
+							Description: "The script content.",
+						},
 						"variable_support": schema.BoolAttribute{
 							Computed:    true,
 							Description: "Whether variable support is enabled for this script.",
-						},
-						"created_by": schema.StringAttribute{
-							Computed:    true,
-							Description: "User that created the script.",
 						},
 						"created_at": schema.StringAttribute{
 							Computed:    true,
@@ -104,8 +104,8 @@ func (d *scriptsDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		entry := scriptsDataSourceScriptModel{
 			ID:              types.StringValue(strconv.Itoa(script.ID)),
 			Name:            types.StringValue(script.Attributes.Name),
+			Content:         types.StringValue(script.Attributes.Content),
 			VariableSupport: types.BoolValue(script.Attributes.VariableSupport),
-			CreatedBy:       types.StringValue(script.Attributes.CreateBy),
 			CreatedAt:       types.StringValue(script.Attributes.CreatedAt),
 			UpdatedAt:       types.StringValue(script.Attributes.UpdatedAt),
 		}
@@ -195,8 +195,8 @@ type scriptDataList struct {
 
 type scriptListAttributes struct {
 	Name            string `json:"name"`
+	Content         string `json:"content"`
 	VariableSupport bool   `json:"variable_support"`
-	CreateBy        string `json:"created_by"`
 	CreatedAt       string `json:"created_at"`
 	UpdatedAt       string `json:"updated_at"`
 }
