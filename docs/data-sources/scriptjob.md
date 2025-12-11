@@ -54,7 +54,7 @@ output "job_execution_details" {
 - `custom_attribute_regex` (String) Regular expression used to filter the custom attribute output.
 - `devices` (Attributes List) Execution results for each targeted device. (see [below for nested schema](#nestedatt--devices))
 - `errored_count` (Number) Number of devices that failed to execute the script.
-- `job_identifier` (String) Identifier reported by the SimpleMDM API for the job.
+- `job_identifier` (String) Short identifier string for the job (maps to API's 'job_id' field, different from the numeric ID).
 - `job_name` (String) Human friendly name of the job.
 - `pending_count` (Number) Number of devices that have not yet reported a result.
 - `script_name` (String) Name of the script that was executed.
