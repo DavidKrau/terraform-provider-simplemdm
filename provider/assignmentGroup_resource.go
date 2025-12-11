@@ -75,7 +75,7 @@ func (r *assignment_groupResource) Metadata(_ context.Context, req resource.Meta
 // Schema defines the schema for the resource.
 func (r *assignment_groupResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Assignment Group resource is used to manage group, you can assign App(s), Profile(s), Custom Profile(s), Custom Declaration(s), Device(s), Device Group(s) and set addition details regarding Group.",
+		Description: "Assignment Group resource is used to manage group, you can assign App(s), Profile(s), Custom Profile(s), Custom Declaration(s), Device(s) and set addition details regarding Group. In case you dont want to manage device/app assignments use lifecycle. Currently App assignment will always show diff in configuration as API is not providing all needed data (request for API change was already submitted).",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Required:    true,

@@ -19,6 +19,4 @@ provider to build your own SimpleMDM infrastructure.Provider's official document
 
 ## Know issues
 
-- API current doesnt support Create and Delete for Device Groups
-- API currently doesnt support update of "name" attribute for Device Groups 
-- Custom Profiles/Profiles for Assignment group and Devices can no be updated because of API limitation (they are compared only between plan and state from previous plan), aka adding profile via web will not be considered in next apply.
+-app assignemnt is not exactly working as expected because of missing data from API (changes requested already), currently there will be always diff in app assignement.

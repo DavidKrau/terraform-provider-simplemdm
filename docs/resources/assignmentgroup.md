@@ -3,12 +3,12 @@
 page_title: "simplemdm_assignmentgroup Resource - simplemdm"
 subcategory: ""
 description: |-
-  Assignment Group resource is used to manage group, you can assign App(s), Profile(s), Custom Profile(s), Custom Declaration(s), Device(s), Device Group(s) and set addition details regarding Group.
+  Assignment Group resource is used to manage group, you can assign App(s), Profile(s), Custom Profile(s), Custom Declaration(s), Device(s) and set addition details regarding Group. In case you dont want to manage device/app assignments use lifecycle. Currently App assignment will always show diff in configuration as API is not providing all needed data (request for API change was already submitted).
 ---
 
 # simplemdm_assignmentgroup (Resource)
 
-Assignment Group resource is used to manage group, you can assign App(s), Profile(s), Custom Profile(s), Custom Declaration(s), Device(s), Device Group(s) and set addition details regarding Group.
+Assignment Group resource is used to manage group, you can assign App(s), Profile(s), Custom Profile(s), Custom Declaration(s), Device(s) and set addition details regarding Group. In case you dont want to manage device/app assignments use lifecycle. Currently App assignment will always show diff in configuration as API is not providing all needed data (request for API change was already submitted).
 
 ## Example Usage
 
@@ -19,15 +19,15 @@ resource "simplemdm_assignmentgroup" "myfirstgroup" {
   //auto deploy true or false, default is true
   auto_deploy = true
   //group type "standard" or "munki", defaults to standard. If this parameter is changed it will destroy/create whole group
-  group_type    = "standard"
-  install_type  = "managed"
-  apps          = [123456]
   profiles      = [123456, 987654]
-  groups        = [135431, 654321]
   devices       = [135431, 987654]
   profiles_sync = false
   apps_push     = false
   apps_update   = false
+  attributes = {
+    "testAttribute" = "attributevalue"
+  }
+  apps = [{ app_id = 553192, deployment_type = "munki", install_type = "managed" }]
 }
 ```
 
