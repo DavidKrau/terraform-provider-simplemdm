@@ -136,28 +136,58 @@ func (d *managedConfigsDataSource) Configure(_ context.Context, req datasource.C
 	d.client = client
 }
 
-// fetchAllManagedConfigs retrieves all managed configs for an app
+// fetchAllManagedConfigs retrieves all managed configs for an app with pagination support
 func fetchAllManagedConfigs(ctx context.Context, client *simplemdm.Client, appID string) ([]managedConfigAPIResource, error) {
 	if client == nil {
 		return nil, fmt.Errorf("simplemdm client is not configured")
 	}
 
-	url := fmt.Sprintf("https://%s/api/v1/apps/%s/managed_configs", client.HostName, appID)
+	var allConfigs []managedConfigAPIResource
+	startingAfter := ""
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
+	// Paginate through all results
+	for {
+		url := fmt.Sprintf("https://%s/api/v1/apps/%s/managed_configs", client.HostName, appID)
+		if startingAfter != "" {
+			url += fmt.Sprintf("?starting_after=%s", startingAfter)
+		}
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		body, err := client.RequestResponse200(req)
+		if err != nil {
+			return nil, err
+		}
+
+		var response managedConfigListResponse
+		if err := json.Unmarshal(body, &response); err != nil {
+			return nil, err
+		}
+
+		// Validate type field for each item
+		for i := range response.Data {
+			if response.Data[i].Type != "" && response.Data[i].Type != "managed_config" {
+				return nil, fmt.Errorf("unexpected resource type: %s (expected managed_config)", response.Data[i].Type)
+			}
+		}
+
+		allConfigs = append(allConfigs, response.Data...)
+
+		// Check if there are more results
+		if !response.HasMore {
+			break
+		}
+
+		// Set starting_after for next page
+		if len(response.Data) > 0 {
+			startingAfter = fmt.Sprintf("%d", response.Data[len(response.Data)-1].ID)
+		} else {
+			break
+		}
 	}
 
-	body, err := client.RequestResponse200(req)
-	if err != nil {
-		return nil, err
-	}
-
-	var response managedConfigListResponse
-	if err := json.Unmarshal(body, &response); err != nil {
-		return nil, err
-	}
-
-	return response.Data, nil
+	return allConfigs, nil
 }
