@@ -23,8 +23,10 @@ type deviceDataSourceModel struct {
 	ID            types.String `tfsdk:"id"`
 	Name          types.String `tfsdk:"name"`
 	DeviceName    types.String `tfsdk:"devicename"`
+	Status        types.String `tfsdk:"status"`
 	DeviceGroup   types.String `tfsdk:"devicegroup"`
 	EnrollmentURL types.String `tfsdk:"enrollmenturl"`
+	EnrolledAt    types.String `tfsdk:"enrolled_at"`
 	Details       types.Map    `tfsdk:"details"`
 }
 
@@ -60,6 +62,10 @@ func (d *deviceDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 				Computed:    true,
 				Description: "The hostname reported by the device.",
 			},
+			"status": schema.StringAttribute{
+				Computed:    true,
+				Description: "Current enrollment status of the device (e.g., enrolled, awaiting_enrollment).",
+			},
 			"devicegroup": schema.StringAttribute{
 				Computed:    true,
 				Description: "Device group identifier for the device.",
@@ -67,6 +73,10 @@ func (d *deviceDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 			"enrollmenturl": schema.StringAttribute{
 				Computed:    true,
 				Description: "Enrollment URL generated for the device, when available.",
+			},
+			"enrolled_at": schema.StringAttribute{
+				Computed:    true,
+				Description: "Timestamp when the device was enrolled.",
 			},
 			"details": schema.MapAttribute{
 				Computed:    true,
@@ -110,10 +120,20 @@ func (d *deviceDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	} else {
 		state.DeviceName = types.StringNull()
 	}
-	if enrollmentURL, ok := flatAttributes["enrollment_url"]; ok && enrollmentURL != "" && enrollmentURL != "null" {
+	if status, ok := flatAttributes["status"]; ok && status != "" {
+		state.Status = types.StringValue(status)
+	} else {
+		state.Status = types.StringNull()
+	}
+	if enrollmentURL, ok := flatAttributes["enrollment_url"]; ok && enrollmentURL != "" {
 		state.EnrollmentURL = types.StringValue(enrollmentURL)
 	} else {
 		state.EnrollmentURL = types.StringNull()
+	}
+	if enrolledAt, ok := flatAttributes["enrolled_at"]; ok && enrolledAt != "" {
+		state.EnrolledAt = types.StringValue(enrolledAt)
+	} else {
+		state.EnrolledAt = types.StringNull()
 	}
 	if groupID := device.Data.Relationships.DeviceGroup.Data.ID; groupID != 0 {
 		state.DeviceGroup = types.StringValue(strconv.Itoa(groupID))
