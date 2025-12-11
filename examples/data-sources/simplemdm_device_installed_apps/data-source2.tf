@@ -3,11 +3,11 @@ data "simplemdm_device_installed_apps" "device_apps" {
   device_id = "123456"
 }
 
-# Process the installed apps data
+# Filter managed apps
 locals {
   managed_apps = [
     for app in data.simplemdm_device_installed_apps.device_apps.installed_apps :
-    jsondecode(app.attributes_json) if lookup(jsondecode(app.attributes_json), "is_managed", false)
+    app if app.managed
   ]
 }
 
@@ -18,7 +18,14 @@ output "app_inventory" {
     managed_apps = length(local.managed_apps)
     app_details = [
       for app in data.simplemdm_device_installed_apps.device_apps.installed_apps :
-      jsondecode(app.attributes_json)
+      {
+        name            = app.name
+        identifier      = app.identifier
+        version         = app.version
+        managed         = app.managed
+        bundle_size     = app.bundle_size
+        discovered_at   = app.discovered_at
+      }
     ]
   }
 }

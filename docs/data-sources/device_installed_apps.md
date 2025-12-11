@@ -20,7 +20,7 @@ data "simplemdm_device_installed_apps" "apps" {
 output "managed_apps" {
   value = [
     for app in data.simplemdm_device_installed_apps.apps.installed_apps :
-    jsondecode(app.attributes_json)
+    app.name if app.managed
   ]
 }
 ```
@@ -31,11 +31,11 @@ data "simplemdm_device_installed_apps" "device_apps" {
   device_id = "123456"
 }
 
-# Process the installed apps data
+# Filter managed apps
 locals {
   managed_apps = [
     for app in data.simplemdm_device_installed_apps.device_apps.installed_apps :
-    jsondecode(app.attributes_json) if lookup(jsondecode(app.attributes_json), "is_managed", false)
+    app if app.managed
   ]
 }
 
@@ -46,7 +46,14 @@ output "app_inventory" {
     managed_apps = length(local.managed_apps)
     app_details = [
       for app in data.simplemdm_device_installed_apps.device_apps.installed_apps :
-      jsondecode(app.attributes_json)
+      {
+        name            = app.name
+        identifier      = app.identifier
+        version         = app.version
+        managed         = app.managed
+        bundle_size     = app.bundle_size
+        discovered_at   = app.discovered_at
+      }
     ]
   }
 }
@@ -68,6 +75,14 @@ output "app_inventory" {
 
 Read-Only:
 
-- `attributes_json` (String) Raw attributes payload returned by the API in JSON format.
 - `id` (String) Installed app identifier.
 - `type` (String) Installed app resource type.
+- `name` (String) Application name.
+- `identifier` (String) Application bundle identifier.
+- `version` (String) Application version.
+- `short_version` (String) Application short version string.
+- `bundle_size` (Number) Size of the application bundle in bytes.
+- `dynamic_size` (Number) Dynamic size of the application in bytes.
+- `managed` (Boolean) Whether the application is managed by SimpleMDM.
+- `discovered_at` (String) Timestamp when the application was first discovered.
+- `last_seen_at` (String) Timestamp when the application was last seen.
