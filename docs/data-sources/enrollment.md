@@ -3,12 +3,12 @@
 page_title: "simplemdm_enrollment Data Source - simplemdm"
 subcategory: ""
 description: |-
-  Enrollment data source retrieves details for an existing SimpleMDM enrollment.
+  Enrollment data source retrieves details for an existing SimpleMDM enrollment. One-time enrollments have a URL and can be used once. Account driven enrollments have a null URL and can be used multiple times.
 ---
 
 # simplemdm_enrollment (Data Source)
 
-Enrollment data source retrieves details for an existing SimpleMDM enrollment.
+Enrollment data source retrieves details for an existing SimpleMDM enrollment. One-time enrollments have a URL and can be used once. Account driven enrollments have a null URL and can be used multiple times.
 
 ## Example Usage
 
@@ -32,13 +32,14 @@ data "simplemdm_enrollment" "onboarding" {
 output "onboarding_details" {
   description = "Enrollment details for new device onboarding"
   value = {
-    id                 = data.simplemdm_enrollment.onboarding.id
-    url                = data.simplemdm_enrollment.onboarding.url
-    device_group_id    = data.simplemdm_enrollment.onboarding.device_group_id
-    user_enrollment    = data.simplemdm_enrollment.onboarding.user_enrollment
-    welcome_screen     = data.simplemdm_enrollment.onboarding.welcome_screen
-    authentication     = data.simplemdm_enrollment.onboarding.authentication
-    invitation_contact = data.simplemdm_enrollment.onboarding.invitation_contact
+    id                  = data.simplemdm_enrollment.onboarding.id
+    url                 = data.simplemdm_enrollment.onboarding.url
+    device_group_id     = data.simplemdm_enrollment.onboarding.device_group_id
+    assignment_group_id = data.simplemdm_enrollment.onboarding.assignment_group_id
+    user_enrollment     = data.simplemdm_enrollment.onboarding.user_enrollment
+    welcome_screen      = data.simplemdm_enrollment.onboarding.welcome_screen
+    authentication      = data.simplemdm_enrollment.onboarding.authentication
+    account_driven      = data.simplemdm_enrollment.onboarding.account_driven
   }
   sensitive = true
 }
@@ -53,10 +54,11 @@ output "onboarding_details" {
 
 ### Read-Only
 
-- `account_driven` (Boolean) True when the enrollment is account driven (URL is null).
+- `account_driven` (Boolean) True when the enrollment is account driven (URL is null). Account driven enrollments do not support invitations.
+- `assignment_group_id` (String) Identifier of the assignment group associated with the enrollment (for New Groups Experience).
 - `authentication` (Boolean) Indicates whether authentication is required before enrollment.
-- `device_group_id` (String) Identifier of the device group associated with the enrollment.
+- `device_group_id` (String) Identifier of the legacy device group associated with the enrollment (deprecated).
 - `device_id` (String) Identifier of the device that used the enrollment, when applicable.
-- `url` (String) Enrollment URL returned by SimpleMDM for one-time enrollments.
+- `url` (String) Enrollment URL returned by SimpleMDM for one-time enrollments. Will be null for account driven enrollments.
 - `user_enrollment` (Boolean) Indicates whether the enrollment is a user enrollment.
 - `welcome_screen` (Boolean) Indicates whether the welcome screen is displayed during enrollment.

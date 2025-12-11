@@ -3,12 +3,12 @@
 page_title: "simplemdm_enrollments Data Source - simplemdm"
 subcategory: ""
 description: |-
-  Fetches the collection of enrollments from your SimpleMDM account.
+  Fetches the collection of enrollments from your SimpleMDM account. One-time enrollments have a URL and can be used once. Account driven enrollments have a null URL and can be used multiple times.
 ---
 
 # simplemdm_enrollments (Data Source)
 
-Fetches the collection of enrollments from your SimpleMDM account.
+Fetches the collection of enrollments from your SimpleMDM account. One-time enrollments have a URL and can be used once. Account driven enrollments have a null URL and can be used multiple times.
 
 ## Example Usage
 
@@ -33,11 +33,12 @@ output "enrollment_count" {
 
 Read-Only:
 
-- `account_driven` (Boolean) Whether enrollment is account driven.
+- `account_driven` (Boolean) Whether enrollment is account driven (URL is null).
+- `assignment_group_id` (String) Assignment group associated with the enrollment (for New Groups Experience).
 - `authentication` (Boolean) Whether authentication is required.
-- `device_group_id` (String) Device group associated with the enrollment.
+- `device_group_id` (String) Legacy device group associated with the enrollment (deprecated).
 - `device_id` (String) Device that used this enrollment link.
 - `id` (String) Enrollment identifier.
-- `url` (String) Enrollment URL for one-time enrollments.
+- `url` (String) Enrollment URL for one-time enrollments. Will be null for account driven enrollments.
 - `user_enrollment` (Boolean) Whether this is a user enrollment.
 - `welcome_screen` (Boolean) Whether welcome screen is shown.

@@ -1,15 +1,17 @@
-# Advanced Example - User enrollment with authentication
-resource "simplemdm_devicegroup" "byod_devices" {
-  name = "BYOD Devices"
+# Advanced Example - User enrollment with authentication using assignment groups
+resource "simplemdm_assignmentgroup" "byod_devices" {
+  name            = "BYOD Devices"
+  auto_deploy     = true
+  device_families = ["iPhone", "iPad"]
 }
 
 resource "simplemdm_enrollment" "user_enrollment" {
-  device_group_id = simplemdm_devicegroup.byod_devices.id
-  user_enrollment = true
-  welcome_screen  = true
-  authentication  = true
+  assignment_group_id = simplemdm_assignmentgroup.byod_devices.id
+  user_enrollment     = true
+  welcome_screen      = true
+  authentication      = true
 
-  # Optional: Send invitation email
+  # Optional: Send invitation email (only works for one-time enrollments)
   invitation_contact = "byod-users@example.com"
 }
 
