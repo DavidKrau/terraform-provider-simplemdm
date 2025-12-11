@@ -3,12 +3,14 @@
 page_title: "simplemdm_profile Data Source - simplemdm"
 subcategory: ""
 description: |-
-  Profile data source can be used together with Device(s), Assignment Group(s) or Device Group(s) to assign profiles to these objects.
+  Profile data source can be used to reference existing configuration profiles in SimpleMDM. Profiles represent both built-in and custom configuration profiles.
 ---
 
 # simplemdm_profile (Data Source)
 
-Profile data source can be used together with Device(s), Assignment Group(s) or Device Group(s) to assign profiles to these objects.
+Profile data source can be used to reference existing configuration profiles in SimpleMDM. Profiles represent both built-in and custom configuration profiles.
+
+**Note:** Profiles are read-only in the SimpleMDM API. To create custom configuration profiles, use the `simplemdm_customprofile` resource.
 
 ## Example Usage
 
@@ -19,7 +21,7 @@ data "simplemdm_profile" "profile" {
 ```
 
 ```terraform
-# Advanced Example - Use predefined profile in assignment group
+# Advanced Example - Use existing profile in assignment group
 data "simplemdm_profile" "company_wifi" {
   id = "123456"
 }
@@ -34,6 +36,7 @@ output "profile_info" {
   value = {
     id   = data.simplemdm_profile.company_wifi.id
     name = data.simplemdm_profile.company_wifi.name
+    type = data.simplemdm_profile.company_wifi.type
   }
 }
 ```
@@ -47,19 +50,11 @@ output "profile_info" {
 
 ### Read-Only
 
-- `attribute_support` (Boolean) Whether the profile supports attribute substitution.
-- `auto_deploy` (Boolean) Whether the profile is auto-deployed when assigned.
-- `created_at` (String) Timestamp when the profile was created.
 - `device_count` (Number) Number of devices currently assigned to the profile.
-- `escape_attributes` (Boolean) Whether attribute values are escaped during installation.
 - `group_count` (Number) Number of device groups currently assigned to the profile.
 - `group_ids` (Set of String) IDs of device or assignment groups currently assigned to the profile.
-- `install_type` (String) The install type configured for the profile.
 - `name` (String) The name of the Profile.
 - `profile_identifier` (String) The identifier contained within the profile payload.
-- `profile_sha` (String) SHA hash reported by SimpleMDM for the profile contents.
 - `reinstall_after_os_update` (Boolean) Whether the profile reinstalls automatically after macOS updates.
-- `source` (String) Origin of the profile within SimpleMDM.
-- `type` (String) The profile payload type reported by SimpleMDM.
-- `updated_at` (String) Timestamp when the profile was last updated.
+- `type` (String) The profile payload type (e.g., 'apn', 'email', 'app_restrictions', 'custom_configuration_profile').
 - `user_scope` (Boolean) Indicates if the profile is installed in the user scope.
