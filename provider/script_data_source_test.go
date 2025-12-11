@@ -19,14 +19,13 @@ func TestAccScriptDataSource(t *testing.T) {
 			{
 				Config: providerConfig + fmt.Sprintf(`data "simplemdm_script" "test" {id ="%s"}`, scriptID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					// Verify name of the app
+					// Verify attributes
 					resource.TestCheckResourceAttr("data.simplemdm_script.test", "id", scriptID),
 					resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "name"),
-					resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "scriptfile"),
-					resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "variablesupport"),
+					resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "content"),
+					resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "variable_support"),
 					resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "created_at"),
 					resource.TestCheckResourceAttrSet("data.simplemdm_script.test", "updated_at"),
-					// Note: created_by is optional and may be null
 				),
 			},
 		},

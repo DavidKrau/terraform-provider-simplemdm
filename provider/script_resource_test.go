@@ -26,16 +26,16 @@ func TestAccScriptResource(t *testing.T) {
 			{
 				Config: providerConfig + `
 		resource "simplemdm_script" "test" {
-			name= "This is test script"
-			scriptfile = file("./testfiles/testscript.sh")
-			variablesupport = true
-		  }
+			name = "This is test script"
+			content = file("./testfiles/testscript.sh")
+			variable_support = true
+			 }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify attributes
 					resource.TestCheckResourceAttr("simplemdm_script.test", "name", "This is test script"),
-					resource.TestCheckResourceAttr("simplemdm_script.test", "scriptfile", "#!/bin/bash\necho \"Hello!\""),
-					resource.TestCheckResourceAttr("simplemdm_script.test", "variablesupport", "true"),
+					resource.TestCheckResourceAttr("simplemdm_script.test", "content", "#!/bin/bash\necho \"Hello!\""),
+					resource.TestCheckResourceAttr("simplemdm_script.test", "variable_support", "true"),
 
 					// Verify dynamic values have any value set in the state.
 					resource.TestCheckResourceAttrSet("simplemdm_script.test", "id"),
@@ -48,23 +48,21 @@ func TestAccScriptResource(t *testing.T) {
 				ResourceName:      "simplemdm_script.test",
 				ImportState:       true,
 				ImportStateVerify: true,
-				// The filesha and  scriptfile attributes does not exist in SimpleMDM
-				// API, therefore there is no value for it during import.
 			},
 			// Update and Read testing
 			{
 				Config: providerConfig + `
 				resource "simplemdm_script" "test" {
-					name= "This is test script 2"
-					scriptfile = file("./testfiles/testscript2.sh")
-					variablesupport = false
+					name = "This is test script 2"
+					content = file("./testfiles/testscript2.sh")
+					variable_support = false
 				  }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify attributes
 					resource.TestCheckResourceAttr("simplemdm_script.test", "name", "This is test script 2"),
-					resource.TestCheckResourceAttr("simplemdm_script.test", "scriptfile", "#!/bin/bash\necho \"Hello again!\""),
-					resource.TestCheckResourceAttr("simplemdm_script.test", "variablesupport", "false"),
+					resource.TestCheckResourceAttr("simplemdm_script.test", "content", "#!/bin/bash\necho \"Hello again!\""),
+					resource.TestCheckResourceAttr("simplemdm_script.test", "variable_support", "false"),
 					// Verify dynamic values have any value set in the state.
 					resource.TestCheckResourceAttrSet("simplemdm_script.test", "id"),
 					resource.TestCheckResourceAttrSet("simplemdm_script.test", "created_at"),
