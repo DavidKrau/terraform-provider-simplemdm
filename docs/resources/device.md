@@ -78,15 +78,16 @@ output "device_details" {
 
 ### Required
 
-- `devicegroup` (String) The ID of Device Group where device will be assigned.
 - `name` (String) Required. The SimpleMDM name of the device.
 
 ### Optional
 
-- `attributes` (Map of String) The name of the Assignment Group.
+- `attributes` (Map of String) Map of custom attribute names to values for this device.
 - `customprofiles` (Set of String) Optional. List of Custom Configuration Profiles assigned to this Device
-- `devicename` (String) The Device name (localhost name) of the device.
+- `devicegroup` (String) The ID of Device Group where device will be assigned. This uses the deprecated device_group parameter.
+- `devicename` (String) The hostname that appears on the device itself. Requires supervision. This operation is asynchronous and occurs when the device is online.
 - `profiles` (Set of String) Optional. List of Configuration Profiles assigned to this Device
+- `static_group_ids` (Set of String) Set of static group IDs to assign the device to. This is the recommended way to assign devices to groups.
 
 ### Read-Only
 

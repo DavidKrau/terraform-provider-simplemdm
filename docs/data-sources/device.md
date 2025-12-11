@@ -52,5 +52,7 @@ output "device_info" {
 - `details` (Map of String) Full set of attributes returned by the SimpleMDM API for the device.
 - `devicegroup` (String) Device group identifier for the device.
 - `devicename` (String) The hostname reported by the device.
+- `enrolled_at` (String) Timestamp when the device was enrolled.
 - `enrollmenturl` (String) Enrollment URL generated for the device, when available.
 - `name` (String) The SimpleMDM name of the device.
+- `status` (String) Current enrollment status of the device (e.g., enrolled, awaiting_enrollment).
