@@ -66,6 +66,7 @@ func (r *deviceGroupResource) Schema(_ context.Context, _ resource.SchemaRequest
 			"Please use the simplemdm_assignmentgroup resource instead. " +
 			"This resource is maintained for backward compatibility only. " +
 			"Device Group resource can be used to manage Device Group. Can be used together with Custom Profile(s), Attribute(s), Assignment Group(s) or Device Group(s) and set addition details regarding Device Group.",
+		DeprecationMessage: "Device Groups are deprecated. Use simplemdm_assignmentgroup instead.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Required:    true,
@@ -120,6 +121,26 @@ func (r *deviceGroupResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	// Device groups cannot be created via API - they are legacy read-only resources
+	resp.Diagnostics.AddError(
+		"Device Group Creation Not Supported",
+		"Device Groups are deprecated in SimpleMDM and cannot be created via the API. "+
+			"Legacy device groups are read-only through this resource. "+
+			"Please use simplemdm_assignmentgroup for new group functionality.",
+	)
+	return
+}
+
+// Deprecated: cloneDeviceGroup is no longer functional as device group creation is not supported
+func (r *deviceGroupResource) deprecatedCreate(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	//Retrieve values from plan
+	var plan deviceGroupResourceModel
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	var (
 		deviceGroup *simplemdm.SimplemdmDefaultStruct
 		err         error
@@ -135,14 +156,12 @@ func (r *deviceGroupResource) Create(ctx context.Context, req resource.CreateReq
 			return
 		}
 	} else {
-		deviceGroup, err = r.client.DeviceGroupCreate(plan.Name.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error creating device group",
-				"Could not create SimpleMDM device group: "+err.Error(),
-			)
-			return
-		}
+		// This API endpoint does not exist
+		resp.Diagnostics.AddError(
+			"Device Group Creation Not Supported",
+			"Device Groups cannot be created via the API.",
+		)
+		return
 	}
 
 	plan.ID = types.StringValue(strconv.Itoa(deviceGroup.Data.ID))
@@ -295,14 +314,23 @@ func (r *deviceGroupResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	// Device groups are read-only legacy resources - name changes not supported
 	if plan.Name.ValueString() != state.Name.ValueString() {
-		if err := updateDeviceGroupName(ctx, r.client, plan.ID.ValueString(), plan.Name.ValueString()); err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating device group name",
-				"Could not update SimpleMDM device group name "+plan.ID.ValueString()+": "+err.Error(),
-			)
-			return
-		}
+		resp.Diagnostics.AddError(
+			"Device Group Updates Not Supported",
+			"Device Groups are deprecated and read-only. Name changes are not supported via the API. "+
+				"Please use simplemdm_assignmentgroup for mutable group functionality.",
+		)
+		return
+	}
+
+	// Add deprecation warnings before performing operations
+	if !plan.Attributes.Equal(state.Attributes) && !plan.Attributes.IsNull() {
+		resp.Diagnostics.AddWarning(
+			"Using Deprecated Custom Attribute Management",
+			"Custom attribute management for device groups is deprecated. "+
+				"Consider migrating to simplemdm_assignmentgroup resource for attribute management.",
+		)
 	}
 
 	r.reconcileAttributes(ctx, plan.ID.ValueString(), state.Attributes, plan.Attributes, &resp.Diagnostics)
@@ -310,9 +338,25 @@ func (r *deviceGroupResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	if !plan.Profiles.Equal(state.Profiles) && !plan.Profiles.IsNull() {
+		resp.Diagnostics.AddWarning(
+			"Using Deprecated Profile Assignment",
+			"Profile assignment to device groups is deprecated. "+
+				"Consider migrating to simplemdm_assignmentgroup resource for profile management.",
+		)
+	}
+
 	r.reconcileProfiles(ctx, plan.ID.ValueString(), state.Profiles, plan.Profiles, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if !plan.CustomProfiles.Equal(state.CustomProfiles) && !plan.CustomProfiles.IsNull() {
+		resp.Diagnostics.AddWarning(
+			"Using Deprecated Custom Profile Assignment",
+			"Custom profile assignment to device groups is deprecated. "+
+				"Consider migrating to simplemdm_assignmentgroup resource for profile management.",
+		)
 	}
 
 	r.reconcileCustomProfiles(ctx, plan.ID.ValueString(), state.CustomProfiles, plan.CustomProfiles, &resp.Diagnostics)
@@ -332,13 +376,14 @@ func (r *deviceGroupResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	if err := r.client.DeviceGroupDelete(state.ID.ValueString()); err != nil {
-		resp.Diagnostics.AddError(
-			"Error deleting SimpleMDM device group",
-			"Could not delete SimpleMDM device group "+state.ID.ValueString()+": "+err.Error(),
-		)
-		return
-	}
+	// Device groups are legacy read-only resources and cannot be deleted via API
+	resp.Diagnostics.AddWarning(
+		"Device Group Deletion Not Supported",
+		"Device Groups are deprecated and cannot be deleted via the API. "+
+			"The resource will be removed from Terraform state only. "+
+			"Please manage device group lifecycle through the SimpleMDM web interface.",
+	)
+	// Resource is removed from state automatically after this function returns
 }
 
 func (r *deviceGroupResource) reconcileAttributes(ctx context.Context, groupID string, oldAttributes, newAttributes types.Map, diags *diag.Diagnostics) {
@@ -485,6 +530,22 @@ func updateDeviceGroupName(ctx context.Context, client *simplemdm.Client, groupI
 	return err
 }
 
+// cloneDeviceGroupResponse represents the actual API response structure for clone operations
+type cloneDeviceGroupResponse struct {
+	Data struct {
+		Type       string `json:"type"`
+		ID         int    `json:"id"`
+		Attributes struct {
+			Name string `json:"name"`
+		} `json:"attributes"`
+		Relationships struct {
+			Devices struct {
+				Data []interface{} `json:"data"`
+			} `json:"devices"`
+		} `json:"relationships"`
+	} `json:"data"`
+}
+
 func cloneDeviceGroup(ctx context.Context, client *simplemdm.Client, sourceID string) (*simplemdm.SimplemdmDefaultStruct, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("https://%s/api/v1/device_groups/%s/clone", client.HostName, sourceID), nil)
 	if err != nil {
@@ -496,10 +557,22 @@ func cloneDeviceGroup(ctx context.Context, client *simplemdm.Client, sourceID st
 		return nil, err
 	}
 
-	clonedGroup := simplemdm.SimplemdmDefaultStruct{}
-	if err := json.Unmarshal(body, &clonedGroup); err != nil {
+	// Use the correct response structure that matches the API specification
+	var cloneResp cloneDeviceGroupResponse
+	if err := json.Unmarshal(body, &cloneResp); err != nil {
 		return nil, err
 	}
 
-	return &clonedGroup, nil
+	// Convert to the expected structure
+	result := &simplemdm.SimplemdmDefaultStruct{
+		Data: simplemdm.SimplemdmDefault{
+			ID:   cloneResp.Data.ID,
+			Type: cloneResp.Data.Type,
+			Attributes: simplemdm.SimplemdmDefaultAttributes{
+				Name: cloneResp.Data.Attributes.Name,
+			},
+		},
+	}
+
+	return result, nil
 }
