@@ -37,6 +37,12 @@ type DeviceRelationships struct {
 			ID   int    `json:"id"`
 		} `json:"data"`
 	} `json:"device_group"`
+	Groups struct {
+		Data []struct {
+			Type string `json:"type"`
+			ID   int    `json:"id"`
+		} `json:"data"`
+	} `json:"groups"`
 	CustomAttributeValues struct {
 		Data []struct {
 			Type       string `json:"type"`
@@ -113,10 +119,10 @@ func GetDevice(ctx context.Context, client *simplemdm.Client, deviceID string, i
 }
 
 // ListDevices retrieves all devices that satisfy the provided filters. It automatically
-// walks through paginated responses.
+// walks through paginated responses using cursor-based pagination.
 func ListDevices(ctx context.Context, client *simplemdm.Client, search string, includeAwaitingEnrollment, includeSecretCustomAttributes bool) ([]DeviceData, error) {
 	results := make([]DeviceData, 0)
-	page := 1
+	var startingAfter string
 
 	for {
 		url := fmt.Sprintf("https://%s/api/v1/devices", client.HostName)
@@ -126,7 +132,10 @@ func ListDevices(ctx context.Context, client *simplemdm.Client, search string, i
 		}
 
 		q := req.URL.Query()
-		q.Set("page", strconv.Itoa(page))
+		q.Set("limit", "100")
+		if startingAfter != "" {
+			q.Set("starting_after", startingAfter)
+		}
 		if search != "" {
 			q.Set("search", search)
 		}
@@ -154,7 +163,8 @@ func ListDevices(ctx context.Context, client *simplemdm.Client, search string, i
 			break
 		}
 
-		page++
+		// Set cursor to last item's ID for next page
+		startingAfter = strconv.Itoa(resp.Data[len(resp.Data)-1].ID)
 	}
 
 	return results, nil
@@ -177,7 +187,7 @@ func ListDeviceUsers(ctx context.Context, client *simplemdm.Client, deviceID str
 
 func listRelated(ctx context.Context, client *simplemdm.Client, deviceID, endpoint string) (*DeviceRelatedListResponse, error) {
 	allData := []DeviceRelatedItem{}
-	page := 1
+	var startingAfter string
 
 	for {
 		url := fmt.Sprintf("https://%s/api/v1/devices/%s/%s", client.HostName, deviceID, endpoint)
@@ -187,7 +197,10 @@ func listRelated(ctx context.Context, client *simplemdm.Client, deviceID, endpoi
 		}
 
 		q := req.URL.Query()
-		q.Set("page", strconv.Itoa(page))
+		q.Set("limit", "100")
+		if startingAfter != "" {
+			q.Set("starting_after", startingAfter)
+		}
 		req.URL.RawQuery = q.Encode()
 
 		body, err := client.RequestResponse200(req)
@@ -207,7 +220,8 @@ func listRelated(ctx context.Context, client *simplemdm.Client, deviceID, endpoi
 			break
 		}
 
-		page++
+		// Set cursor to last item's ID for next page
+		startingAfter = resp.Data[len(resp.Data)-1].ID.String()
 	}
 
 	return &DeviceRelatedListResponse{
