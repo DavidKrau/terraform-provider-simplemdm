@@ -13,5 +13,6 @@ output "profile_info" {
   value = {
     id   = data.simplemdm_profile.company_wifi.id
     name = data.simplemdm_profile.company_wifi.name
+    type = data.simplemdm_profile.company_wifi.type
   }
 }
