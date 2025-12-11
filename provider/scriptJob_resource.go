@@ -155,7 +155,7 @@ func (r *scriptJobResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			},
 			"job_identifier": schema.StringAttribute{
 				Computed:    true,
-				Description: "Identifier reported by the SimpleMDM API for the job.",
+				Description: "Short identifier string for the job (maps to API's 'job_id' field, different from the numeric ID).",
 			},
 			"status": schema.StringAttribute{
 				Computed:    true,
@@ -262,13 +262,8 @@ func (r *scriptJobResource) Create(ctx context.Context, req resource.CreateReque
 		customAttributeRegex = plan.CustomAttributeRegex.ValueString()
 	}
 
-	if len(deviceIDs) == 0 && len(groupIDs) == 0 && len(assignmentGroupIDs) == 0 {
-		resp.Diagnostics.AddError(
-			"Missing Script Job Targets",
-			"At least one of device_ids, group_ids, or assignment_group_ids must contain a value.",
-		)
-		return
-	}
+	// Note: Validation for at least one target being provided is already handled by schema validators
+	// at lines 101-106, 115-121, and 130-136, so no additional validation is needed here.
 
 	scriptJob, err := r.client.ScriptJobCreate(
 		plan.ScriptId.ValueString(),
@@ -343,7 +338,8 @@ func (r *scriptJobResource) Delete(ctx context.Context, req resource.DeleteReque
 	if err := r.client.ScriptCancelJob(state.ID.ValueString()); err != nil && !isNotFoundError(err) {
 		resp.Diagnostics.AddError(
 			"Error cancelling script job",
-			"Could not cancel SimpleMDM Script Job "+state.ID.ValueString()+": "+err.Error(),
+			fmt.Sprintf("Could not cancel SimpleMDM Script Job %s. Note: Jobs can only be canceled before devices receive the command. Error: %s",
+				state.ID.ValueString(), err.Error()),
 		)
 		return
 	}
@@ -382,11 +378,16 @@ func (r *scriptJobResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *scriptJobResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// Force the recreation by seeing an appropriate error
+	// Force the recreation by showing an appropriate error
 	resp.Diagnostics.AddError(
 		"Update Not Supported",
 		"Updating this resource is not supported. Please destroy and recreate the resource.",
 	)
+}
+
+func (r *scriptJobResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// Import using the script job ID
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func applyScriptJobDetailsToResourceModel(ctx context.Context, details *scriptJobDetailsData, model *scriptJobResourceModel, diagnostics *diag.Diagnostics) {
