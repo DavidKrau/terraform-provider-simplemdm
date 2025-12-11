@@ -21,12 +21,14 @@ type managedConfigAttributes struct {
 }
 
 type managedConfigAPIResource struct {
+	Type       string                  `json:"type"`
 	ID         int                     `json:"id"`
 	Attributes managedConfigAttributes `json:"attributes"`
 }
 
 type managedConfigListResponse struct {
-	Data []managedConfigAPIResource `json:"data"`
+	Data    []managedConfigAPIResource `json:"data"`
+	HasMore bool                       `json:"has_more"`
 }
 
 type managedConfigItemResponse struct {
@@ -40,25 +42,19 @@ func fetchManagedConfig(ctx context.Context, client *simplemdm.Client, appID, co
 		return nil, errors.New("simplemdm client is not configured")
 	}
 
-	url := fmt.Sprintf("https://%s/api/v1/apps/%s/managed_configs", client.HostName, appID)
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	// Fetch all configs with pagination support
+	allConfigs, err := fetchAllManagedConfigs(ctx, client, appID)
 	if err != nil {
 		return nil, err
 	}
 
-	body, err := client.RequestResponse200(req)
-	if err != nil {
-		return nil, err
-	}
-
-	var response managedConfigListResponse
-	if err := json.Unmarshal(body, &response); err != nil {
-		return nil, err
-	}
-
-	for _, item := range response.Data {
+	// Find the specific config
+	for _, item := range allConfigs {
 		if strconv.Itoa(item.ID) == configID {
+			// Validate type field
+			if item.Type != "" && item.Type != "managed_config" {
+				return nil, fmt.Errorf("unexpected resource type: %s (expected managed_config)", item.Type)
+			}
 			return &item, nil
 		}
 	}
@@ -105,6 +101,11 @@ func createManagedConfig(ctx context.Context, client *simplemdm.Client, appID, k
 		return nil, err
 	}
 
+	// Validate type field
+	if response.Data.Type != "" && response.Data.Type != "managed_config" {
+		return nil, fmt.Errorf("unexpected resource type: %s (expected managed_config)", response.Data.Type)
+	}
+
 	return &response.Data, nil
 }
 
@@ -123,33 +124,15 @@ func deleteManagedConfig(ctx context.Context, client *simplemdm.Client, appID, c
 func pushManagedConfigUpdates(ctx context.Context, client *simplemdm.Client, appID string) error {
 	url := fmt.Sprintf("https://%s/api/v1/apps/%s/managed_configs/push", client.HostName, appID)
 
-	type requester func(*http.Request) ([]byte, error)
-
-	attempts := []struct {
-		fn       requester
-		expected string
-	}{
-		{fn: client.RequestResponse202, expected: "202"},
-		{fn: client.RequestResponse200, expected: "200"},
-		{fn: client.RequestResponse204, expected: "204"},
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create push request: %w", err)
 	}
 
-	for _, attempt := range attempts {
-		req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
-		if err != nil {
-			return err
-		}
-
-		if _, err = attempt.fn(req); err != nil {
-			if strings.Contains(err.Error(), "non "+attempt.expected+" status code") {
-				continue
-			}
-
-			return err
-		}
-
-		return nil
+	// API returns 202 Accepted for async push operations
+	if _, err = client.RequestResponse202(req); err != nil {
+		return fmt.Errorf("failed to push managed config updates: %w", err)
 	}
 
-	return fmt.Errorf("failed to push managed config updates for app %s", appID)
+	return nil
 }
