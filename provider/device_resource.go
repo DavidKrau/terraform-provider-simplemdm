@@ -24,14 +24,13 @@ var (
 
 // deviceGroupResourceModel maps the resource schema data.
 type deviceResourceModel struct {
-	Name           types.String `tfsdk:"name"`
-	ID             types.String `tfsdk:"id"`
-	Attributes     types.Map    `tfsdk:"attributes"`
-	CustomProfiles types.Set    `tfsdk:"customprofiles"`
-	Profiles       types.Set    `tfsdk:"profiles"`
-	DeviceGroup    types.String `tfsdk:"devicegroup"`
-	DeviceName     types.String `tfsdk:"devicename"`
-	EnrollmentURL  types.String `tfsdk:"enrollmenturl"`
+	Name          types.String `tfsdk:"name"`
+	ID            types.String `tfsdk:"id"`
+	Attributes    types.Map    `tfsdk:"attributes"`
+	Profiles      types.Set    `tfsdk:"profiles"`
+	DeviceGroups  types.Set    `tfsdk:"devicegroups"`
+	DeviceName    types.String `tfsdk:"devicename"`
+	EnrollmentURL types.String `tfsdk:"enrollmenturl"`
 }
 
 // deviceGroupResource is a helper function to simplify the provider implementation.
@@ -78,22 +77,17 @@ func (r *deviceResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"profiles": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
-				Description: "Optional. List of Configuration Profiles assigned to this Device",
-			},
-			"customprofiles": schema.SetAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
-				Description: "Optional. List of Custom Configuration Profiles assigned to this Device",
+				Description: "Optional. List of Configuration Profiles (Custom or predefined Profiles and Custom Declarations) assigned to this device.",
 			},
 			"attributes": schema.MapAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
-				Description: "The name of the Assignment Group.",
+				Description: "Optional. Map of Attributes and values set for this Group",
 			},
-			"devicegroup": schema.StringAttribute{
-				Required:    true,
-				Optional:    false,
-				Description: "The ID of Device Group where device will be assigned.",
+			"devicegroups": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Description: "The ID of static Group(s) where device will be assigned.",
 			},
 			"devicename": schema.StringAttribute{
 				Required:    false,
@@ -126,8 +120,12 @@ func (r *deviceResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
+	groups := []string{}
+	for _, groupId := range plan.DeviceGroups.Elements() {
+		groups = append(groups, strings.Replace(groupId.String(), "\"", "", 2))
+	}
 	// Generate API request body from plan
-	device, err := r.client.DeviceCreate(plan.Name.ValueString(), plan.DeviceGroup.ValueString())
+	device, err := r.client.DeviceCreate(plan.Name.ValueString(), groups)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating device",
@@ -151,19 +149,7 @@ func (r *deviceResource) Create(ctx context.Context, req resource.CreateRequest,
 		}
 	}
 
-	// Assign all custom profiles in plan
-	for _, profileId := range plan.CustomProfiles.Elements() {
-		err := r.client.CustomProfileAssignToDevice(strings.Replace(profileId.String(), "\"", "", 2), plan.ID.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating device profile assignment",
-				"Could not update device profile assignment, unexpected error: "+err.Error(),
-			)
-			return
-		}
-	}
-
-	// Assign all custom profiles in plan
+	// Assign all profiles in plan
 	for _, profileId := range plan.Profiles.Elements() {
 		err := r.client.ProfileAssignToDevice(strings.Replace(profileId.String(), "\"", "", 2), plan.ID.ValueString())
 		if err != nil {
@@ -241,7 +227,24 @@ func (r *deviceResource) Read(ctx context.Context, req resource.ReadRequest, res
 	// Overwrite items with refreshed state
 	state.Name = types.StringValue(device.Data.Attributes.Name)
 	state.DeviceName = types.StringValue(device.Data.Attributes.Name)
-	state.DeviceGroup = types.StringValue(strconv.Itoa(device.Data.Relationships.DeviceGroup.Data.ID))
+
+	groupsPresent := false
+	groupsElements := []attr.Value{}
+	for _, group := range device.Data.Relationships.Groups.Data {
+		if group.GroupType == "static" {
+			groupsElements = append(groupsElements, types.StringValue(strconv.Itoa(group.ID)))
+			groupsPresent = true
+		}
+	}
+
+	if groupsPresent {
+		groupsElements, _ := types.SetValue(types.StringType, groupsElements)
+		state.DeviceGroups = groupsElements
+	} else {
+		groupsElements := types.SetNull(types.StringType)
+		state.Profiles = groupsElements
+	}
+
 	if device.Data.Attributes.EnrollmentURL == "" {
 		state.EnrollmentURL = types.StringValue("nil")
 	} else {
@@ -277,15 +280,46 @@ func (r *deviceResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	//assign device to correct group
-	err2 := r.client.DeviceGroupAssignDevice(plan.ID.ValueString(), plan.DeviceGroup.ValueString())
-	if err2 != nil {
-		resp.Diagnostics.AddError(
-			"Error updating device",
-			"Could not update device, unexpected error: "+err2.Error(),
-		)
-		return
+	//Handling assigned groups
+	//reading assigned groups from simpleMDM
+	stateGroups := []string{}
+	for _, groupID := range state.DeviceGroups.Elements() {
+		stateGroups = append(stateGroups, strings.Replace(groupID.String(), "\"", "", 2))
 	}
+
+	//reading configured groups from TF file
+	planGroups := []string{}
+	for _, groupId := range plan.DeviceGroups.Elements() {
+		planGroups = append(planGroups, strings.Replace(groupId.String(), "\"", "", 2))
+	}
+
+	// // creating diff
+	groupsToAdd, groupsToRemove := diffFunction(stateGroups, planGroups)
+
+	// //adding groups
+	for _, groupId := range groupsToAdd {
+		err := r.client.AssignmentGroupAssignObject(groupId, plan.ID.ValueString(), "devices")
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error updating device group assignment",
+				"Could not update device group assignment, unexpected error: "+err.Error(),
+			)
+			return
+		}
+	}
+
+	//removing groups
+	for _, groupId := range groupsToRemove {
+		err := r.client.AssignmentGroupUnAssignObject(groupId, plan.ID.ValueString(), "devices")
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error updating device group assignment",
+				"Could not update device group assignment, unexpected error: "+err.Error(),
+			)
+			return
+		}
+	}
+
 	//comparing planed attributes and their values to attributes in SimpleMDM
 	for planAttribute, planValue := range plan.Attributes.Elements() {
 		found := false
@@ -369,46 +403,6 @@ func (r *deviceResource) Update(ctx context.Context, req resource.UpdateRequest,
 	//removing profiles
 	for _, profileId := range profilesToRemove {
 		err := r.client.ProfileUnAssignToDevice(profileId, plan.ID.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating device custom profile assignment",
-				"Could not update device custom profile assignment, unexpected error: "+err.Error(),
-			)
-			return
-		}
-	}
-
-	//Handling assigned custom prfiles profiles
-	//reading assigned profiles from simpleMDM
-	stateCustomProfiles := []string{}
-	for _, profileId := range state.CustomProfiles.Elements() {
-		stateCustomProfiles = append(stateCustomProfiles, strings.Replace(profileId.String(), "\"", "", 2))
-	}
-
-	//reading configured profiles from TF file
-	planCustomProfiles := []string{}
-	for _, profileId := range plan.CustomProfiles.Elements() {
-		planCustomProfiles = append(planCustomProfiles, strings.Replace(profileId.String(), "\"", "", 2))
-	}
-
-	// // creating diff
-	customProfilesToAdd, customProfilesToRemove := diffFunction(stateCustomProfiles, planCustomProfiles)
-
-	// //adding profiles
-	for _, profileId := range customProfilesToAdd {
-		err := r.client.CustomProfileAssignToDevice(profileId, plan.ID.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating device custom profile assignment",
-				"Could not update device custom profile assignment, unexpected error: "+err.Error(),
-			)
-			return
-		}
-	}
-
-	//removing profiles
-	for _, profileId := range customProfilesToRemove {
-		err := r.client.CustomProfileUnAssignToDevice(profileId, plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating device custom profile assignment",

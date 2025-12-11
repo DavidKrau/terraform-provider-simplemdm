@@ -31,15 +31,14 @@ resource "simplemdm_device" "firstdevice" {
 
 ### Required
 
-- `devicegroup` (String) The ID of Device Group where device will be assigned.
 - `name` (String) Required. The SimpleMDM name of the device.
 
 ### Optional
 
-- `attributes` (Map of String) The name of the Assignment Group.
-- `customprofiles` (Set of String) Optional. List of Custom Configuration Profiles assigned to this Device
+- `attributes` (Map of String) Optional. Map of Attributes and values set for this Group
+- `devicegroups` (Set of String) The ID of static Group(s) where device will be assigned.
 - `devicename` (String) The Device name (localhost name) of the device.
-- `profiles` (Set of String) Optional. List of Configuration Profiles assigned to this Device
+- `profiles` (Set of String) Optional. List of Configuration Profiles (Custom or predefined Profiles and Custom Declarations) assigned to this device.
 
 ### Read-Only
 
@@ -49,6 +48,8 @@ resource "simplemdm_device" "firstdevice" {
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 # Device can be imported by specifying the device ID.

@@ -1,0 +1,1 @@
+terraform import simplemdm_customdeclaration.example 12345

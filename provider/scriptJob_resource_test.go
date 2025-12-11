@@ -17,16 +17,15 @@ func TestAccScriptJobResource(t *testing.T) {
 		resource "simplemdm_scriptjob" "test_job" {
 			script_id              = 5727
 			device_ids             = []
-			group_ids              = [140188]
-			assignment_group_ids   = []
+			assignment_group_ids   = [2179161]
 		}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Check the script job attributes
 					resource.TestCheckResourceAttrSet("simplemdm_scriptjob.test_job", "id"),
 					resource.TestCheckResourceAttr("simplemdm_scriptjob.test_job", "script_id", "5727"),
-					resource.TestCheckResourceAttr("simplemdm_scriptjob.test_job", "group_ids.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_scriptjob.test_job", "group_ids.0", "140188"),
+					resource.TestCheckResourceAttr("simplemdm_scriptjob.test_job", "assignment_group_ids.#", "1"),
+					resource.TestCheckResourceAttr("simplemdm_scriptjob.test_job", "assignment_group_ids.0", "2179161"),
 				),
 			},
 			// // ImportState testing
@@ -42,8 +41,7 @@ func TestAccScriptJobResource(t *testing.T) {
 				Config: providerConfig + `
 		resource "simplemdm_scriptjob" "test_job" {
 			script_id              = 5727
-			device_ids             = [1905524]
-			group_ids              = []
+			device_ids             = [2142348]
 			assignment_group_ids   = []
 			custom_attribute       = "updated_attribute"
 			custom_attribute_regex = "\\r"

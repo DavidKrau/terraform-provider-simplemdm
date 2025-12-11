@@ -25,7 +25,6 @@ var (
 type scriptJobResourceModel struct {
 	ScriptId             types.String `tfsdk:"script_id"`
 	DeviceIds            types.Set    `tfsdk:"device_ids"`
-	GroupIds             types.Set    `tfsdk:"group_ids"`
 	AssignmentGroupIds   types.Set    `tfsdk:"assignment_group_ids"`
 	CustomAttribute      types.String `tfsdk:"custom_attribute"`
 	CustomAttributeRegex types.String `tfsdk:"custom_attribute_regex"`
@@ -83,14 +82,6 @@ func (r *scriptJobResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 					setplanmodifier.RequiresReplace(),
 				},
 			},
-			"group_ids": schema.SetAttribute{
-				Required:    true,
-				ElementType: types.StringType,
-				Description: "A comma separated list of group IDs to run the script on. All macOS devices from these groups will be included. At least one of `device_ids`, `group_ids`, or `assignment_group_ids` must be provided.",
-				PlanModifiers: []planmodifier.Set{
-					setplanmodifier.RequiresReplace(),
-				},
-			},
 			"assignment_group_ids": schema.SetAttribute{
 				Required:    true,
 				ElementType: types.StringType,
@@ -137,12 +128,6 @@ func (r *scriptJobResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	groupIDs, err := convertSetToSlice(ctx, plan.GroupIds)
-	if err != nil {
-		resp.Diagnostics.AddError("Group IDs Conversion Error", "Failed to convert group IDs: "+err.Error())
-		return
-	}
-
 	assignmentGroupIDs, err := convertSetToSlice(ctx, plan.AssignmentGroupIds)
 	if err != nil {
 		resp.Diagnostics.AddError("Assignment Group IDs Conversion Error", "Failed to convert assignment group IDs: "+err.Error())
@@ -163,7 +148,6 @@ func (r *scriptJobResource) Create(ctx context.Context, req resource.CreateReque
 	scriptJob, err := r.client.ScriptJobCreate(
 		plan.ScriptId.ValueString(),
 		deviceIDs,
-		groupIDs,
 		assignmentGroupIDs,
 		customAttribute,
 		customAttributeRegex,
@@ -180,7 +164,6 @@ func (r *scriptJobResource) Create(ctx context.Context, req resource.CreateReque
 
 	// Preserve input fields in state (since they are not returned by the API)
 	plan.DeviceIds = types.SetValueMust(types.StringType, stringSliceToAttrValues(deviceIDs))
-	plan.GroupIds = types.SetValueMust(types.StringType, stringSliceToAttrValues(groupIDs))
 	plan.AssignmentGroupIds = types.SetValueMust(types.StringType, stringSliceToAttrValues(assignmentGroupIDs))
 
 	// Set state to fully populated data
@@ -201,10 +184,15 @@ func (r *scriptJobResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	resp.Diagnostics.AddWarning(
-		"Delete Not Supported",
-		"Deleting this resource is not supported.",
-	)
+	// stop script job
+	err := r.client.ScriptCancelJob(state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error stopping SimpleMDM script job",
+			"Could not stop script job, unexpected error: "+err.Error(),
+		)
+		return
+	}
 
 }
 

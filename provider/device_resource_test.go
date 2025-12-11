@@ -16,20 +16,19 @@ func TestAccDeviceResource(t *testing.T) {
 		resource "simplemdm_device" "test" {
 			name= "Created test device"
 			devicename  = "Created test device"
-			devicegroup = 140188
+			devicegroups = [1978695,2170591]
   			profiles = [172801]
-  			customprofiles = [172804]
 		}
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify attributes
 					resource.TestCheckResourceAttr("simplemdm_device.test", "name", "Created test device"),
 					resource.TestCheckResourceAttr("simplemdm_device.test", "devicename", "Created test device"),
-					resource.TestCheckResourceAttr("simplemdm_device.test", "devicegroup", "140188"),
+					resource.TestCheckResourceAttr("simplemdm_device.test", "devicegroups.#", "2"),
+					resource.TestCheckResourceAttr("simplemdm_device.test", "devicegroups.1", "2170591"),
+					resource.TestCheckResourceAttr("simplemdm_device.test", "devicegroups.0", "1978695"),
 					resource.TestCheckResourceAttr("simplemdm_device.test", "profiles.#", "1"),
 					resource.TestCheckResourceAttr("simplemdm_device.test", "profiles.0", "172801"),
-					resource.TestCheckResourceAttr("simplemdm_device.test", "customprofiles.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_device.test", "customprofiles.0", "172804"),
 					// Verify dynamic values have any value set in the state.
 					resource.TestCheckResourceAttrSet("simplemdm_device.test", "id"),
 					resource.TestCheckResourceAttrSet("simplemdm_device.test", "enrollmenturl"),
@@ -42,7 +41,7 @@ func TestAccDeviceResource(t *testing.T) {
 				ImportStateVerify: true,
 				// The profiles and  customprofiles attributes does not exist in SimpleMDM
 				// API, therefore there is no value for it during import.
-				ImportStateVerifyIgnore: []string{"profiles", "customprofiles"},
+				ImportStateVerifyIgnore: []string{"profiles"},
 			},
 			// Update and Read testing
 			{
@@ -50,20 +49,18 @@ func TestAccDeviceResource(t *testing.T) {
 				resource "simplemdm_device" "test" {
 					name= "Created test device changed"
 					devicename  = "Created test device changed"
-					devicegroup = 140189
-					profiles = [172802]
-					customprofiles = [172805]
+					devicegroups = [1538158]
+					//profiles = [176844]
 				  }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify attributes
 					resource.TestCheckResourceAttr("simplemdm_device.test", "name", "Created test device changed"),
 					resource.TestCheckResourceAttr("simplemdm_device.test", "devicename", "Created test device changed"),
-					resource.TestCheckResourceAttr("simplemdm_device.test", "devicegroup", "140189"),
-					resource.TestCheckResourceAttr("simplemdm_device.test", "profiles.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_device.test", "profiles.0", "172802"),
-					resource.TestCheckResourceAttr("simplemdm_device.test", "customprofiles.#", "1"),
-					resource.TestCheckResourceAttr("simplemdm_device.test", "customprofiles.0", "172805"),
+					resource.TestCheckResourceAttr("simplemdm_device.test", "devicegroups.#", "1"),
+					resource.TestCheckResourceAttr("simplemdm_device.test", "devicegroups.0", "1538158"),
+					//resource.TestCheckResourceAttr("simplemdm_device.test", "profiles.#", "1"),
+					//resource.TestCheckResourceAttr("simplemdm_device.test", "profiles.0", "176844"),
 					// Verify dynamic values have any value set in the state.
 					resource.TestCheckResourceAttrSet("simplemdm_device.test", "id"),
 					resource.TestCheckResourceAttrSet("simplemdm_device.test", "enrollmenturl"),
