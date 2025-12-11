@@ -503,7 +503,6 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 	}
 
 	//remove any left over apps in state
-
 	for _, stateApp := range state.Apps {
 		found := false
 		for _, planApp := range plan.Apps {
@@ -656,8 +655,8 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 		err := r.client.AssignmentGroupUnAssignObject(plan.ID.ValueString(), deviceId, "devices")
 		if err != nil {
 			resp.Diagnostics.AddError(
-				"Error updating assignment group device group assignment",
-				"Could not update assignment group device group, unexpected error: "+err.Error(),
+				"Error updating assignment group device assignment",
+				"Could not update assignment group device assignment, unexpected error: "+err.Error(),
 			)
 			return
 		}
@@ -667,8 +666,8 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 		err := r.client.AssignmentGroupUpdateInstalledApps(plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
-				"Error updating assignment group profile assignment",
-				"Could not update assignment group profile assignment, unexpected error: "+err.Error(),
+				"Error updating assignment App update failed",
+				"Could not update assignment App update failed, unexpected error: "+err.Error(),
 			)
 			return
 		}
@@ -678,8 +677,8 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 		err := r.client.AssignmentGroupPushApps(plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
-				"Error updating assignment group profile assignment",
-				"Could not update assignment group profile assignment, unexpected error: "+err.Error(),
+				"Error updating assignment App push failed",
+				"Could not update assignment App push failed, unexpected error: "+err.Error(),
 			)
 			return
 		}
@@ -689,8 +688,8 @@ func (r *assignment_groupResource) Update(ctx context.Context, req resource.Upda
 		err := r.client.AssignmentGroupSyncProfiles(plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
-				"Error updating assignment group profile assignment",
-				"Could not update assignment group profile assignment, unexpected error: "+err.Error(),
+				"Error updating assignment group profile sync",
+				"Could not update assignment group profile sync, unexpected error: "+err.Error(),
 			)
 			return
 		}

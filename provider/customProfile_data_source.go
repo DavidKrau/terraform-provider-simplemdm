@@ -61,33 +61,18 @@ func (d *customProfileDataSource) Read(ctx context.Context, req datasource.ReadR
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
-	profiles, err := d.client.CustomProfileGetAll()
+	profile, err := d.client.ProfileGet(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Read SimpleMDM profile",
-			err.Error(),
-		)
-		return
-	}
-
-	profilefound := false
-	for _, profile := range profiles.Data {
-		if state.ID.ValueString() == strconv.Itoa(profile.ID) {
-			state.Name = types.StringValue(profile.Attributes.Name)
-			profilefound = true
-			break
-		}
-	}
-
-	if !profilefound {
-		resp.Diagnostics.AddError(
 			"Error Reading SimpleMDM custom profile",
-			"Could not read custom profles ID %s from array:"+state.ID.ValueString(),
+			"Could not read custom profile ID "+state.ID.ValueString()+": "+err.Error(),
 		)
 		return
 	}
 
 	// Set state
+	state.Name = types.StringValue(profile.Data.Attributes.Name)
+	state.ID = types.StringValue(strconv.Itoa(profile.Data.ID))
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)

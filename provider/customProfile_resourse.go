@@ -156,34 +156,22 @@ func (r *customProfileResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	//retrive one needs to be implemented first
 	// Get refreshed profile values from SimpleMDM
-	profiles, err := r.client.CustomProfileGetAll()
+
+	profile, err := r.client.ProfileGet(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading SimpleMDM custom profile",
-			"Could not read custom profles ID "+state.ID.ValueString()+": "+err.Error(),
+			"Could not read custom profile ID "+state.ID.ValueString()+": "+err.Error(),
 		)
 		return
 	}
 
-	profilefound := false
-	for _, profile := range profiles.Data {
-		if state.ID.ValueString() == strconv.Itoa(profile.ID) {
-			state.Name = types.StringValue(profile.Attributes.Name)
-			state.UserScope = types.BoolValue(profile.Attributes.UserScope)
-			state.AttributeSupport = types.BoolValue(profile.Attributes.AttributeSupport)
-			state.EscapeAttributes = types.BoolValue(profile.Attributes.EscapeAttributes)
-			state.ReinstallAfterOSUpdate = types.BoolValue(profile.Attributes.ReinstallAfterOsUpdate)
-			profilefound = true
-			break
-		}
-	}
-
-	if !profilefound {
-		resp.State.RemoveResource(ctx)
-		return
-	}
+	state.Name = types.StringValue(profile.Data.Attributes.Name)
+	state.UserScope = types.BoolValue(profile.Data.Attributes.UserScope)
+	state.AttributeSupport = types.BoolValue(profile.Data.Attributes.AttributeSupport)
+	state.EscapeAttributes = types.BoolValue(profile.Data.Attributes.EscapeAttributes)
+	state.ReinstallAfterOSUpdate = types.BoolValue(profile.Data.Attributes.ReinstallAfterOsUpdate)
 
 	_, body, err := r.client.CustomProfileSHA(state.ID.ValueString())
 	if err != nil {
