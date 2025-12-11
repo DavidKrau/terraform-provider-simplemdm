@@ -32,6 +32,7 @@ type deviceResourceModel struct {
 	CustomProfiles types.Set    `tfsdk:"customprofiles"`
 	Profiles       types.Set    `tfsdk:"profiles"`
 	DeviceGroup    types.String `tfsdk:"devicegroup"`
+	StaticGroupIDs types.Set    `tfsdk:"static_group_ids"`
 	DeviceName     types.String `tfsdk:"devicename"`
 	EnrollmentURL  types.String `tfsdk:"enrollmenturl"`
 	Details        types.Map    `tfsdk:"details"`
@@ -91,17 +92,20 @@ func (r *deviceResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"attributes": schema.MapAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
-				Description: "The name of the Assignment Group.",
+				Description: "Map of custom attribute names to values for this device.",
 			},
 			"devicegroup": schema.StringAttribute{
-				Required:    true,
-				Optional:    false,
-				Description: "The ID of Device Group where device will be assigned.",
+				Optional:    true,
+				Description: "The ID of Device Group where device will be assigned. This uses the deprecated device_group parameter.",
+			},
+			"static_group_ids": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Description: "Set of static group IDs to assign the device to. This is the recommended way to assign devices to groups.",
 			},
 			"devicename": schema.StringAttribute{
-				Required:    false,
 				Optional:    true,
-				Description: "The Device name (localhost name) of the device.",
+				Description: "The hostname that appears on the device itself. Requires supervision. This operation is asynchronous and occurs when the device is online.",
 			},
 			"enrollmenturl": schema.StringAttribute{
 				Computed: true,
@@ -135,7 +139,21 @@ func (r *deviceResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	// Generate API request body from plan
-	device, err := r.client.DeviceCreate(plan.Name.ValueString(), plan.DeviceGroup.ValueString())
+	// Note: The current simplemdm-go-client library still uses the deprecated group_id parameter.
+	// TODO: Update to use static_group_ids array when library is updated
+	var groupID string
+	if !plan.DeviceGroup.IsNull() {
+		groupID = plan.DeviceGroup.ValueString()
+	} else if !plan.StaticGroupIDs.IsNull() && len(plan.StaticGroupIDs.Elements()) > 0 {
+		// For now, use the first static group ID with the legacy API
+		// This is a workaround until the library supports static_group_ids array
+		for _, id := range plan.StaticGroupIDs.Elements() {
+			groupID = id.(types.String).ValueString()
+			break
+		}
+	}
+	
+	device, err := r.client.DeviceCreate(plan.Name.ValueString(), groupID)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating device",
@@ -251,24 +269,34 @@ func (r *deviceResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	// Generate API request body from plan
-	_, err := r.client.DeviceUpdate(plan.ID.ValueString(), plan.Name.ValueString(), plan.DeviceName.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error updating device",
-			"Could not update device, unexpected error: "+err.Error(),
+	// Only update device fields if they actually changed
+	if !plan.Name.Equal(state.Name) || !plan.DeviceName.Equal(state.DeviceName) {
+		_, err := r.client.DeviceUpdate(
+			plan.ID.ValueString(),
+			plan.Name.ValueString(),
+			plan.DeviceName.ValueString(),
 		)
-		return
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error updating device",
+				"Could not update device, unexpected error: "+err.Error(),
+			)
+			return
+		}
 	}
 
-	//assign device to correct group
-	err2 := r.client.DeviceGroupAssignDevice(plan.ID.ValueString(), plan.DeviceGroup.ValueString())
-	if err2 != nil {
-		resp.Diagnostics.AddError(
-			"Error updating device",
-			"Could not update device, unexpected error: "+err2.Error(),
-		)
-		return
+	// Handle device group assignment if changed
+	// Note: Using deprecated DeviceGroupAssignDevice API for backwards compatibility
+	// TODO: Migrate to assignment groups or static groups when available
+	if !plan.DeviceGroup.IsNull() && !plan.DeviceGroup.Equal(state.DeviceGroup) {
+		err := r.client.DeviceGroupAssignDevice(plan.ID.ValueString(), plan.DeviceGroup.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error updating device group",
+				"Could not update device group, unexpected error: "+err.Error(),
+			)
+			return
+		}
 	}
 	//comparing planed attributes and their values to attributes in SimpleMDM
 	for planAttribute, planValue := range plan.Attributes.Elements() {
@@ -455,7 +483,7 @@ func (r *deviceResource) assignAPIValues(ctx context.Context, apiDevice *simplem
 	}
 
 	enrollmentURL := flatAttributes["enrollment_url"]
-	if enrollmentURL != "" && enrollmentURL != "null" {
+	if enrollmentURL != "" {
 		model.EnrollmentURL = types.StringValue(enrollmentURL)
 	} else {
 		model.EnrollmentURL = types.StringNull()
