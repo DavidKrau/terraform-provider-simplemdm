@@ -31,8 +31,9 @@ type enrollmentAttributes struct {
 }
 
 type enrollmentRelationships struct {
-	DeviceGroup enrollmentRelationshipItem  `json:"device_group"`
-	Device      *enrollmentRelationshipItem `json:"device,omitempty"`
+	DeviceGroup      *enrollmentRelationshipItem `json:"device_group,omitempty"`
+	AssignmentGroup  *enrollmentRelationshipItem `json:"assignment_group,omitempty"`
+	Device           *enrollmentRelationshipItem `json:"device,omitempty"`
 }
 
 type enrollmentRelationshipItem struct {
@@ -43,20 +44,22 @@ type enrollmentRelationshipItem struct {
 }
 
 type enrollmentUpsertRequest struct {
-	DeviceGroupID  string
-	UserEnrollment *bool
-	WelcomeScreen  *bool
-	Authentication *bool
+	DeviceGroupID     string
+	AssignmentGroupID string
+	UserEnrollment    *bool
+	WelcomeScreen     *bool
+	Authentication    *bool
 }
 
 type enrollmentFlat struct {
-	ID             int
-	URL            *string
-	UserEnrollment bool
-	WelcomeScreen  bool
-	Authentication bool
-	DeviceGroupID  *int
-	DeviceID       *int
+	ID                int
+	URL               *string
+	UserEnrollment    bool
+	WelcomeScreen     bool
+	Authentication    bool
+	DeviceGroupID     *int
+	AssignmentGroupID *int
+	DeviceID          *int
 }
 
 func fetchEnrollment(ctx context.Context, client *simplemdm.Client, id string) (*enrollmentResponse, error) {
@@ -64,32 +67,44 @@ func fetchEnrollment(ctx context.Context, client *simplemdm.Client, id string) (
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create request for enrollment %s: %w", id, err)
 	}
 
 	body, err := client.RequestResponse200(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to fetch enrollment %s: %w", id, err)
 	}
 
 	var enrollment enrollmentResponse
 	if err := json.Unmarshal(body, &enrollment); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal enrollment %s response: %w", id, err)
 	}
 
 	return &enrollment, nil
 }
 
+// createEnrollment creates a new enrollment using the SimpleMDM API.
+// NOTE: This endpoint (POST /api/v1/enrollments) is not documented in the official
+// SimpleMDM API specification but is supported by the API. This implementation may
+// be subject to change without notice if the API changes.
 func createEnrollment(ctx context.Context, client *simplemdm.Client, payload enrollmentUpsertRequest) (*enrollmentResponse, error) {
 	endpoint := fmt.Sprintf("https://%s/api/v1/enrollments", client.HostName)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create enrollment request: %w", err)
 	}
 
 	q := req.URL.Query()
-	q.Add("device_group_id", payload.DeviceGroupID)
+	
+	// Support both legacy device_group_id and modern assignment_group_id
+	if payload.DeviceGroupID != "" {
+		q.Add("device_group_id", payload.DeviceGroupID)
+	}
+	
+	if payload.AssignmentGroupID != "" {
+		q.Add("assignment_group_id", payload.AssignmentGroupID)
+	}
 
 	if payload.UserEnrollment != nil {
 		q.Add("user_enrollment", strconv.FormatBool(*payload.UserEnrollment))
@@ -107,12 +122,12 @@ func createEnrollment(ctx context.Context, client *simplemdm.Client, payload enr
 
 	body, err := client.RequestResponse201(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create enrollment: %w", err)
 	}
 
 	var enrollment enrollmentResponse
 	if err := json.Unmarshal(body, &enrollment); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal enrollment creation response: %w", err)
 	}
 
 	return &enrollment, nil
@@ -123,11 +138,14 @@ func deleteEnrollment(ctx context.Context, client *simplemdm.Client, id string) 
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, endpoint, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create delete request for enrollment %s: %w", id, err)
 	}
 
 	_, err = client.RequestResponse204(req)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to delete enrollment %s: %w", id, err)
+	}
+	return nil
 }
 
 func sendEnrollmentInvitation(ctx context.Context, client *simplemdm.Client, id string, contact string) error {
@@ -138,20 +156,31 @@ func sendEnrollmentInvitation(ctx context.Context, client *simplemdm.Client, id 
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, strings.NewReader(form.Encode()))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create invitation request for enrollment %s: %w", id, err)
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	_, err = client.RequestResponse200(req)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to send invitation for enrollment %s: %w", id, err)
+	}
+	return nil
 }
 
 func flattenEnrollment(response *enrollmentResponse) enrollmentFlat {
 	var deviceGroupID *int
-	if response.Data.Relationships.DeviceGroup.Data != nil {
+	if response.Data.Relationships.DeviceGroup != nil &&
+	   response.Data.Relationships.DeviceGroup.Data != nil {
 		value := response.Data.Relationships.DeviceGroup.Data.ID
 		deviceGroupID = &value
+	}
+
+	var assignmentGroupID *int
+	if response.Data.Relationships.AssignmentGroup != nil &&
+	   response.Data.Relationships.AssignmentGroup.Data != nil {
+		value := response.Data.Relationships.AssignmentGroup.Data.ID
+		assignmentGroupID = &value
 	}
 
 	var deviceID *int
@@ -161,13 +190,14 @@ func flattenEnrollment(response *enrollmentResponse) enrollmentFlat {
 	}
 
 	return enrollmentFlat{
-		ID:             response.Data.ID,
-		URL:            response.Data.Attributes.URL,
-		UserEnrollment: response.Data.Attributes.UserEnrollment,
-		WelcomeScreen:  response.Data.Attributes.WelcomeScreen,
-		Authentication: response.Data.Attributes.Authentication,
-		DeviceGroupID:  deviceGroupID,
-		DeviceID:       deviceID,
+		ID:                response.Data.ID,
+		URL:               response.Data.Attributes.URL,
+		UserEnrollment:    response.Data.Attributes.UserEnrollment,
+		WelcomeScreen:     response.Data.Attributes.WelcomeScreen,
+		Authentication:    response.Data.Attributes.Authentication,
+		DeviceGroupID:     deviceGroupID,
+		AssignmentGroupID: assignmentGroupID,
+		DeviceID:          deviceID,
 	}
 }
 
@@ -188,17 +218,17 @@ func listEnrollments(ctx context.Context, client *simplemdm.Client, startingAfte
 
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to create list enrollments request: %w", err)
 		}
 
 		body, err := client.RequestResponse200(req)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to list enrollments: %w", err)
 		}
 
 		var response enrollmentsListResponse
 		if err := json.Unmarshal(body, &response); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to unmarshal enrollments list response: %w", err)
 		}
 
 		for _, data := range response.Data {

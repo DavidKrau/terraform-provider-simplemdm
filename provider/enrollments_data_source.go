@@ -25,14 +25,15 @@ type enrollmentsDataSourceModel struct {
 }
 
 type enrollmentsDataSourceEnrollmentModel struct {
-	ID             types.String `tfsdk:"id"`
-	DeviceGroupID  types.String `tfsdk:"device_group_id"`
-	URL            types.String `tfsdk:"url"`
-	UserEnrollment types.Bool   `tfsdk:"user_enrollment"`
-	WelcomeScreen  types.Bool   `tfsdk:"welcome_screen"`
-	Authentication types.Bool   `tfsdk:"authentication"`
-	DeviceID       types.String `tfsdk:"device_id"`
-	AccountDriven  types.Bool   `tfsdk:"account_driven"`
+	ID                types.String `tfsdk:"id"`
+	DeviceGroupID     types.String `tfsdk:"device_group_id"`
+	AssignmentGroupID types.String `tfsdk:"assignment_group_id"`
+	URL               types.String `tfsdk:"url"`
+	UserEnrollment    types.Bool   `tfsdk:"user_enrollment"`
+	WelcomeScreen     types.Bool   `tfsdk:"welcome_screen"`
+	Authentication    types.Bool   `tfsdk:"authentication"`
+	DeviceID          types.String `tfsdk:"device_id"`
+	AccountDriven     types.Bool   `tfsdk:"account_driven"`
 }
 
 func EnrollmentsDataSource() datasource.DataSource {
@@ -45,7 +46,8 @@ func (d *enrollmentsDataSource) Metadata(_ context.Context, req datasource.Metad
 
 func (d *enrollmentsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Fetches the collection of enrollments from your SimpleMDM account.",
+		Description: "Fetches the collection of enrollments from your SimpleMDM account. " +
+			"One-time enrollments have a URL and can be used once. Account driven enrollments have a null URL and can be used multiple times.",
 		Blocks: map[string]schema.Block{
 			"enrollments": schema.ListNestedBlock{
 				Description: "Collection of enrollment records returned by the API.",
@@ -57,11 +59,15 @@ func (d *enrollmentsDataSource) Schema(_ context.Context, _ datasource.SchemaReq
 						},
 						"device_group_id": schema.StringAttribute{
 							Computed:    true,
-							Description: "Device group associated with the enrollment.",
+							Description: "Legacy device group associated with the enrollment (deprecated).",
+						},
+						"assignment_group_id": schema.StringAttribute{
+							Computed:    true,
+							Description: "Assignment group associated with the enrollment (for New Groups Experience).",
 						},
 						"url": schema.StringAttribute{
 							Computed:    true,
-							Description: "Enrollment URL for one-time enrollments.",
+							Description: "Enrollment URL for one-time enrollments. Will be null for account driven enrollments.",
 						},
 						"user_enrollment": schema.BoolAttribute{
 							Computed:    true,
@@ -81,7 +87,7 @@ func (d *enrollmentsDataSource) Schema(_ context.Context, _ datasource.SchemaReq
 						},
 						"account_driven": schema.BoolAttribute{
 							Computed:    true,
-							Description: "Whether enrollment is account driven.",
+							Description: "Whether enrollment is account driven (URL is null).",
 						},
 					},
 				},
@@ -124,7 +130,17 @@ func (d *enrollmentsDataSource) Read(ctx context.Context, req datasource.ReadReq
 			entry.DeviceGroupID = types.StringNull()
 		}
 
-		if flat.URL == nil || *flat.URL == "" {
+		if flat.AssignmentGroupID != nil {
+			entry.AssignmentGroupID = types.StringValue(strconv.Itoa(*flat.AssignmentGroupID))
+		} else {
+			entry.AssignmentGroupID = types.StringNull()
+		}
+
+		// More defensive URL null handling
+		if flat.URL == nil {
+			entry.URL = types.StringNull()
+			entry.AccountDriven = types.BoolValue(true)
+		} else if *flat.URL == "" {
 			entry.URL = types.StringNull()
 			entry.AccountDriven = types.BoolValue(true)
 		} else {

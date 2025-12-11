@@ -17,14 +17,15 @@ var (
 )
 
 type enrollmentDataSourceModel struct {
-	ID             types.String `tfsdk:"id"`
-	URL            types.String `tfsdk:"url"`
-	UserEnrollment types.Bool   `tfsdk:"user_enrollment"`
-	WelcomeScreen  types.Bool   `tfsdk:"welcome_screen"`
-	Authentication types.Bool   `tfsdk:"authentication"`
-	DeviceGroupID  types.String `tfsdk:"device_group_id"`
-	DeviceID       types.String `tfsdk:"device_id"`
-	AccountDriven  types.Bool   `tfsdk:"account_driven"`
+	ID                types.String `tfsdk:"id"`
+	URL               types.String `tfsdk:"url"`
+	UserEnrollment    types.Bool   `tfsdk:"user_enrollment"`
+	WelcomeScreen     types.Bool   `tfsdk:"welcome_screen"`
+	Authentication    types.Bool   `tfsdk:"authentication"`
+	DeviceGroupID     types.String `tfsdk:"device_group_id"`
+	AssignmentGroupID types.String `tfsdk:"assignment_group_id"`
+	DeviceID          types.String `tfsdk:"device_id"`
+	AccountDriven     types.Bool   `tfsdk:"account_driven"`
 }
 
 func EnrollmentDataSource() datasource.DataSource {
@@ -59,7 +60,8 @@ func (d *enrollmentDataSource) Configure(_ context.Context, req datasource.Confi
 
 func (d *enrollmentDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Enrollment data source retrieves details for an existing SimpleMDM enrollment.",
+		Description: "Enrollment data source retrieves details for an existing SimpleMDM enrollment. " +
+			"One-time enrollments have a URL and can be used once. Account driven enrollments have a null URL and can be used multiple times.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Required:    true,
@@ -67,7 +69,7 @@ func (d *enrollmentDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 			},
 			"url": schema.StringAttribute{
 				Computed:    true,
-				Description: "Enrollment URL returned by SimpleMDM for one-time enrollments.",
+				Description: "Enrollment URL returned by SimpleMDM for one-time enrollments. Will be null for account driven enrollments.",
 			},
 			"user_enrollment": schema.BoolAttribute{
 				Computed:    true,
@@ -83,7 +85,11 @@ func (d *enrollmentDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 			},
 			"device_group_id": schema.StringAttribute{
 				Computed:    true,
-				Description: "Identifier of the device group associated with the enrollment.",
+				Description: "Identifier of the legacy device group associated with the enrollment (deprecated).",
+			},
+			"assignment_group_id": schema.StringAttribute{
+				Computed:    true,
+				Description: "Identifier of the assignment group associated with the enrollment (for New Groups Experience).",
 			},
 			"device_id": schema.StringAttribute{
 				Computed:    true,
@@ -91,7 +97,7 @@ func (d *enrollmentDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 			},
 			"account_driven": schema.BoolAttribute{
 				Computed:    true,
-				Description: "True when the enrollment is account driven (URL is null).",
+				Description: "True when the enrollment is account driven (URL is null). Account driven enrollments do not support invitations.",
 			},
 		},
 	}
@@ -123,7 +129,11 @@ func (d *enrollmentDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 	flat := flattenEnrollment(enrollment)
 
-	if flat.URL == nil || *flat.URL == "" {
+	// More defensive URL null handling
+	if flat.URL == nil {
+		state.URL = types.StringNull()
+		state.AccountDriven = types.BoolValue(true)
+	} else if *flat.URL == "" {
 		state.URL = types.StringNull()
 		state.AccountDriven = types.BoolValue(true)
 	} else {
@@ -139,6 +149,12 @@ func (d *enrollmentDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		state.DeviceGroupID = types.StringValue(strconv.Itoa(*flat.DeviceGroupID))
 	} else {
 		state.DeviceGroupID = types.StringNull()
+	}
+
+	if flat.AssignmentGroupID != nil {
+		state.AssignmentGroupID = types.StringValue(strconv.Itoa(*flat.AssignmentGroupID))
+	} else {
+		state.AssignmentGroupID = types.StringNull()
 	}
 
 	if flat.DeviceID != nil {

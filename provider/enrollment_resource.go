@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/DavidKrau/simplemdm-go-client"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -25,6 +27,7 @@ var (
 type enrollmentResourceModel struct {
 	ID                types.String `tfsdk:"id"`
 	DeviceGroupID     types.String `tfsdk:"device_group_id"`
+	AssignmentGroupID types.String `tfsdk:"assignment_group_id"`
 	URL               types.String `tfsdk:"url"`
 	UserEnrollment    types.Bool   `tfsdk:"user_enrollment"`
 	WelcomeScreen     types.Bool   `tfsdk:"welcome_screen"`
@@ -66,7 +69,10 @@ func (r *enrollmentResource) Configure(_ context.Context, req resource.Configure
 
 func (r *enrollmentResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Enrollment resource manages SimpleMDM enrollment links used for one-time and account driven enrollments.",
+		Description: "Enrollment resource manages SimpleMDM enrollment links. There are two types: " +
+			"One-time enrollments (with a URL) can be used once by a single device and support sending invitations. " +
+			"Account driven enrollments (URL is null) can be used multiple times but do not support invitations. " +
+			"Note: You must specify either device_group_id (for legacy device groups) or assignment_group_id (for modern assignment groups).",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
@@ -76,15 +82,30 @@ func (r *enrollmentResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Description: "Numeric identifier of the enrollment.",
 			},
 			"device_group_id": schema.StringAttribute{
-				Required:    true,
-				Description: "Identifier of the device group associated with the enrollment.",
+				Optional:    true,
+				Description: "Identifier of the legacy device group (deprecated). For accounts using the New Groups Experience, use assignment_group_id instead. Either device_group_id or assignment_group_id must be specified.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(path.MatchRoot("assignment_group_id")),
+					stringvalidator.AtLeastOneOf(path.MatchRoot("assignment_group_id")),
+				},
+			},
+			"assignment_group_id": schema.StringAttribute{
+				Optional:    true,
+				Description: "Identifier of the assignment group to associate with this enrollment. For accounts using the New Groups Experience. Either device_group_id or assignment_group_id must be specified.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(path.MatchRoot("device_group_id")),
+					stringvalidator.AtLeastOneOf(path.MatchRoot("device_group_id")),
 				},
 			},
 			"url": schema.StringAttribute{
 				Computed:    true,
-				Description: "Enrollment URL returned by SimpleMDM for one-time enrollments.",
+				Description: "Enrollment URL returned by SimpleMDM for one-time enrollments. Will be null for account driven enrollments.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -93,7 +114,7 @@ func (r *enrollmentResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
-				Description: "When true, creates a user enrollment instead of a device enrollment.",
+				Description: "When true, creates a user enrollment instead of a device enrollment. This setting cannot be changed after creation and will force a new resource if modified.",
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -102,7 +123,7 @@ func (r *enrollmentResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
-				Description: "Controls whether the welcome screen is shown to end users during enrollment.",
+				Description: "Controls whether the welcome screen is shown to end users during enrollment. This setting cannot be changed after creation and will force a new resource if modified.",
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -111,7 +132,7 @@ func (r *enrollmentResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
-				Description: "Requires authentication before enrollment can proceed.",
+				Description: "Requires authentication before enrollment can proceed. This setting cannot be changed after creation and will force a new resource if modified.",
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -122,11 +143,14 @@ func (r *enrollmentResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			},
 			"account_driven": schema.BoolAttribute{
 				Computed:    true,
-				Description: "True when the enrollment is account driven (URL is null).",
+				Description: "True when the enrollment is account driven (URL is null). Account driven enrollments do not support sending invitations.",
 			},
 			"invitation_contact": schema.StringAttribute{
 				Optional:    true,
-				Description: "Email address or phone number to send an enrollment invitation to after creation or when updated.",
+				Description: "Email address or phone number to send an enrollment invitation to after creation or when updated. Phone numbers should be prefixed with + for international numbers. Note: This is write-only - the API does not return invitation history, so Terraform cannot detect if invitations were sent outside of Terraform. Only works for one-time enrollments (not account driven).",
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(3),
+				},
 			},
 		},
 	}
@@ -141,10 +165,11 @@ func (r *enrollmentResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	payload := enrollmentUpsertRequest{
-		DeviceGroupID:  plan.DeviceGroupID.ValueString(),
-		UserEnrollment: boolPointer(plan.UserEnrollment),
-		WelcomeScreen:  boolPointer(plan.WelcomeScreen),
-		Authentication: boolPointer(plan.Authentication),
+		DeviceGroupID:     plan.DeviceGroupID.ValueString(),
+		AssignmentGroupID: plan.AssignmentGroupID.ValueString(),
+		UserEnrollment:    boolPointer(plan.UserEnrollment),
+		WelcomeScreen:     boolPointer(plan.WelcomeScreen),
+		Authentication:    boolPointer(plan.Authentication),
 	}
 
 	created, err := createEnrollment(ctx, r.client, payload)
@@ -161,6 +186,15 @@ func (r *enrollmentResource) Create(ctx context.Context, req resource.CreateRequ
 	applyEnrollmentFlat(&state, flat)
 
 	if !plan.InvitationContact.IsNull() && !plan.InvitationContact.IsUnknown() {
+		// Check if this is an account driven enrollment before sending invitation
+		if state.AccountDriven.ValueBool() {
+			resp.Diagnostics.AddError(
+				"Cannot send invitation for account driven enrollment",
+				"Account driven enrollments (where URL is null) do not support sending invitations. Only one-time enrollments with a URL can have invitations sent.",
+			)
+			return
+		}
+		
 		if err := sendEnrollmentInvitation(ctx, r.client, state.ID.ValueString(), plan.InvitationContact.ValueString()); err != nil {
 			resp.Diagnostics.AddError(
 				"Error sending enrollment invitation",
@@ -228,6 +262,15 @@ func (r *enrollmentResource) Update(ctx context.Context, req resource.UpdateRequ
 	if plan.InvitationContact.IsNull() || plan.InvitationContact.IsUnknown() {
 		state.InvitationContact = types.StringNull()
 	} else if plan.InvitationContact.ValueString() != state.InvitationContact.ValueString() {
+		// Check if this is an account driven enrollment before sending invitation
+		if state.AccountDriven.ValueBool() {
+			resp.Diagnostics.AddError(
+				"Cannot send invitation for account driven enrollment",
+				"Account driven enrollments (where URL is null) do not support sending invitations. Only one-time enrollments with a URL can have invitations sent.",
+			)
+			return
+		}
+		
 		if err := sendEnrollmentInvitation(ctx, r.client, state.ID.ValueString(), plan.InvitationContact.ValueString()); err != nil {
 			resp.Diagnostics.AddError(
 				"Error sending enrollment invitation",
@@ -272,7 +315,17 @@ func applyEnrollmentFlat(model *enrollmentResourceModel, flat enrollmentFlat) {
 		model.DeviceGroupID = types.StringNull()
 	}
 
-	if flat.URL == nil || *flat.URL == "" {
+	if flat.AssignmentGroupID != nil {
+		model.AssignmentGroupID = types.StringValue(strconv.Itoa(*flat.AssignmentGroupID))
+	} else {
+		model.AssignmentGroupID = types.StringNull()
+	}
+
+	// More defensive URL null handling
+	if flat.URL == nil {
+		model.URL = types.StringNull()
+		model.AccountDriven = types.BoolValue(true)
+	} else if *flat.URL == "" {
 		model.URL = types.StringNull()
 		model.AccountDriven = types.BoolValue(true)
 	} else {
