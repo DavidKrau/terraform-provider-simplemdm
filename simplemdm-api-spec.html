@@ -1,0 +1,5298 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>SimpleMDM API Reference</title>
+
+  <link rel="stylesheet" href="/packs/css/default~api_docs-dc19f71d.chunk.css" media="all" />
+    <script src="/packs/js/runtime~api_docs-a0a56504c0312f512719.js"></script>
+<script src="/packs/js/node_vendors~admin~api_docs~employee~marketing-f28010091bcdc040de06.chunk.js"></script>
+<script src="/packs/js/default~api_docs-662e892f249d5e883679.chunk.js"></script>
+<script src="/packs/js/api_docs-96a89e0fab370f2ec308.chunk.js"></script>
+</head>
+
+<body class="index" data-languages="[]">
+<a href="#" id="nav-button">
+      <span>
+        NAV
+        <img src="/packs/media/images/navbar-0eb89152aee5253e96a6e9433d08da9e.png" alt=""/>
+      </span>
+</a>
+<div class="toc-wrapper">
+    <div class="nav-header">
+        <a href="//simplemdm.com/">
+            <img src="/packs/media/images/logo-4bbf06d6d51096cfae3746d8c7cbb898.svg" class="logo" alt=""/>
+        </a>
+        <div class="version">API version 1.54</div>
+    </div>
+    <div class="search">
+        <input type="text" class="search" id="input-search" placeholder="Search">
+    </div>
+    <ul class="search-results">
+
+    </ul>
+    <ul id="toc" class="toc-list-h1">
+    <li>
+        <a href="#introduction" class="toc-h1 toc-link" data-title="Introduction">Introduction</a>
+    </li>
+    <li>
+        <a href="#authentication" class="toc-h1 toc-link" data-title="Authentication">Authentication</a>
+    </li>
+    <li>
+        <a href="#errors" class="toc-h1 toc-link" data-title="Errors">Errors</a>
+    </li>
+    <li>
+        <a href="#pagination" class="toc-h1 toc-link" data-title="Pagination">Pagination</a>
+        <ul class="toc-list-h2">
+            <li>
+                <a href="#request" class="toc-h2 toc-link" data-title="Request">Request</a>
+            </li>
+            <li>
+                <a href="#response" class="toc-h2 toc-link" data-title="Response">Response</a>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <a href="#account" class="toc-h1 toc-link" data-title="Account">Account</a>
+        <ul class="toc-list-h2">
+            <li>
+                <a href="#show" class="toc-h2 toc-link" data-title="Show">Show</a>
+            </li>
+            <li>
+                <a href="#update" class="toc-h2 toc-link" data-title="Update">Update</a>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <a href="#apps" class="toc-h1 toc-link" data-title="Apps">Apps</a>
+        <ul class="toc-list-h2">
+            <li>
+                <a href="#list-all" class="toc-h2 toc-link" data-title="List all">List all</a>
+            </li>
+            <li>
+                <a href="#retrieve-one" class="toc-h2 toc-link" data-title="Retrieve one">Retrieve one</a>
+            </li>
+            <li>
+                <a href="#create" class="toc-h2 toc-link" data-title="Create">Create</a>
+            </li>
+            <li>
+                <a href="#update-2" class="toc-h2 toc-link" data-title="Update">Update</a>
+            </li>
+            <li>
+                <a href="#delete" class="toc-h2 toc-link" data-title="Delete">Delete</a>
+            </li>
+            <li>
+                <a href="#list-installs" class="toc-h2 toc-link" data-title="List installs">List installs</a>
+            </li>
+            <li>
+                <a href="#update-munki-pkg-info" class="toc-h2 toc-link" data-title="Update Munki Pkg Info">Update
+                    Munki Pkg Info</a>
+            </li>
+            <li>
+                <a href="#delete-munki-pkg-info" class="toc-h2 toc-link" data-title="Delete Munki Pkg Info">Delete
+                    Munki Pkg Info</a>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <a href="#assignment-groups" class="toc-h1 toc-link" data-title="Assignment Groups">Assignment Groups</a>
+        <ul class="toc-list-h2">
+            <li>
+                <a href="#list-all-2" class="toc-h2 toc-link" data-title="List all">List all</a>
+            </li>
+            <li>
+                <a href="#retrieve-one-2" class="toc-h2 toc-link" data-title="Retrieve one">Retrieve one</a>
+            </li>
+            <li>
+                <a href="#create-2" class="toc-h2 toc-link" data-title="Create">Create</a>
+            </li>
+            <li>
+                <a href="#update-3" class="toc-h2 toc-link" data-title="Update">Update</a>
+            </li>
+            <li>
+                <a href="#delete-2" class="toc-h2 toc-link" data-title="Delete">Delete</a>
+            </li>
+            <li>
+                <a href="#assign-app" class="toc-h2 toc-link" data-title="Assign app">Assign app</a>
+            </li>
+            <li>
+                <a href="#unassign-app" class="toc-h2 toc-link" data-title="Unassign app">Unassign app</a>
+            </li>
+            <li>
+                <a href="#assign-device-group" class="toc-h2 toc-link" data-title="Assign device group">Assign
+                    device group</a>
+            </li>
+            <li>
+                <a href="#unassign-device-group" class="toc-h2 toc-link" data-title="Unassign device group">Unassign
+                    device group</a>
+            </li>
+            <li>
+                <a href="#assign-device" class="toc-h2 toc-link" data-title="Assign device">Assign device</a>
+            </li>
+            <li>
+                <a href="#unassign-device" class="toc-h2 toc-link" data-title="Unassign device">Unassign device</a>
+            </li>
+            <li>
+                <a href="#push-apps" class="toc-h2 toc-link" data-title="Push apps">Push apps</a>
+            </li>
+            <li>
+                <a href="#update-apps" class="toc-h2 toc-link" data-title="Update apps">Update apps</a>
+            </li>
+            <li>
+                <a href="#assign-profile" class="toc-h2 toc-link" data-title="Assign profile">Assign profile</a>
+            </li>
+            <li>
+                <a href="#unassign-profile" class="toc-h2 toc-link" data-title="Unassign profile">Unassign
+                    profile</a>
+            </li>
+            <li>
+                <a href="#sync-profiles" class="toc-h2 toc-link" data-title="Sync profiles">Sync profiles</a>
+            </li>
+            <li>
+                <a href="#clone-assignment-group" class="toc-h2 toc-link" data-title="Clone">Clone</a>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <a href="#custom-attributes" class="toc-h1 toc-link" data-title="Custom Attributes">Custom Attributes</a>
+        <ul class="toc-list-h2">
+            <li>
+                <a href="#list-all-3" class="toc-h2 toc-link" data-title="List all">List all</a>
+            </li>
+            <li>
+                <a href="#retrieve-one-3" class="toc-h2 toc-link" data-title="Retrieve one">Retrieve one</a>
+            </li>
+            <li>
+                <a href="#create-3" class="toc-h2 toc-link" data-title="Create">Create</a>
+            </li>
+            <li>
+                <a href="#update-4" class="toc-h2 toc-link" data-title="Update">Update</a>
+            </li>
+            <li>
+                <a href="#delete-3" class="toc-h2 toc-link" data-title="Delete">Delete</a>
+            </li>
+            <li>
+                <a href="#get-values-for-device" class="toc-h2 toc-link" data-title="Get values for device">Get
+                    values for device</a>
+            </li>
+            <li>
+                <a href="#set-value-for-device" class="toc-h2 toc-link" data-title="Set value for device">Set value
+                    for device</a>
+            </li>
+            <li>
+                <a href="#set-multiple-values-for-a-device" class="toc-h2 toc-link"
+                   data-title="Set multiple values for a device">Set multiple values for a device</a>
+            </li>
+            <li>
+                <a href="#set-custom-attribute-value-for-multiple-devices" class="toc-h2 toc-link"
+                   data-title="Set custom attribute value for multiple devices">Set custom attribute value for
+                    multiple devices</a>
+            </li>
+          <li>
+            <a href="#get-values-for-assignment-group" class="toc-h2 toc-link"
+               data-title="Get values for assignment group">Get values for assignment group</a>
+          </li>
+          <li>
+            <a href="#set-value-for-assignment-group" class="toc-h2 toc-link"
+               data-title="Set value for assignment group">Set value for assignment group</a>
+          </li>
+            <li>
+                <a href="#get-values-for-group" class="toc-h2 toc-link" data-title="Get values for group">Get values
+                    for group</a>
+            </li>
+            <li>
+                <a href="#set-value-for-group" class="toc-h2 toc-link" data-title="Set value for group">Set value
+                    for group</a>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <a href="#custom-configuration-profiles" class="toc-h1 toc-link" data-title="Custom Configuration Profiles">Custom
+            Configuration Profiles</a>
+        <ul class="toc-list-h2">
+            <li>
+                <a href="#list-all-4" class="toc-h2 toc-link" data-title="List all">List all</a>
+            </li>
+            <li>
+                <a href="#create-4" class="toc-h2 toc-link" data-title="Create">Create</a>
+            </li>
+            <li>
+                <a href="#update-5" class="toc-h2 toc-link" data-title="Update">Update</a>
+            </li>
+            <li>
+                <a href="#download" class="toc-h2 toc-link" data-title="Download">Download</a>
+            </li>
+            <li>
+                <a href="#delete-4" class="toc-h2 toc-link" data-title="Delete">Delete</a>
+            </li>
+            <li>
+                <a href="#assign-to-device-group" class="toc-h2 toc-link" data-title="Assign to device group">Assign
+                    to device group</a>
+            </li>
+            <li>
+                <a href="#unassign-from-device-group" class="toc-h2 toc-link"
+                   data-title="Unassign from device group">Unassign from device group</a>
+            </li>
+            <li>
+                <a href="#assign-to-device" class="toc-h2 toc-link" data-title="Assign to device">Assign to
+                    device</a>
+            </li>
+            <li>
+                <a href="#unassign-from-device" class="toc-h2 toc-link" data-title="Unassign from device">Unassign
+                    from device</a>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <a href="#custom-declarations" class="toc-h1 toc-link" data-title="Custom Declarations">Custom
+            Declarations</a>
+        <ul class="toc-list-h2">
+            <li>
+                <a href="#cd-list-all" class="toc-h2 toc-link" data-title="List all">List all</a>
+            </li>
+            <li>
+                <a href="#cd-create" class="toc-h2 toc-link" data-title="Create">Create</a>
+            </li>
+            <li>
+                <a href="#cd-update" class="toc-h2 toc-link" data-title="Update">Update</a>
+            </li>
+            <li>
+                <a href="#cd-download" class="toc-h2 toc-link" data-title="Download">Download</a>
+            </li>
+            <li>
+                <a href="#cd-delete" class="toc-h2 toc-link" data-title="Delete">Delete</a>
+            </li>
+            <li>
+                <a href="#cd-assign-to-device" class="toc-h2 toc-link" data-title="Assign to device">Assign to
+                    device</a>
+            </li>
+            <li>
+                <a href="#cd-unassign-from-device" class="toc-h2 toc-link" data-title="Unassign from device">Unassign
+                    from device</a>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <a href="#dep-servers" class="toc-h1 toc-link" data-title="DEP Servers">DEP Servers</a>
+        <ul class="toc-list-h2">
+            <li>
+                <a href="#list-all-5" class="toc-h2 toc-link" data-title="List all">List all</a>
+            </li>
+            <li>
+                <a href="#retrieve-one-4" class="toc-h2 toc-link" data-title="Retrieve one">Retrieve one</a>
+            </li>
+            <li>
+                <a href="#sync-with-apple" class="toc-h2 toc-link" data-title="Sync with Apple">Sync with Apple</a>
+            </li>
+            <li>
+                <a href="#list-dep-devices" class="toc-h2 toc-link" data-title="List DEP devices">List DEP
+                    devices</a>
+            </li>
+            <li>
+                <a href="#retrieve-one-dep-device" class="toc-h2 toc-link" data-title="Retrieve one DEP device">Retrieve
+                    one DEP device</a>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <a href="#devices" class="toc-h1 toc-link" data-title="Devices">Devices</a>
+        <ul class="toc-list-h2">
+            <li>
+                <a href="#list-all-6" class="toc-h2 toc-link" data-title="List all">List all</a>
+            </li>
+            <li>
+                <a href="#retrieve-one-5" class="toc-h2 toc-link" data-title="Retrieve one">Retrieve one</a>
+            </li>
+            <li>
+                <a href="#create-5" class="toc-h2 toc-link" data-title="Create">Create</a>
+            </li>
+            <li>
+                <a href="#update-6" class="toc-h2 toc-link" data-title="Update">Update</a>
+            </li>
+            <li>
+                <a href="#delete-5" class="toc-h2 toc-link" data-title="Delete">Delete</a>
+            </li>
+            <li>
+                <a href="#list-profiles" class="toc-h2 toc-link" data-title="List profiles">List profiles</a>
+            </li>
+            <li>
+                <a href="#list-installed-apps" class="toc-h2 toc-link" data-title="List installed apps">List
+                    installed apps</a>
+            </li>
+            <li>
+                <a href="#list-users" class="toc-h2 toc-link" data-title="List Users">List Users</a>
+            </li>
+            <li>
+                <a href="#delete-user" class="toc-h2 toc-link" data-title="Delete User">Delete User</a>
+            </li>
+            <li>
+                <a href="#push-assigned-apps" class="toc-h2 toc-link" data-title="Push assigned apps">Push assigned
+                    apps</a>
+            </li>
+            <li>
+                <a href="#refresh" class="toc-h2 toc-link" data-title="Refresh">Refresh</a>
+            </li>
+            <li>
+                <a href="#restart" class="toc-h2 toc-link" data-title="Restart">Restart</a>
+            </li>
+            <li>
+                <a href="#shut-down" class="toc-h2 toc-link" data-title="Shut down">Shut down</a>
+            </li>
+            <li>
+                <a href="#lock" class="toc-h2 toc-link" data-title="Lock">Lock</a>
+            </li>
+            <li>
+                <a href="#lost-mode-actions" class="toc-h2 toc-link" data-title="Lost mode actions">Lost mode
+                    actions</a>
+            </li>
+            <li>
+                <a href="#clear-passcode" class="toc-h2 toc-link" data-title="Clear passcode">Clear passcode</a>
+            </li>
+            <li>
+                <a href="#clear-firmware-password" class="toc-h2 toc-link" data-title="Clear firmware password">Clear
+                    firmware password</a>
+            </li>
+            <li>
+                <a href="#rotate-firmware-password" class="toc-h2 toc-link" data-title="Rotate firmware password">Rotate
+                    firmware password</a>
+            </li>
+            <li>
+                <a href="#clear-recovery-lock-password" class="toc-h2 toc-link"
+                   data-title="Clear recovery lock password">Clear recovery lock password</a>
+            </li>
+            <li>
+                <a href="#clear-the-restrictions-password" class="toc-h2 toc-link"
+                   data-title="Clear the Restrictions Password">Clear the Restrictions Password</a>
+            </li>
+            <li>
+                <a href="#rotate-recovery-lock-password" class="toc-h2 toc-link"
+                   data-title="Rotate recovery lock password">Rotate recovery lock password</a>
+            </li>
+            <li>
+                <a href="#rotate-filevault-recovery-key" class="toc-h2 toc-link"
+                   data-title="Rotate FileVault recovery key">Rotate FileVault recovery key</a>
+            </li>
+            <li>
+                <a href="#set-admin-password" class="toc-h2 toc-link" data-title="Set Admin Password">Set Admin
+                    Password</a>
+            </li>
+            <li>
+                <a href="#rotate-admin-password" class="toc-h2 toc-link" data-title="Rotate Admin Password">Rotate
+                    Admin Password</a>
+            </li>
+            <li>
+                <a href="#wipe" class="toc-h2 toc-link" data-title="Wipe">Wipe</a>
+            </li>
+            <li>
+                <a href="#update-os" class="toc-h2 toc-link" data-title="Update OS">Update OS</a>
+            </li>
+            <li>
+                <a href="#enable-remote-desktop" class="toc-h2 toc-link" data-title="Enable Remote Desktop">Enable
+                    Remote Desktop</a>
+            </li>
+            <li>
+                <a href="#disable-remote-desktop" class="toc-h2 toc-link" data-title="Disable Remote Desktop">Disable
+                    Remote Desktop</a>
+            </li>
+            <li>
+                <a href="#enable-bluetooth" class="toc-h2 toc-link" data-title="Enable Bluetooth">Enable
+                    Bluetooth</a>
+            </li>
+            <li>
+                <a href="#disable-bluetooth" class="toc-h2 toc-link" data-title="Disable Bluetooth">Disable
+                    Bluetooth</a>
+            </li>
+            <li>
+                <a href="#set-time-zone" class="toc-h2 toc-link" data-title="Set Time Zone">Set Time Zone</a>
+            </li>
+            <li>
+                <a href="#unenroll" class="toc-h2 toc-link" data-title="Unenroll">Unenroll</a>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <a href="#device-groups" class="toc-h1 toc-link" data-title="Device Groups">Device Groups</a>
+        <ul class="toc-list-h2">
+            <li>
+                <a href="#list-all-7" class="toc-h2 toc-link" data-title="List all">List all</a>
+            </li>
+            <li>
+                <a href="#retrieve-one-6" class="toc-h2 toc-link" data-title="Retrieve one">Retrieve one</a>
+            </li>
+            <li>
+                <a href="#assign-device-2" class="toc-h2 toc-link" data-title="Assign device">Assign device</a>
+            </li>
+            <li>
+                <a href="#clone" class="toc-h2 toc-link" data-title="Clone">Clone</a>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <a href="#enrollments" class="toc-h1 toc-link" data-title="Enrollments">Enrollments</a>
+        <ul class="toc-list-h2">
+            <li>
+                <a href="#list-all-8" class="toc-h2 toc-link" data-title="List All">List All</a>
+            </li>
+            <li>
+                <a href="#retrieve-one-7" class="toc-h2 toc-link" data-title="Retrieve One">Retrieve One</a>
+            </li>
+            <li>
+                <a href="#send-invitation" class="toc-h2 toc-link" data-title="Send Invitation">Send Invitation</a>
+            </li>
+            <li>
+                <a href="#delete-6" class="toc-h2 toc-link" data-title="Delete">Delete</a>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <a href="#installed-apps" class="toc-h1 toc-link" data-title="Installed Apps">Installed Apps</a>
+        <ul class="toc-list-h2">
+            <li>
+                <a href="#list-for-device" class="toc-h2 toc-link" data-title="List for device">List for device</a>
+            </li>
+            <li>
+                <a href="#retrieve-one-8" class="toc-h2 toc-link" data-title="Retrieve one">Retrieve one</a>
+            </li>
+            <li>
+                <a href="#request-management-of-app" class="toc-h2 toc-link" data-title="Request management of app">Request
+                    management of app</a>
+            </li>
+            <li>
+                <a href="#install-update" class="toc-h2 toc-link" data-title="Install update">Install update</a>
+            </li>
+            <li>
+                <a href="#uninstall" class="toc-h2 toc-link" data-title="Uninstall">Uninstall</a>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <a href="#logs" class="toc-h1 toc-link" data-title="Logs">Logs</a>
+        <ul class="toc-list-h2">
+            <li>
+                <a href="#list-all-9" class="toc-h2 toc-link" data-title="List All">List All</a>
+            </li>
+            <li>
+                <a href="#retrieve-one-9" class="toc-h2 toc-link" data-title="Retrieve one">Retrieve one</a>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <a href="#lost-mode" class="toc-h1 toc-link" data-title="Lost Mode">Lost Mode</a>
+        <ul class="toc-list-h2">
+            <li>
+                <a href="#enable" class="toc-h2 toc-link" data-title="Enable">Enable</a>
+            </li>
+            <li>
+                <a href="#disable" class="toc-h2 toc-link" data-title="Disable">Disable</a>
+            </li>
+            <li>
+                <a href="#play-a-sound" class="toc-h2 toc-link" data-title="Play a sound">Play a sound</a>
+            </li>
+            <li>
+                <a href="#update-location" class="toc-h2 toc-link" data-title="Update location">Update location</a>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <a href="#managed-app-configs" class="toc-h1 toc-link" data-title="Managed App Configs">Managed App
+            Configs</a>
+        <ul class="toc-list-h2">
+            <li>
+                <a href="#get" class="toc-h2 toc-link" data-title="Get">Get</a>
+            </li>
+            <li>
+                <a href="#create-6" class="toc-h2 toc-link" data-title="Create">Create</a>
+            </li>
+            <li>
+                <a href="#delete-7" class="toc-h2 toc-link" data-title="Delete">Delete</a>
+            </li>
+            <li>
+                <a href="#push-updates" class="toc-h2 toc-link" data-title="Push Updates">Push Updates</a>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <a href="#profiles" class="toc-h1 toc-link" data-title="Profiles">Profiles</a>
+        <ul class="toc-list-h2">
+            <li>
+                <a href="#list-all-10" class="toc-h2 toc-link" data-title="List all">List all</a>
+            </li>
+            <li>
+                <a href="#retrieve-one-10" class="toc-h2 toc-link" data-title="Retrieve one">Retrieve one</a>
+            </li>
+            <li>
+                <a href="#assign-to-device-group-2" class="toc-h2 toc-link" data-title="Assign to device group">Assign
+                    to device group</a>
+            </li>
+            <li>
+                <a href="#unassign-from-device-group-2" class="toc-h2 toc-link"
+                   data-title="Unassign from device group">Unassign from device group</a>
+            </li>
+            <li>
+                <a href="#assign-to-device-2" class="toc-h2 toc-link" data-title="Assign to device">Assign to
+                    device</a>
+            </li>
+            <li>
+                <a href="#unassign-from-device-2" class="toc-h2 toc-link" data-title="Unassign from device">Unassign
+                    from device</a>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <a href="#push-certificate" class="toc-h1 toc-link" data-title="Push Certificate">Push Certificate</a>
+        <ul class="toc-list-h2">
+            <li>
+                <a href="#show-2" class="toc-h2 toc-link" data-title="Show">Show</a>
+            </li>
+            <li>
+                <a href="#update-7" class="toc-h2 toc-link" data-title="Update">Update</a>
+            </li>
+            <li>
+                <a href="#get-signed-csr" class="toc-h2 toc-link" data-title="Get Signed CSR">Get Signed CSR</a>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <a href="#scripts" class="toc-h1 toc-link" data-title="Scripts">Scripts</a>
+        <ul class="toc-list-h2">
+            <li>
+                <a href="#list-all-11" class="toc-h2 toc-link" data-title="List all">List all</a>
+            </li>
+            <li>
+                <a href="#retrieve-one-11" class="toc-h2 toc-link" data-title="Retrieve one">Retrieve one</a>
+            </li>
+            <li>
+                <a href="#create-7" class="toc-h2 toc-link" data-title="Create">Create</a>
+            </li>
+            <li>
+                <a href="#update-8" class="toc-h2 toc-link" data-title="Update">Update</a>
+            </li>
+            <li>
+                <a href="#delete-8" class="toc-h2 toc-link" data-title="Delete">Delete</a>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <a href="#script-jobs" class="toc-h1 toc-link" data-title="Script Jobs">Script Jobs</a>
+        <ul class="toc-list-h2">
+            <li>
+                <a href="#list-all-12" class="toc-h2 toc-link" data-title="List all">List all</a>
+            </li>
+            <li>
+                <a href="#retrieve-one-12" class="toc-h2 toc-link" data-title="Retrieve one">Retrieve one</a>
+            </li>
+            <li>
+                <a href="#create-8" class="toc-h2 toc-link" data-title="Create">Create</a>
+            </li>
+            <li>
+                <a href="#cancel-job" class="toc-h2 toc-link" data-title="Cancel Job">Cancel Job</a>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <a href="#webhooks" class="toc-h1 toc-link" data-title="Webhooks">Webhooks</a>
+        <ul class="toc-list-h2">
+            <li>
+                <a href="#events" class="toc-h2 toc-link" data-title="Events">Events</a>
+            </li>
+        </ul>
+    </li>
+</ul>
+
+</div>
+
+<div class="page-wrapper">
+    <div class="dark-box">
+    </div>
+    <div class="content">
+        <h1 id='introduction'>Introduction</h1>
+<p>
+    The SimpleMDM API exists as
+    a <a href="https://en.wikipedia.org/wiki/Representational_state_transfer" target="_blank"
+         rel="noopener noreferrer">
+    RESTful</a> <a href="https://en.wikipedia.org/wiki/JSON" target="_blank"
+                   rel="noopener noreferrer">JSON</a>
+    implementation. It is designed to work over
+    authenticated, <a href="https://en.wikipedia.org/wiki/HTTPS" target="_blank"
+                      rel="noopener noreferrer">HTTPS</a> secured
+    channels. This reference describes the extent of the API functionality available to you.</p>
+
+<p>
+    Since the API is based upon the HTTP protocol, you can directly interact with it using any HTTP client
+    library.</p>
+        <h1 id='authentication'>Authentication</h1>
+<div class="highlight">
+            <pre>
+                <code class="language-bash">
+# To authenticate with curl, use the "-u" flag with each request.
+# Be sure to include a trailing ":"
+curl https://a.simplemdm.com/api/v1/account \
+  -u ${API_KEY}:
+        </code></pre>
+</div>
+<p>
+    You authenticate with the SimpleMDM API by providing your secret API key with each request. The API
+    uses <a href="http://en.wikipedia.org/wiki/Basic_access_authentication" target="_blank"
+            rel="noopener noreferrer">HTTP Basic Authentication</a>
+    to receive your API key. It will look for your API key in the username field.
+    The password field should be left blank.</p>
+
+<p>
+    You can retrieve your API key by signing into your SimpleMDM account, visiting &quot;Settings&quot; and then
+    selecting the &quot;API&quot;
+    tab.</p>
+
+<aside class="notice">
+    SimpleMDM operates exclusively over HTTPS. Requests that are received over HTTP without encryption will
+    fail.
+</aside>
+        <h1 id='errors'>Errors</h1>
+<blockquote>
+    <p>
+        Example response body
+    </p>
+</blockquote>
+<div class="highlight">
+            <pre>
+                <code class="language-json">{
+  "errors": [
+    {
+      "title": "object not found"
+    }
+  ]
+}
+</code></pre>
+</div>
+<p>
+    When the API encounters an error with your request, it will respond with an HTTP status code and a
+    JSON-formatted body
+    with additional details.</p>
+        <h1 id='pagination'>Pagination</h1>
+
+
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/apps?limit=3&amp;starting_after=33 \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": [
+    {
+      "type": "app",
+      "id": 34,
+      "attributes": {
+        "name": "Afterlight",
+        "bundle_identifier": "com.simonfilip.AfterGlow",
+        "app_type": "app store",
+        "itunes_store_id": 573116090
+      }
+    },
+    {
+      "type": "app",
+      "id": 63,
+      "attributes": {
+        "name": "Surf Report",
+        "bundle_identifier": "com.portlandsurfclub.ent.surfreport2.2",
+        "app_type": "enterprise",
+        "version": "2.2"
+      }
+    },
+    {
+      "type": "app",
+      "id": 67,
+      "attributes": {
+        "name": "Scanner Pro",
+        "app_type": "custom b2b",
+        "itunes_store_id": 44827291
+      }
+    }
+  ],
+  "has_more": true
+}
+</code></pre>
+</div>
+<p>
+    Many of the &quot;list&quot; API methods utilize cursor-based pagination using the <code>limit</code> and
+    <code>starting_after</code> parameters. These methods also support ordering the result set by specifying the
+    <code>direction</code> parameter.</p>
+
+<h3 id='request'>Request</h3>
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>limit</td>
+        <td>Optional. A limit on the number of objects to be returned, between 1 and 100. Defaults to
+            <code>10</code>.
+        </td>
+    </tr>
+    <tr>
+        <td>starting_after</td>
+        <td>Optional. A cursor in the form of an object ID. It is typically set to the id of the last object of
+            the previous response. If unspecified, the API will start at the beginning of the object list.
+        </td>
+    </tr>
+    <tr>
+        <td>direction</td>
+        <td>Optional. The direction to sort the result set. Possible values are <code>asc</code> or
+            <code>desc</code>. Defaults to <code>asc</code>.
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<h3 id='response'>Response</h3>
+<p>
+    The response from the API will indicate whether additional objects are available with the
+    <code>has_more</code> key.</p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>has_more</td>
+        <td>A boolean <code>true</code> or <code>false</code>, based on if additional records exist beyond the
+            specified cursor and limit.
+        </td>
+    </tr>
+    </tbody>
+</table>
+        <h1 id='account'>Account</h1>
+
+<h2 id='show'>Show</h2>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/account \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": {
+    "type": "account",
+    "attributes": {
+      "name": "SimpleMDM",
+      "apple_store_country_code": "US",
+      "subscription": {
+        "licenses": {
+          "total": 500,
+          "available": 123
+        }
+      }
+    }
+  }
+}
+</code></pre>
+</div>
+
+<p>
+    Retrieve information about your account. Subscription information is only available for accounts on a manual
+    billing
+    plan.
+</p>
+
+<h3 id='http-request'>HTTP Request</h3>
+<p>
+    <code>GET https://a.simplemdm.com/api/v1/account</code>
+</p>
+<h2 id='update'>Update</h2>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/account \
+  -F _method=PATCH \
+  -d apple_store_country_code=AU \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": {
+      "type": "account",
+      "attributes": {
+          "name": "SimpleMDM",
+          "apple_store_country_code": "AU"
+      }
+  }
+}
+</code></pre>
+</div>
+
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>name</td>
+        <td>The name of the account.</td>
+    </tr>
+    <tr>
+        <td>apple_store_country_code</td>
+        <td>The app store country that SimpleMDM uses for the account.</td>
+    </tr>
+    </tbody>
+</table>
+
+<h3 id='http-request-2'>HTTP Request</h3>
+<p>
+    <code>PATCH https://a.simplemdm.com/api/v1/account</code>
+</p>
+
+        <h1 id='apps'>Apps</h1>
+<p>
+    An app represents an app in your app catalog. You can manage your app catalog via the API and use <em>assignment
+    groups</em> to install apps to your devices.
+</p>
+<h2 id='list-all'>List all</h2>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/apps \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": [
+    {
+      "type": "app",
+      "id": 34,
+      "attributes": {
+        "name": "Afterlight",
+        "bundle_identifier": "com.simonfilip.AfterGlow",
+        "app_type": "app store",
+        "itunes_store_id": 573116090,
+        "installation_channels": [
+          "standard"
+        ],
+        "platform_support": "iOS",
+        "processing_status": "processed"
+      }
+    },
+    {
+      "type": "app",
+      "id": 63,
+      "attributes": {
+        "name": "Surf Report",
+        "bundle_identifier": "com.portlandsurfclub.ent.surfreport2.2",
+        "app_type": "enterprise",
+        "version": "2.2",
+        "installation_channels": [
+          "standard"
+        ],
+        "platform_support": "iOS",
+        "processing_status": "processed"
+      }
+    },
+    {
+      "type": "app",
+      "id": 67,
+      "attributes": {
+        "name": "Scanner Pro",
+        "app_type": "custom b2b",
+        "itunes_store_id": 44827291,
+        "installation_channels": [
+          "standard"
+        ],
+        "platform_support": "iOS",
+        "processing_status": "processed"
+      }
+    }
+  ],
+  "has_more": false
+}
+</code></pre>
+</div>
+<p>
+    Supports <a href="#pagination">pagination</a>.</p>
+<h3 id='http-request-3'>HTTP Request</h3>
+<p>
+    <code>GET https://a.simplemdm.com/api/v1/apps</code>
+</p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>include_shared</td>
+        <td>If true, includes assigned apps from the shared catalog. Defaults to false.</td>
+    </tr>
+    </tbody>
+</table>
+<h2 id='retrieve-one'>Retrieve one</h2>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/apps/34 \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": {
+    "type": "app",
+    "id": 34,
+    "attributes": {
+      "name": "Afterlight",
+      "bundle_identifier": "com.simonfilip.AfterGlow",
+      "app_type": "app store",
+      "itunes_store_id": 573116090
+    }
+  }
+}
+</code></pre>
+</div>
+<h3 id='http-request-4'>HTTP Request</h3>
+<p>
+    <code>GET https://a.simplemdm.com/api/v1/apps/{APP_ID}</code>
+</p>
+<h2 id='create'>Create</h2>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/apps \
+  -F binary=@SurfReport.ipa \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": {
+    "type": "app",
+    "id": 63,
+    "attributes": {
+      "name": "Surf Report",
+      "app_type": "enterprise",
+      "version": "2.2",
+      "bundle_identifier": "com.portlandsurfclub.ent.surfreport2.2"
+    }
+  }
+}
+</code></pre>
+</div>
+<p>
+    You can use this method to add an App Store app, upload an enterprise iOS app, or upload macOS package to
+    your app
+    catalog.</p>
+<h3 id='http-request-5'>HTTP Request</h3>
+<p>
+    <code>POST https://a.simplemdm.com/api/v1/apps</code>
+</p>
+
+<p>
+    One and only one of of app_store_id, bundle_id, or binary must be specified. Name can optionally be
+    specified
+    if binary
+    is specified.</p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>app_store_id</td>
+        <td>The Apple App Store ID of the app to be added. Example: 1090161858.</td>
+    </tr>
+    <tr>
+        <td>bundle_id</td>
+        <td>The bundle identifier of the Apple App Store app to be added. Example: com.myCompany.MyApp1</td>
+    </tr>
+    <tr>
+        <td>binary</td>
+        <td>The binary file with an <code>ipa</code> or <code>pkg</code> extension. File should be provided as
+            multipart/form-data.
+        </td>
+    </tr>
+    <tr>
+        <td>name</td>
+        <td>The name that SimpleMDM will use to reference this app. If left blank, SimpleMDM will automatically
+            set this to the app name specified by the binary.
+        </td>
+    </tr>
+    </tbody>
+</table>
+<h2 id='update-2'>Update</h2>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/apps/63 \
+  -F binary=@SurfReportUpdated.ipa \
+  -F deploy_to=outdated \
+  -X PATCH \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": {
+    "type": "app",
+    "id": 63,
+    "attributes": {
+      "name": "Surf Report (Updated)",
+      "app_type": "enterprise",
+      "version": "2.3",
+      "bundle_identifier": "com.portlandsurfclub.ent.surfreport2.3"
+    }
+  }
+}
+</code></pre>
+</div>
+<p>
+    You can use this method to update the binary or name of an existing app. Does not work for shared apps.</p>
+<h3 id='http-request-6'>HTTP Request</h3>
+<p>
+    <code>PATCH https://a.simplemdm.com/api/v1/apps/{APP_ID}</code>
+</p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>binary</td>
+        <td>The binary file with an <code>ipa</code> or <code>pkg</code> extension. File should be provided as
+            multipart/form-data.
+        </td>
+    </tr>
+    <tr>
+        <td>name</td>
+        <td>The name that SimpleMDM will use to reference this app. If left blank, SimpleMDM will automatically
+            set this to the app name specified by the binary.
+        </td>
+    </tr>
+    <tr>
+        <td>deploy_to</td>
+        <td>Deploy the app to associated devices immediately after the app has been uploaded and processed.
+            Possible values are <code>none</code>, <code>outdated</code> or <code>all</code>. When set to <code>outdated</code>,
+            and a newer version of an app has been uploaded, SimpleMDM will deploy the app to all associated
+            devices with an outdated version of the app installed. When set to <code>all</code>, SimpleMDM will
+            deploy to all associated devices regardless of the version of the app currently installed. If set to
+            <code>none</code> then the app will not be immediately deployed to any devices as a result of this
+            API call. Defaults to <code>none</code>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<h2 id='delete'>Delete</h2>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/apps/63 \
+  -u ${API_KEY}: \
+  -X DELETE
+
+HTTP/1.1 204 No Content
+</code></pre>
+</div>
+<h3 id='http-request-7'>HTTP Request</h3>
+<p>
+    <code>DELETE https://a.simplemdm.com/api/v1/apps/{APP_ID}</code>
+</p>
+
+<aside class="notice">
+    Deleting an app from the catalog will not remove it from any devices it may be install on. Does not work for
+    shared apps.
+</aside>
+<h2 id='list-installs'>List installs</h2>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/apps/{APP_ID}/installs \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": [
+    {
+      "type": "installed_app",
+      "id": 26409,
+      "attributes": {
+        "name": "Deliveries",
+        "identifier": "com.junecloud.Deliveries",
+        "version": "9.2.1",
+        "short_version": "9.2.1",
+        "bundle_size": 56163003,
+        "dynamic_size": null,
+        "managed": false,
+        "discovered_at": "2021-11-08T09:02:07.000-08:00",
+        "last_seen_at": "2021-12-22T13:01:58.000-08:00"
+      },
+      "relationships": {
+        "device": {
+          "data": {
+            "type": "device",
+            "id": 7
+          }
+        }
+      }
+    },
+    {
+      "type": "installed_app",
+      "id": 34943,
+      "attributes": {
+        "name": "Deliveries",
+        "identifier": "com.junecloud.Deliveries",
+        "version": "1311",
+        "short_version": "9.2.1",
+        "bundle_size": 21204992,
+        "dynamic_size": 139264,
+        "managed": true,
+        "discovered_at": "2021-12-16T14:25:54.000-08:00",
+        "last_seen_at": "2021-12-22T13:00:57.000-08:00"
+      },
+      "relationships": {
+        "device": {
+          "data": {
+            "type": "device",
+            "id": 3
+          }
+        }
+      }
+    }
+  ],
+  "has_more": false
+}
+</code></pre>
+</div>
+<p>
+    Returns a listing of the devices that an app is installed on. Supports <a href="#pagination">pagination</a>.
+</p>
+<h3 id='http-request-8'>HTTP Request</h3>
+<p>
+    <code>GET https://a.simplemdm.com/api/v1/apps/{APP_ID}/installs</code>
+</p>
+<h2 id='update-munki-pkg-info'>Update Munki Pkg Info</h2>
+<p>
+    Upload a new XML or PLIST file for a Munki App.</p>
+<h3 id='http-request-9'>HTTP Request</h3>
+<p>
+    <code>POST https://a.simplemdm.com/api/v1/apps/{APP_ID}/munki_pkginfo</code>
+</p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>file</td>
+        <td>Required. XML or PLIST file to replace any preexisting file. Send as multipart/form-data.</td>
+    </tr>
+    </tbody>
+</table>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/apps/{APP_ID}/munki_pkginfo \
+  -X POST \
+  -F file@munkipkg.plist \
+  -u ${API_KEY}:
+
+HTTP/1.1 202 Accepted
+</code></pre>
+</div>
+<h2 id='delete-munki-pkg-info'>Delete Munki Pkg Info</h2>
+<p>
+    Delete Munki information.</p>
+<h3 id='http-request-10'>HTTP Request</h3>
+<p>
+    <code>DELETE https://a.simplemdm.com/api/v1/apps/{APP_ID}/munki_pkginfo</code>
+</p>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/apps/{APP_ID}/munki_pkginfo \
+  -u ${API_KEY}: \
+  -X DELETE
+
+HTTP/1.1 204 No Content
+</code></pre>
+</div>
+
+
+
+        <h1 id='assignment-groups'>Assignment Groups</h1>
+<p>
+    An assignment group is an object that pairs <em>apps</em> with <em>device groups</em> and <em>devices</em>
+    for the purpose of pushing apps
+    and media to devices. Supports <a href="#pagination">pagination</a>.</p>
+<h2 id='list-all-2'>List all</h2>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/assignment_groups \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": [
+    {
+      "type": "assignment_group",
+      "id": 26,
+      "attributes": {
+        "name": "SimpleMDM",
+        "auto_deploy": true,
+        "group_type": "static"
+      },
+      "relationships": {
+        "apps": {
+          "data": [
+            {
+              "type": "app",
+              "id": 49
+            }
+          ]
+        },
+        "device_groups": {
+          "data": [
+            {
+              "type": "device_group",
+              "id": 37
+            }
+          ]
+        },
+        "devices": {
+          "data": [
+            {
+              "type": "device",
+              "id": 56
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "assignment_group",
+      "id": 38,
+      "attributes": {
+        "name": "Productivity Apps",
+        "auto_deploy": false,
+        "group_type": "dynamic"
+      },
+      "relationships": {
+        "apps": {
+          "data": [
+            {
+              "type": "app",
+              "id": 63
+            },
+            {
+              "type": "app",
+              "id": 67
+            }
+          ]
+        },
+        "device_groups": {
+          "data": [
+            {
+              "type": "device_group",
+              "id": 37
+            },
+            {
+              "type": "device_group",
+              "id": 38
+            }
+          ]
+        },
+        "devices": {
+          "data": [
+            {
+              "type": "device",
+              "id": 54
+            }
+          ]
+        }
+      }
+    },
+
+    ...
+
+  ],
+  "has_more": false
+}
+</code></pre>
+</div>
+<h3 id='http-request-11'>HTTP Request</h3>
+<p>
+    <code>GET https://a.simplemdm.com/api/v1/assignment_groups</code>
+</p>
+
+<h2 id='retrieve-one-2'>Retrieve one</h2>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/assignment_groups/26 \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": {
+    "type": "assignment_group",
+    "id": 26,
+    "attributes": {
+      "name": "SimpleMDM",
+      "auto_deploy": true,
+      "group_type": "static"
+    },
+    "relationships": {
+      "apps": {
+        "data": [
+          {
+            "type": "app",
+            "id": 49
+          },
+          {
+            "type": "app",
+            "id": 67
+          }
+        ]
+      },
+      "device_groups": {
+        "data": [
+          {
+            "type": "device_group",
+            "id": 37
+          },
+          {
+            "type": "device_group",
+            "id": 38
+          }
+        ]
+      },
+      "devices": {
+        "data": [
+          {
+            "type": "device",
+            "id": 54
+          }
+        ]
+      }
+    }
+  }
+}
+</code></pre>
+</div>
+<h3 id='http-request-12'>HTTP Request</h3>
+<p>
+    <code>GET https://a.simplemdm.com/api/v1/assignment_groups/{ASSIGNMENT_GROUP_ID}</code>
+</p>
+
+<h2 id='create-2'>Create</h2>
+<p>Creates a new static assignment group.</p>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/assignment_groups \
+  -d name="Communication Apps"
+  -u ${API_KEY}: \
+  -X POST
+
+{
+  "data": {
+    "type": "assignment_group",
+    "id": 43,
+    "priority": 3,
+    "attributes": {
+      "name": "Communication Apps",
+      "auto_deploy": true,
+    },
+    "relationships": {
+      "apps": {
+        "data": []
+      },
+      "device_groups": {
+        "data": []
+      },
+      "devices": {
+        "data": []
+      }
+    }
+  }
+}
+</code></pre>
+</div>
+<h3 id='http-request-13'>HTTP Request</h3>
+<p>
+    <code>POST https://a.simplemdm.com/api/v1/assignment_groups</code>
+</p>
+<p>The <code>install_type</code> property is deprecated for this endpoint. It should be set per-app using the Assign App endpoint.</p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>name</td>
+        <td>The name of the assignment group.</td>
+    </tr>
+    <tr>
+        <td>priority</td>
+        <td>Optional. The priority of the assignment group.</td>
+    </tr>
+    <tr>
+        <td>auto_deploy</td>
+        <td>Optional. Whether the apps should be automatically pushed to devices when they join any of the
+            related device groups. Defaults to <code>true</code>.
+        </td>
+    </tr>
+    <tr>
+        <td>type <span class="badge">deprecated</span></td>
+        <td>Optional. Type of assignment group. Must be one of <code>standard</code> (for MDM app/media
+            deployments) or <code>munki</code> for Munki app deployments. Defaults to <code>standard</code>.
+            This field is deprecated and is ignored for accounts opted into the New Groups Experience.
+        </td>
+    </tr>
+    <tr>
+        <td>install_type</td>
+        <td>Optional. The install type for munki assignment groups. Must be one of <code>managed</code>, <code>self_serve</code>,
+            <code>default_installs</code> or <code>managed_updates</code>. This setting has no effect for
+            non-munki (<code>standard</code>) assignment groups. Defaults to <code>managed</code>.
+        </td>
+    </tr>
+    <tr>
+        <td>app_track_location</td>
+        <td>Optional. If true, it tracks the location of IOS device when the SimpleMDM mobile app is installed.
+            Defaults to <code>true</code>.
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<h2 id='update-3'>Update</h2>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/assignment_groups/43 \
+  -d auto_deploy=false
+  -u ${API_KEY}: \
+  --request PATCH
+
+HTTP/1.1 204 No Content
+</code></pre>
+</div>
+<h3 id='http-request-14'>HTTP Request</h3>
+<p>
+    <code>PATCH https://a.simplemdm.com/api/v1/assignment_groups/{ASSIGNMENT_GROUP_ID}</code>
+</p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>name</td>
+        <td>The name of the assignment group.</td>
+    </tr>
+    <tr>
+        <td>priority</td>
+        <td>Optional. The priority of the assignment group.</td>
+    </tr>
+    <tr>
+        <td>auto_deploy</td>
+        <td>Optional. Whether the apps should be automatically pushed to devices when they join any of the
+            related device groups. Defaults to <code>true</code>.
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<h2 id='delete-2'>Delete</h2>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/assignment_groups/{ASSIGNMENT_GROUP_ID} \
+  -u ${API_KEY}: \
+  -X DELETE
+
+HTTP/1.1 204 No Content
+</code></pre>
+</div>
+<h3 id='http-request-15'>HTTP Request</h3>
+<p>
+    <code>DELETE https://a.simplemdm.com/api/v1/assignment_groups/{ASSIGNMENT_GROUP_ID}</code>
+</p>
+
+<h2 id='assign-app'>Assign app</h2>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/assignment_groups/43/apps/21 \
+  -d deployment_type="standard" \
+  -d install_type="managed" \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 204 No Content
+</code></pre>
+</div>
+<h3 id='http-request-16'>HTTP Request</h3>
+<p>
+    <code>POST https://a.simplemdm.com/api/v1/assignment_groups/{ASSIGNMENT_GROUP_ID}/apps/{APP_ID}</code>
+</p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>deployment_type</td>
+        <td>Optional. Type of assignment group. Must be one of <code>standard</code> (for MDM  app/media deployments) or <code>munki</code> for Munki app deployments.</td>
+    </tr>
+    <tr>
+        <td>install_type</td>
+        <td>Optional. The install type for munki assignment groups. Must be one of <code>managed</code>, <code>self_serve</code>, <code>default_installs</code> or <code>managed_updates</code>. This setting has no effect for non-munki (<code>standard</code>) assignment groups. Defaults to <code>managed</code>.</td>
+    </tr>
+    </tbody>
+</table>
+
+<h2 id='unassign-app'>Unassign app</h2>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/assignment_groups/43/apps/21 \
+  -u ${API_KEY}: \
+  -X DELETE
+
+HTTP/1.1 204 No Content
+</code></pre>
+</div>
+<h3 id='http-request-17'>HTTP Request</h3>
+<p>
+    <code>DELETE https://a.simplemdm.com/api/v1/assignment_groups/{ASSIGNMENT_GROUP_ID}/apps/{APP_ID}</code>
+</p>
+
+<h2 id='assign-device-group'>Assign device group</h2>
+<p class="notice"><span class="badge">deprecated</span> The unassign device group API has been deprecated and is only available for backwards compatibility with existing API integrations. To use this endpoint, you must provide the legacy_device_group_id from a static group that was previously migrated from a legacy device group.</p>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/assignment_groups/43/device_groups/87 \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 204 No Content
+</code></pre>
+</div>
+<h3 id='http-request-18'>HTTP Request</h3>
+<p>
+    <code>POST
+        https://a.simplemdm.com/api/v1/assignment_groups/{ASSIGNMENT_GROUP_ID}/device_groups/{LEGACY_DEVICE_GROUP_ID}</code>
+</p>
+
+<h2 id='unassign-device-group'>Unassign device group</h2>
+<p class="notice"><span class="badge">deprecated</span> The assign device group API has been deprecated and is only available for backwards compatibility with existing API integrations. To use this endpoint, you must provide the legacy_device_group_id from a static group that was previously migrated from a legacy device group.</p>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/assignment_groups/43/device_groups/87 \
+  -u ${API_KEY}: \
+  -X DELETE
+
+HTTP/1.1 204 No Content
+</code></pre>
+</div>
+<h3 id='http-request-19'>HTTP Request</h3>
+<p>
+    <code>DELETE
+        https://a.simplemdm.com/api/v1/assignment_groups/{ASSIGNMENT_GROUP_ID}/device_groups/{LEGACY_DEVICE_GROUP_ID}</code>
+</p>
+
+<h2 id='assign-device'>Assign device</h2>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/assignment_groups/43/devices/87 \
+  -d remove_others=true \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 204 No Content
+</code></pre>
+</div>
+<h3 id='http-request-20'>HTTP Request</h3>
+<p>
+    <code>POST https://a.simplemdm.com/api/v1/assignment_groups/{ASSIGNMENT_GROUP_ID}/devices/{DEVICE_ID}</code>
+</p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>remove_others</td>
+        <td>Optional. If set to <code>true</code>, the device will be removed from all other assignment groups before being added to this one.</td>
+    </tr>
+    </tbody>
+</table>
+
+<h2 id='unassign-device'>Unassign device</h2>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/assignment_groups/43/device/87 \
+  -u ${API_KEY}: \
+  -X DELETE
+
+HTTP/1.1 204 No Content
+</code></pre>
+</div>
+<h3 id='http-request-21'>HTTP Request</h3>
+<p>
+    <code>DELETE
+        https://a.simplemdm.com/api/v1/assignment_groups/{ASSIGNMENT_GROUP_ID}/devices/{DEVICE_ID}</code>
+</p>
+
+<h2 id='push-apps'>Push apps</h2>
+<p>
+    Installs associated apps to associated devices. A munki catalog refresh or MDM install command will be sent to all associated devices depending on the assignment group type.</p>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/assignment_groups/43/push_apps \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 202 Accepted
+</code></pre>
+</div>
+<h3 id='http-request-22'>HTTP Request</h3>
+<p>
+    <code>POST https://a.simplemdm.com/api/v1/assignment_groups/{ASSIGNMENT_GROUP_ID}/push_apps</code>
+</p>
+
+<h2 id='update-apps'>Update apps</h2>
+<p>
+    Updates associated apps on associated devices. A munki catalog refresh or MDM install command will be sent to all associated devices depending on the assignment group type.</p>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/assignment_groups/43/update_apps \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 202 Accepted
+</code></pre>
+</div>
+<h3 id='http-request-23'>HTTP Request</h3>
+<p>
+    <code>POST https://a.simplemdm.com/api/v1/assignment_groups/{ASSIGNMENT_GROUP_ID}/update_apps</code>
+</p>
+
+<h2 id='assign-profile'>Assign profile</h2>
+<p>
+    Assign profile to an assignment group. You must have permission to modify both the assignment group and the
+    profile.</p>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/assignment_groups/43/profiles/83 \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 204 No Content
+</code></pre>
+</div>
+<h3 id='http-request-24'>HTTP Request</h3>
+<p>
+    <code>POST
+        https://a.simplemdm.com/api/v1/assignment_groups/{ASSIGNMENT_GROUP_ID}/profiles/{PROFILE_ID}</code>
+</p>
+
+<h2 id='unassign-profile'>Unassign profile</h2>
+<p>
+    Unassign profile from an assignment group. You must have permission to modify both the assignment group and
+    the profile.</p>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/assignment_groups/43/profiles/83 \
+  -u ${API_KEY}: \
+  -X DELETE
+
+HTTP/1.1 204 No Content
+</code></pre>
+</div>
+<h3 id='http-request-25'>HTTP Request</h3>
+<p>
+    <code>DELETE
+        https://a.simplemdm.com/api/v1/assignment_groups/{ASSIGNMENT_GROUP_ID}/profiles/{PROFILE_ID}</code>
+</p>
+
+<h2 id='sync-profiles'>Sync profiles</h2>
+<p>
+    Sync profiles with an assignment group after assigning or unassigning them. This endpoint has a rate limit
+    of
+    1 request every 30 seconds. When the limit is reached, it will return a status code of &#39;429&#39;. You
+    can check the &#39;X-RateLimit-Reset&#39; header to see when the limit will be reset.</p>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/assignment_groups/43/sync_profiles \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 204 No Content
+</code></pre>
+</div>
+<h3 id='http-request-26'>HTTP Request</h3>
+<p>
+    <code>POST https://a.simplemdm.com/api/v1/assignment_groups/{ASSIGNMENT_GROUP_ID}/sync_profiles</code>
+</p>
+<h2 id='clone-assignment-group'>Clone</h2>
+<p>
+  Clone an assignment group. The cloned assignment group will have the same apps, profiles, and devices as the
+  original assignment group.
+</p>
+
+<aside class="notice">
+  This endpoint requires that your account be opted in to the New Groups Experience. It will only clone Static and Dynamic groups.
+</aside>
+
+<div class="highlight">
+  <pre>
+    <code class="language-bash">curl https://a.simplemdm.com/api/v1/assignment_groups/43/clone \
+  -u ${API_KEY}: \
+  --request POST
+
+HTTP/1.1 204 No Content
+    </code>
+  </pre>
+</div>
+<h3 id='http-request-clone-ag'>HTTP Request</h3>
+<p>
+  <code>POST https://a.simplemdm.com/api/v1/assignment_groups/{ASSIGNMENT_GROUP_ID}/clone</code>
+</p>
+        <h1 id='custom-attributes'>Custom Attributes</h1>
+<h2 id='list-all-3'>List all</h2>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/custom_attributes \
+  -u ${API_KEY}:</code><code class="language-json">{
+    "data": [
+        {
+            "type": "custom_attribute",
+            "id": "email_address",
+            "attributes": {
+                "name": "email_address",
+                "default_value": "user@example.org"
+            }
+        },
+        {
+            "type": "custom_attribute",
+            "id": "full_name",
+            "attributes": {
+                "name": "full_name",
+                "default_value": "not provided"
+            }
+        }
+    ],
+    "has_more": false
+}
+</code></pre>
+</div>
+<p>
+    Show all custom attributes active in the account.</p>
+<h3 id='http-request-27'>HTTP Request</h3>
+<p>
+    <code>GET https://a.simplemdm.com/api/v1/custom_attributes</code>
+</p>
+
+<h2 id='retrieve-one-3'>Retrieve one</h2>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/custom_attributes/email_address \
+  -u ${API_KEY}:</code><code class="language-json">{
+    "data": {
+      "type": "custom_attribute",
+      "id": "email_address",
+      "attributes": {
+          "name": "email_address",
+          "default_value": "user@example.org"
+      }
+    }
+}
+</code></pre>
+</div>
+<h3 id='http-request-28'>HTTP Request</h3>
+<p>
+    <code>GET https://a.simplemdm.com/api/v1/custom_attributes/{CUSTOM_ATTRIBUTE_ID}</code>
+</p>
+
+<h2 id='create-3'>Create</h2>
+<p>
+    Define a new custom attribute for the account.</p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>name</td>
+        <td>Required. The name of the custom attribute. This name will be used when referencing the custom
+            attribute throughout the app. Alphanumeric characters and underscores only. Case insensitive.
+        </td>
+    </tr>
+    <tr>
+        <td>default_value</td>
+        <td>Optional. The value that will be used if a value is not provided elsewhere.</td>
+    </tr>
+    </tbody>
+</table>
+<h3 id='http-request-29'>HTTP Request</h3>
+<p>
+    <code>POST https://a.simplemdm.com/api/v1/custom_attributes</code>
+</p>
+
+<h2 id='update-4'>Update</h2>
+<p>
+    Update a custom attribute for the account.</p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>default_value</td>
+        <td>The value that will be used if a value is not provided elsewhere.</td>
+    </tr>
+    </tbody>
+</table>
+<h3 id='http-request-30'>HTTP Request</h3>
+<p>
+    <code>PATCH https://a.simplemdm.com/api/v1/custom_attributes/{CUSTOM_ATTRIBUTE_ID}</code>
+</p>
+
+<h2 id='delete-3'>Delete</h2>
+<p>
+    Remove a custom attribute from the account. This will also remove all custom attribute values related to the
+    custom
+    attribute.</p>
+<h3 id='http-request-31'>HTTP Request</h3>
+<p>
+    <code>DELETE https://a.simplemdm.com/api/v1/custom_attributes/{CUSTOM_ATTRIBUTE_ID}</code>
+</p>
+
+<h2 id='get-values-for-device'>Get values for device</h2>
+<p>
+    Show all custom attribute values assigned to a device.</p>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/custom_attribute_values \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": [
+    {
+      "type": "custom_attribute_value",
+      "id": "my_first_custom_attribute",
+      "attributes": {
+        "value": "hello",
+        "secret": false,
+        "source": "group"
+      }
+    },
+    {
+      "type": "custom_attribute_value",
+      "id": "my_other_custom_attribute",
+      "attributes": {
+        "value": "",
+        "secret": true,
+        "source": "device"
+      }
+    }
+  ]
+}
+</code></pre>
+</div>
+<h3 id='http-request-32'>HTTP Request</h3>
+<p>
+    <code>GET https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/custom_attribute_values</code>
+</p>
+
+<h2 id='set-value-for-device'>Set value for device</h2>
+<p>
+    Set the value of a custom attribute for a device.</p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>value</td>
+        <td>Required. The value to be assigned for the provided device and custom attribute.</td>
+    </tr>
+    </tbody>
+</table>
+<div class="highlight">
+            <pre><code class="language-bash">curl "https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/custom_attribute_values/my_other_custom_attribute" \
+  -u ${API_KEY}: \
+  -d value="test" \
+  -X "PUT"
+
+{
+  "data": {
+    "type": "custom_attribute_value",
+    "id": "my_other_custom_attribute",
+    "attributes": {
+      "value": "test"
+    }
+  }
+}
+</code></pre>
+</div>
+<h3 id='http-request-33'>HTTP Request</h3>
+<p>
+    <code>PUT
+        https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/custom_attribute_values/{CUSTOM_ATTRIBUTE_NAME}</code>
+</p>
+
+<h2 id='set-multiple-values-for-a-device'>Set multiple values for a device</h2>
+<p>
+    Set multiple custom attribute values for a device.</p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>
+            <code>[{&quot;name&quot;: &quot;my_custom_attribute_1&quot;, &quot;value&quot;:
+                &quot;test1&quot;}]</code>
+        </td>
+        <td>Required. An array of json objects where each object contains a &#39;name&#39; and &#39;value&#39;
+            key
+        </td>
+    </tr>
+    </tbody>
+</table>
+<div class="highlight">
+            <pre><code class="language-bash">curl "https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/custom_attribute_values" \
+  -u "${API_KEY}:" \
+  -X "PUT" \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "data": [
+        {
+           "name": "my_custom_attribute_1",
+           "value": "test1"
+         },
+         {
+           "name": "my_custom_attribute_2",
+           "value": "test2"
+         }
+      ]
+  }'
+</code></pre>
+</div>
+<h3 id='http-request-34'>HTTP Request</h3>
+<p>
+    <code>PUT https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/custom_attribute_values</code>
+</p>
+
+<h2 id='set-custom-attribute-value-for-multiple-devices'>Set custom attribute value for multiple devices</h2>
+<p>
+    Set the value for a custom attribute on multiple devices
+</p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>
+            <code>[{&quot;device_id&quot;: &quot;123&quot;, &quot;value&quot;: &quot;test1&quot;}]</code>
+        </td>
+        <td>Required. An array of json objects where each object contains a &#39;device_id&#39; and &#39;value&#39;
+            key
+        </td>
+    </tr>
+    </tbody>
+</table>
+<div class="highlight">
+            <pre><code class="language-bash">curl "https://a.simplemdm.com/api/v1/custom_attribute_values/my_custom_attribute" \
+  -u ${API_KEY}: \
+  -X "PUT" \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "data": [
+            {
+              "device_id": "123",
+              "value": "test1"
+            },
+            {
+              "device_id": "321",
+              "value": "test2"
+            }
+        ]
+      }'
+</code></pre>
+</div>
+<h3 id='http-request-35'>HTTP Request</h3>
+<p>
+    <code>PUT https://a.simplemdm.com/api/v1/custom_attribute_values/my_custom_attribute</code>
+</p>
+
+<h2 id='get-values-for-assignment-group'>Get values for assignment group</h2>
+<p>
+    Show all custom attribute values assigned to an assignment group.</p>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/assignment_groups/{ASSIGNMENT_GROUP_ID}/custom_attribute_values \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": [
+    {
+      "type": "custom_attribute_value",
+      "id": "my_first_custom_attribute",
+      "attributes": {
+        "value": "hello",
+        "secret": false,
+        "source": "group"
+      }
+    },
+    {
+      "type": "custom_attribute_value",
+      "id": "my_other_custom_attribute",
+      "attributes": {
+        "value": "",
+        "secret": true,
+        "source": "group"
+      }
+    }
+  ]
+}
+</code></pre>
+</div>
+<h3 id='http-request-33-new'>HTTP Request</h3>
+<p>
+    <code>GET https://a.simplemdm.com/api/v1/assignment_groups/{ASSIGNMENT_GROUP_ID}/custom_attribute_values</code>
+</p>
+
+
+<h2 id='set-value-for-assignment-group'>Set value for assignment group</h2>
+<p>
+    Set a custom attribute value on an assignment group.</p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>value</td>
+        <td>Required. The value to be assigned for the provided assignment group and custom attribute.</td>
+    </tr>
+    </tbody>
+</table>
+<div class="highlight">
+            <pre><code class="language-bash">curl "https://a.simplemdm.com/api/v1/assignment_groups/{ASSIGNMENT_GROUP_ID}/custom_attribute_values/my_first_custom_attribute" \
+  -u ${API_KEY}: \
+  -d value="my_new_value" \
+  -X "PUT"
+
+{
+  "data": {
+    "type": "custom_attribute_value",
+    "id": "my_first_custom_attribute",
+    "attributes": {
+      "value": "my_new_value",
+      "secret": false,
+      "source": "group"
+    }
+  }
+}
+</code></pre>
+</div>
+<h3 id='http-request-34-new'>HTTP Request</h3>
+<p>
+    <code>PUT https://a.simplemdm.com/api/v1/assignment_groups/{ASSIGNMENT_GROUP_ID}/custom_attribute_values/{CUSTOM_ATTRIBUTE_ID}</code>
+</p>
+<h2 id='get-values-for-group'>Get values for group</h2>
+<p>
+    <span class="badge">deprecated</span> Show all custom attribute values assigned to a device group.</p>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/device_groups/1/custom_attribute_values \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": [
+    {
+      "type": "custom_attribute_value",
+      "id": "my_first_custom_attribute",
+      "attributes": {
+        "value": "hello",
+        "secret": false,
+        "source": "group"
+      }
+    },
+    {
+      "type": "custom_attribute_value",
+      "id": "my_other_custom_attribute",
+      "attributes": {
+        "value": "",
+        "secret": true,
+        "source": "account"
+      }
+    }
+  ]
+}
+</code></pre>
+</div>
+<h3 id='http-request-36'>HTTP Request</h3>
+<p>
+    <code>GET https://a.simplemdm.com/api/v1/device_groups/{DEVICE_GROUP_ID}/custom_attribute_values</code>
+</p>
+
+<h2 id='set-value-for-group'>Set value for device group</h2>
+<p>
+<span class="badge">deprecated</span> Set the value of a custom attribute for a device group. This endpoint is deprecated. It is recommended that you use the Assignment Groups endpoints to manage groups.
+</p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>value</td>
+        <td>Required. The value to be assigned for the provided group and custom attribute.</td>
+    </tr>
+    </tbody>
+</table>
+<div class="highlight">
+            <pre><code class="language-bash">curl "https://a.simplemdm.com/api/v1/device_groups/1/custom_attribute_values/my_other_custom_attribute" \
+  -u ${API_KEY}: \
+  -d value="test" \
+  -X "PUT"
+
+{
+  "data": {
+    "type": "custom_attribute_value",
+    "id": "my_other_custom_attribute",
+    "attributes": {
+      "value": "test"
+    }
+  }
+}
+</code></pre>
+</div>
+<h3 id='http-request-37'>HTTP Request</h3>
+<p>
+    <code>PUT
+        https://a.simplemdm.com/api/v1/device_groups/{DEVICE_GROUP_ID}/custom_attribute_values/{CUSTOM_ATTRIBUTE_NAME}</code>
+</p>
+
+        <h1 id='custom-configuration-profiles'>Custom Configuration Profiles</h1>
+<h2 id='list-all-4'>List all</h2>
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>search</td>
+        <td>Limit response to profiles with matching profile name</td>
+    </tr>
+    </tbody>
+</table>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/custom_configuration_profiles \
+  -u ${API_KEY}:</code><code class="language-json">{
+    "data": [
+        {
+            "type": "custom_configuration_profile",
+            "id": 293814,
+            "attributes": {
+                "name": "Munki Configuration",
+                "reinstall_after_os_update": false,
+                "profile_identifier": "com.unwiredmdm.aabc717175a3467b93af177aa5f1992d"
+                "user_scope": true,
+                "attribute_support": false,
+                "escape_attributes": false,
+                "group_count": 2,
+                "device_count": 4
+            },
+            "relationships": {
+                "device_groups": {
+                    "data": [
+                        {
+                            "type": "device group",
+                            "id": 732444
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "has_more": false
+}
+</code></pre>
+</div>
+<p>
+    Supports <a href="#pagination">pagination</a>.</p>
+<h3 id='http-request-38'>HTTP Request</h3>
+<p>
+    <code>GET https://a.simplemdm.com/api/v1/custom_configuration_profiles</code>
+</p>
+
+<h2 id='create-4'>Create</h2>
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>name</td>
+        <td>Required. A name for the profile.</td>
+    </tr>
+    <tr>
+        <td>mobileconfig</td>
+        <td>Required. The mobileconfig file. Send as multipart/form-data.</td>
+    </tr>
+    <tr>
+        <td>user_scope</td>
+        <td>Optional. A boolean true or false. If false, deploy as a device profile instead of a user profile
+            for macOS devices. Defaults to true.
+        </td>
+    </tr>
+    <tr>
+        <td>attribute_support</td>
+        <td>Optional. A boolean true or false. When enabled, SimpleMDM will process variables in the uploaded
+            profile. Defaults to false.
+        </td>
+    </tr>
+    <tr>
+        <td>escape_attributes</td>
+        <td>Optional. A boolean true or false. When enabled, SimpleMDM escape the values of the custom variables
+            in the uploaded profile.
+        </td>
+    </tr>
+    <tr>
+        <td>reinstall_after_os_update</td>
+        <td>Optional. A boolean true or false. When enabled, SimpleMDM will re-install the profile automatically
+            after macOS software updates are detected.
+        </td>
+    </tr>
+    </tbody>
+</table>
+<h3 id='http-request-39'>HTTP Request</h3>
+<p>
+    <code>POST https://a.simplemdm.com/api/v1/custom_configuration_profiles/</code>
+</p>
+
+<h2 id='update-5'>Update</h2>
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>name</td>
+        <td>Optional. Change the name of the profile.</td>
+    </tr>
+    <tr>
+        <td>mobileconfig</td>
+        <td>Optional. Update the mobileconfig file. Send as multipart/form-data.</td>
+    </tr>
+    <tr>
+        <td>user_scope</td>
+        <td>Optional. A boolean true or false. If false, deploy as a device profile instead of a user profile
+            for macOS devices.
+        </td>
+    </tr>
+    <tr>
+        <td>attribute_support</td>
+        <td>Optional. A boolean true or false. When enabled, SimpleMDM will process variables in the uploaded
+            profile.
+        </td>
+    </tr>
+    <tr>
+        <td>escape_attributes</td>
+        <td>Optional. A boolean true or false. When enabled, SimpleMDM escape the values of the custom variables
+            in the uploaded profile.
+        </td>
+    </tr>
+    <tr>
+        <td>reinstall_after_os_update</td>
+        <td>Optional. A boolean true or false. When enabled, SimpleMDM will re-install the profile automatically
+            after macOS software updates are detected.
+        </td>
+    </tr>
+    </tbody>
+</table>
+<h3 id='http-request-40'>HTTP Request</h3>
+<p>
+    <code>PATCH https://a.simplemdm.com/api/v1/custom_configuration_profiles/{PROFILE_ID}</code>
+</p>
+
+<h2 id='download'>Download</h2>
+<p>
+    Download the contents of the custom configuration profile.</p>
+<h3 id='http-request-41'>HTTP Request</h3>
+<p>
+    <code>GET https://a.simplemdm.com/api/v1/custom_configuration_profiles/{PROFILE_ID}/download</code>
+</p>
+
+<h2 id='delete-4'>Delete</h2>
+<h3 id='http-request-42'>HTTP Request</h3>
+<p>
+    <code>DELETE https://a.simplemdm.com/api/v1/custom_configuration_profiles/{PROFILE_ID}</code>
+</p>
+
+<h2 id='assign-to-device-group'>Assign to device group</h2>
+<p class="notice"><span class="badge">deprecated</span> This endpoint is deprecated. It is recommended that you use the <a href="#assign-profile">Assignment Groups Assign Profile</a> endpoint instead. To ensure backwards compatibility with accounts created before Dynamic Groups, <code>device_group_id</code> will map to the static group that was created from the original device group.</p>
+<p>
+    This action will cause the profile to push to all devices in the assigned device group.</p>
+<h3 id='http-request-43'>HTTP Request</h3>
+<p>
+    <code>POST
+        https://a.simplemdm.com/api/v1/custom_configuration_profiles/{PROFILE_ID}/device_groups/{DEVICE_GROUP_ID}</code>
+</p>
+
+<h2 id='unassign-from-device-group'>Unassign from device group</h2>
+<p class="notice"><span class="badge">deprecated</span> This endpoint is deprecated. It is recommended that you use the <a href="#unassign-profile">Assignment Groups Unassign Profile</a> endpoint instead. To ensure backwards compatibility for accounts created before Dynamic Groups, <code>device_group_id</code> will map to the static group that was created from the original device group.</p>
+<p>
+    This action will cause the profile to be removed from all devices in the assigned device group.</p>
+<h3 id='http-request-44'>HTTP Request</h3>
+<p>
+    <code>DELETE
+        https://a.simplemdm.com/api/v1/custom_configuration_profiles/{PROFILE_ID}/device_groups/{DEVICE_GROUP_ID}</code>
+</p>
+
+<h2 id='assign-to-device'>Assign to device</h2>
+<p>
+    This action will cause the profile to push to the specified device.</p>
+<h3 id='http-request-45'>HTTP Request</h3>
+<p>
+    <code>POST
+        https://a.simplemdm.com/api/v1/custom_configuration_profiles/{PROFILE_ID}/devices/{DEVICE_ID}</code>
+</p>
+
+<h2 id='unassign-from-device'>Unassign from device</h2>
+<p>
+    This action will cause the profile to be removed from the specified device.</p>
+<h3 id='http-request-46'>HTTP Request</h3>
+<p>
+    <code>DELETE
+        https://a.simplemdm.com/api/v1/custom_configuration_profiles/{PROFILE_ID}/devices/{DEVICE_ID}</code>
+</p>
+        <h1 id='custom-declarations'>Custom Declarations</h1>
+<h2 id='cd-list-all'>List all</h2>
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>search</td>
+        <td>Limit response to profiles with matching profile name</td>
+    </tr>
+    </tbody>
+</table>
+<div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/custom_declarations \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": [
+    {
+      "type": "custom_declaration",
+      "id": 166,
+      "attributes": {
+        "name": "My custom declaration",
+        "reinstall_after_os_update": false,
+        "profile_identifier": "com.unwiredmdm.1d443b30cec842dfb4b079347cb7e8e3",
+        "user_scope": false,
+        "attribute_support": false,
+        "escape_attributes": false,
+        "group_count": 0,
+        "device_count": 1
+      },
+      "relationships": {
+        "device_groups": {
+          "data": [],
+          "groups": {
+            "data": []
+          }
+        }
+      }
+    },
+    {
+      "type": "custom_declaration",
+      "id": 167,
+      "attributes": {
+        "name": "Custom Safari Bookmarks",
+        "reinstall_after_os_update": false,
+        "profile_identifier": "com.unwiredmdm.4794e39a8f0d4d1dbc1c7af46697b671",
+        "user_scope": true,
+        "attribute_support": true,
+        "escape_attributes": true,
+        "group_count": 0,
+        "device_count": 1
+      },
+      "relationships": {
+        "device_groups": {
+          "data": [],
+          "groups": {
+            "data": []
+          }
+        }
+      }
+    }
+  ],
+  "has_more": false
+}
+</code></pre>
+</div>
+<p>
+    Supports <a href="#pagination">pagination</a>.</p>
+<h3 id='cd-http-request-38'>HTTP Request</h3>
+<p>
+    <code>GET https://a.simplemdm.com/api/v1/custom_declarations</code>
+</p>
+
+<h2 id='cd-create'>Create</h2>
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>name</td>
+        <td>Required. A name for the profile.</td>
+    </tr>
+     <tr>
+        <td>declaration_type</td>
+        <td>Required. The type of declaration being defined.</td>
+    </tr>
+    <tr>
+        <td>payload</td>
+        <td>Required. The JSON payload for the declaration. Send as multipart/form-data.</td>
+    </tr>
+    <tr>
+        <td>user_scope</td>
+        <td>Optional. A boolean true or false. If false, deploy as a device profile instead of a user profile
+            for macOS devices. Defaults to true.
+        </td>
+    </tr>
+    <tr>
+        <td>attribute_support</td>
+        <td>Optional. A boolean true or false. When enabled, SimpleMDM will process variables in the uploaded
+            profile. Defaults to false.
+        </td>
+    </tr>
+    <tr>
+        <td>escape_attributes</td>
+        <td>Optional. A boolean true or false. When enabled, SimpleMDM escape the values of the custom variables
+            in the uploaded profile.
+        </td>
+    </tr>
+    <tr>
+        <td>activation_predicate</td>
+        <td>
+            Optional. A predicate format string as
+            <a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Predicates/AdditionalChapters/Introduction.html" target="_blank" rel="noopener noreferrer">Apple's Predicate Programming</a> describes.
+            The activation only installs when the predicate evaluates to true or if it is left blank.
+        </td>
+    </tr>
+
+    </tbody>
+</table>
+<h3 id='cd-http-request-39'>HTTP Request</h3>
+<p>
+    <code>POST https://a.simplemdm.com/api/v1/custom_declarations/</code>
+</p>
+
+<h2 id='cd-update'>Update</h2>
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>name</td>
+        <td>Optional. Change the name of the profile.</td>
+    </tr>
+      <tr>
+        <td>declaration_type</td>
+        <td>Optional. Update the type of declaration being defined.</td>
+    </tr>
+    <tr>
+        <td>payload</td>
+        <td>Optional. Update the JSON payload for the declaration. Send as multipart/form-data.</td>
+    </tr>
+    <tr>
+        <td>user_scope</td>
+        <td>Optional. A boolean true or false. If false, deploy as a device profile instead of a user profile
+            for macOS devices.
+        </td>
+    </tr>
+    <tr>
+        <td>attribute_support</td>
+        <td>Optional. A boolean true or false. When enabled, SimpleMDM will process variables in the uploaded
+            profile.
+        </td>
+    </tr>
+    <tr>
+        <td>escape_attributes</td>
+        <td>Optional. A boolean true or false. When enabled, SimpleMDM escape the values of the custom variables
+            in the uploaded profile.
+        </td>
+    </tr>
+    <tr>
+        <td>activation_predicate</td>
+        <td>
+            Optional. A predicate format string as
+            <a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Predicates/AdditionalChapters/Introduction.html" target="_blank" rel="noopener noreferrer">Apple's Predicate Programming</a> describes.
+            The activation only installs when the predicate evaluates to true or if it is left blank.
+        </td>
+    </tr>
+    </tbody>
+</table>
+<h3 id='cd-http-request-40'>HTTP Request</h3>
+<p>
+    <code>PATCH https://a.simplemdm.com/api/v1/custom_declarations/{PROFILE_ID}</code>
+</p>
+
+<h2 id='cd-download'>Download</h2>
+<p>
+    Download the contents of the custom declaration as a JSON file.</p>
+<h3 id='cd-http-request-41'>HTTP Request</h3>
+<p>
+    <code>GET https://a.simplemdm.com/api/v1/custom_declarations/{PROFILE_ID}/download</code>
+</p>
+
+<h2 id='cd-delete'>Delete</h2>
+<h3 id='cd-http-request-42'>HTTP Request</h3>
+<p>
+    <code>DELETE https://a.simplemdm.com/api/v1/custom_declarations/{PROFILE_ID}</code>
+</p>
+
+<h2 id='cd-assign-to-device'>Assign to device</h2>
+<p>
+    This action will cause the profile to push to the specified device.</p>
+<h3 id='cd-http-request-45'>HTTP Request</h3>
+<p>
+    <code>POST
+        https://a.simplemdm.com/api/v1/custom_declarations/{PROFILE_ID}/devices/{DEVICE_ID}</code>
+</p>
+
+<h2 id='cd-unassign-from-device'>Unassign from device</h2>
+<p>
+    This action will cause the profile to be removed from the specified device.</p>
+<h3 id='http-request-46'>HTTP Request</h3>
+<p>
+    <code>DELETE
+        https://a.simplemdm.com/api/v1/custom_declarations/{PROFILE_ID}/devices/{DEVICE_ID}</code>
+</p>
+        <h1 id='dep-servers'>DEP Servers</h1>
+<h2 id='list-all-5'>List all</h2>
+<p>
+    Returns a list of Apple Business Manager server associations, which are used for the purposes of Automated
+    Enrollment (
+    formerly Apple DEP or Device Enrollment Program). These associations exist as &quot;Enrollments&quot; within
+    the SimpleMDM admin
+    interface. Supports <a href="#pagination">pagination</a>.</p>
+<div class="highlight">
+            <pre><code class="language-bash">curl "https://a.simplemdm.com/api/v1/dep_servers" \
+     -u ${API_KEY}:</code><code class="language-json">{
+  "data": [
+    {
+      "type": "dep_server",
+      "id": 1,
+      "attributes": {
+        "server_name": "My DEP MDM Server",
+        "organization_name": "SimpleMDM",
+        "token_expires_at": "2023-02-03T10:57:07.000-08:00",
+        "last_synced_at": "2022-02-05T06:00:05.000-08:00"
+      }
+    },
+    {
+      "type": "dep_server",
+      "id": 2,
+      "attributes": {
+        "server_name": "Another MDM Server",
+        "organization_name": "Acme Corp",
+        "token_expires_at": "2023-02-03T10:57:07.000-08:00",
+        "last_synced_at": "2022-02-05T06:00:05.000-08:00"
+      }
+    }
+  ],
+  "has_more": false
+}
+</code></pre>
+</div>
+<h3 id='http-request-47'>HTTP Request</h3>
+<p>
+    <code>GET https://a.simplemdm.com/api/v1/dep_servers</code>
+</p>
+
+<h2 id='retrieve-one-4'>Retrieve one</h2>
+<h3 id='http-request-48'>HTTP Request</h3>
+<p>
+    <code>GET https://a.simplemdm.com/api/v1/dep_servers/{DEP_SERVER_ID}</code>
+</p>
+
+<h2 id='sync-with-apple'>Sync with Apple</h2>
+<p>
+    DEP server records are automatically synchronized with Apple every couple of hours. This provokes a manual
+    sync.</p>
+<h3 id='http-request-49'>HTTP Request</h3>
+<p>
+    <code>POST https://a.simplemdm.com/api/v1/dep_servers/{DEP_SERVER_ID}/sync</code>
+</p>
+
+<h2 id='list-dep-devices'>List DEP devices</h2>
+<p>
+    Returns a listing of device records associated with the DEP server, as provided by Apple. These DEP devices
+    do not
+    necessarily have corresponding SimpleMDM device records. Supports <a href="#pagination">pagination</a>.</p>
+<h3 id='http-request-50'>HTTP Request</h3>
+<p>
+    <code>GET https://a.simplemdm.com/api/v1/dep_servers/{DEP_SERVER_ID}/dep_devices</code>
+</p>
+
+<h2 id='retrieve-one-dep-device'>Retrieve one DEP device</h2>
+<h3 id='http-request-51'>HTTP Request</h3>
+<p>
+    <code>GET https://a.simplemdm.com/api/v1/dep_servers/{DEP_SERVER_ID}/dep_devices/{DEP_DEVICE_ID}</code>
+</p>
+
+
+        <h1 id='devices'>Devices</h1>
+        <h2 id='list-all-6'>List all</h2>
+        <p>
+            Returns a listing of all devices in the account. Supports <a href="#pagination">pagination</a>.</p>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Argument</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>search</td>
+                <td>Limit response to devices with matching name, UDID, serial number, IMEI, MAC address, or phone
+                    number.
+                </td>
+            </tr>
+            <tr>
+                <td>include_awaiting_enrollment</td>
+                <td>When true, returns all devices including those in the awaiting_enrollment state. When false, does
+                    not return devices in the awaiting_enrollment state. Defaults to false.
+                </td>
+            </tr>
+            <tr>
+                <td>include_secret_custom_attributes</td>
+                <td>When true, returns all custom attribute values including those marked as secret. Defaults to
+                    false.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": [
+    {
+      "type": "device",
+      "id": 121,
+      "attributes": {
+        "name": "Mike's iPhone",
+        "last_seen_at": "2022-07-13T16:00:54.000-07:00",
+        "last_seen_ip": "203.0.113.0",
+        "enrolled_at": "2022-11-14T21:37:37.000-08:00",
+        "status": "enrolled",
+        "enrollment_channels": [
+          "device"
+        ],
+        "device_name": "Mike's iPhone",
+        "os_version": "14.7",
+        "build_version": "18G5042c",
+        "model_name": "iPhone 7",
+        "model": "NG4W2LL",
+        "product_name": "iPhone9,1",
+        "unique_identifier": "4A08359C-1D3A-5D3E-939E-FFA6A561321D",
+        "serial_number": "DNFJE9DNG5MG",
+        "processor_architecture": null,
+        "imei": "35 445506 652132 5",
+        "meid": "35404596608032",
+        "device_capacity": 128.0,
+        "available_device_capacity": 119.07,
+        "battery_level": "100%",
+        "modem_firmware_version": "8.80.00",
+        "iccid": "8914 8110 0002 8094 4264",
+        "bluetooth_mac": "f0:db:e2:df:e9:11",
+        "ethernet_macs": [],
+        "wifi_mac": "f0:db:e2:df:e9:2f",
+        "current_carrier_network": "Verizon",
+        "sim_carrier_network": null,
+        "subscriber_carrier_network": "Verizon",
+        "carrier_settings_version": "46.0.1",
+        "phone_number": "+15555555555",
+        "voice_roaming_enabled": true,
+        "data_roaming_enabled": false,
+        "is_roaming": false,
+        "subscriber_mcc": "311",
+        "subscriber_mnc": "480",
+        "simmnc": null,
+        "current_mcc": "310",
+        "current_mnc": "00",
+        "hardware_encryption_caps": 3,
+        "passcode_present": false,
+        "passcode_compliant": true,
+        "passcode_compliant_with_profiles": true,
+        "is_supervised": true,
+        "is_dep_enrollment": false,
+        "is_user_approved_enrollment": null,
+        "is_device_locator_service_enabled": false,
+        "is_do_not_disturb_in_effect": false,
+        "personal_hotspot_enabled": false,
+        "itunes_store_account_is_active": false,
+        "cellular_technology": 3,
+        "last_cloud_backup_date": null,
+        "is_activation_lock_enabled": false,
+        "is_cloud_backup_enabled": false,
+        "filevault_enabled": false,
+        "filevault_recovery_key": null,
+        "firmware_password_enabled": false,
+        "recovery_lock_password_enabled": false,
+        "remote_desktop_enabled": false,
+        "firmware_password": null,
+        "recovery_lock_password": null,
+        "managed_apple_id": testing@simplemdm.com,
+        "firewall": {
+          "enabled": null,
+          "block_all_incoming": null,
+          "stealth_mode": null
+        },
+        "system_integrity_protection_enabled": null,
+        "os_update": {
+          "automatic_os_installation_enabled": null,
+          "automatic_app_installation_enabled": null,
+          "automatic_check_enabled": null,
+          "automatic_security_updates_enabled": null,
+          "background_download_enabled": null,
+          "catalog_url": null,
+          "default_catalog": null,
+          "perform_periodic_check": null,
+          "previous_scan_date": null,
+          "previous_scan_result": null
+        },
+        "location_latitude": null,
+        "location_longitude": null,
+        "location_accuracy": null,
+        "location_updated_at": null
+      },
+      "relationships": {
+        "device_group": {
+          "data": {
+            "type": "device_group",
+            "id": 1
+          }
+        },
+        "custom_attribute_values" {
+          "data": [
+            {
+              "type": "custom_attribute_value",
+              "id": "custom_attribute_name",
+              "attributes": {
+                "secret": false,
+                "value": "custom attribute value"
+              }
+            }
+          ]
+        }
+      }
+    },
+
+    ...
+
+  ],
+  "has_more": false
+}
+</code></pre>
+        </div>
+        <h3 id='http-request-52'>HTTP Request</h3>
+        <p>
+            <code>GET https://a.simplemdm.com/api/v1/devices</code>
+        </p>
+
+<h2 id='retrieve-one-5'>Retrieve one</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Argument</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>include_secret_custom_attributes</td>
+                <td>When true, returns all custom attribute values including those marked as secret. Defaults to
+                    false.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID} \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": {
+    "type": "device",
+    "id": 121,
+    "attributes": {
+      "name": "Mike's iPhone",
+      "last_seen_at": "2022-07-13T16:00:54.000-07:00",
+      "last_seen_ip": "203.0.113.0",
+      "enrolled_at": "2022-11-14T21:37:37.000-08:00",
+      "status": "enrolled",
+      "enrollment_channels": [
+        "device"
+      ],
+      "device_name": "Mike's iPhone",
+      "os_version": "14.7",
+      "build_version": "18G5042c",
+      "model_name": "iPhone 7",
+      "model": "NG4W2LL",
+      "product_name": "iPhone9,1",
+      "unique_identifier": "4A08359C-1D3A-5D3E-939E-FFA6A561321D",
+      "serial_number": "DNFJE9DNG5MG",
+      "processor_architecture": null,
+      "imei": "35 445506 652132 5",
+      "meid": "35404596608032",
+      "device_capacity": 128.0,
+      "available_device_capacity": 119.07,
+      "battery_level": "100%",
+      "modem_firmware_version": "8.80.00",
+      "iccid": "8914 8110 0002 8094 4264",
+      "bluetooth_mac": "f0:db:e2:df:e9:11",
+      "ethernet_macs": [],
+      "wifi_mac": "f0:db:e2:df:e9:2f",
+      "current_carrier_network": "Verizon",
+      "sim_carrier_network": null,
+      "subscriber_carrier_network": "Verizon",
+      "carrier_settings_version": "46.0.1",
+      "phone_number": "+15555555555",
+      "voice_roaming_enabled": true,
+      "data_roaming_enabled": false,
+      "is_roaming": false,
+      "subscriber_mcc": "311",
+      "subscriber_mnc": "480",
+      "simmnc": null,
+      "current_mcc": "310",
+      "current_mnc": "00",
+      "hardware_encryption_caps": 3,
+      "passcode_present": false,
+      "passcode_compliant": true,
+      "passcode_compliant_with_profiles": true,
+      "is_supervised": true,
+      "is_dep_enrollment": false,
+      "dep_enrolled": false,
+      "dep_assigned": false,
+      "is_user_approved_enrollment": null,
+      "is_device_locator_service_enabled": false,
+      "is_do_not_disturb_in_effect": false,
+      "personal_hotspot_enabled": false,
+      "itunes_store_account_is_active": false,
+      "cellular_technology": 3,
+      "last_cloud_backup_date": null,
+      "is_activation_lock_enabled": false,
+      "is_cloud_backup_enabled": false,
+      "filevault_enabled": false,
+      "filevault_recovery_key": null,
+      "firmware_password_enabled": false,
+      "recovery_lock_password_enabled": false,
+      "remote_desktop_enabled": false,
+      "firmware_password": null,
+      "recovery_lock_password": null,
+      "managed_apple_id": "testing@simplemdm.com",
+      "firewall": {
+        "enabled": null,
+        "block_all_incoming": null,
+        "stealth_mode": null
+      },
+      "system_integrity_protection_enabled": null,
+      "os_update": {
+        "automatic_os_installation_enabled": null,
+        "automatic_app_installation_enabled": null,
+        "automatic_check_enabled": null,
+        "automatic_security_updates_enabled": null,
+        "background_download_enabled": null,
+        "last_sync_at": "2022-11-14T21:37:37.000-08:00"
+      },
+      "relationships": {
+        "groups": {
+          "data": [
+            {
+              "type": "group",
+              "id": 123
+            },
+            {
+              "type": "group",
+              "id": 456
+            }
+          ]
+        },
+        "custom_attribute_values": {
+          "data": [
+            {
+              "type": "custom_attribute_value",
+              "id": "custom_attribute_name",
+              "attributes": {
+                "secret": false,
+                "value": "custom attribute value"
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+</code></pre>
+        </div>
+        <h3 id='http-request-53'>HTTP Request</h3>
+        <p>
+            <code>GET https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}</code>
+        </p>
+
+<h2 id='create-5'>Create</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/ \
+  -d name="Sara's iPad" \
+  -d static_group_ids[]="41" \
+  -u ${API_KEY}:</code><code class="language-json">{
+    "data": {
+                 "type": "device",
+                   "id": 980190963,
+           "attributes": {
+                                         "name": "Sara's iPad",
+                                 "last_seen_at": null,
+                                 "last_seen_ip": null,
+                                       "status": "awaiting enrollment",
+                               "enrollment_url": "https://a.simplemdm.com/e/?c=63154796",
+                                  "device_name": null,
+                                   "os_version": null,
+                                "build_version": null,
+                                   "model_name": "Unknown",
+                                        "model": null,
+                                 "product_name": null,
+                            "unique_identifier": null,
+                                "serial_number": null,
+                                         "imei": null,
+                                         "meid": null,
+                              "device_capacity": null,
+                    "available_device_capacity": null,
+                                "battery_level": null,
+                       "modem_firmware_version": null,
+                                        "iccid": null,
+                                "bluetooth_mac": null,
+                                     "wifi_mac": null,
+                      "current_carrier_network": null,
+                          "sim_carrier_network": null,
+                   "subscriber_carrier_network": null,
+                     "carrier_settings_version": null,
+                                 "phone_number": null,
+                        "voice_roaming_enabled": null,
+                         "data_roaming_enabled": null,
+                                   "is_roaming": null,
+                               "subscriber_mcc": null,
+                                       "simmnc": null,
+                                  "current_mcc": null,
+                                  "current_mnc": null,
+                     "hardware_encryption_caps": null,
+                             "passcode_present": null,
+                           "passcode_compliant": null,
+             "passcode_compliant_with_profiles": null,
+                                "is_supervised": null,
+            "is_device_locator_service_enabled": null,
+                  "is_do_not_disturb_in_effect": null,
+                     "personal_hotspot_enabled": null,
+               "itunes_store_account_is_active": null,
+                          "cellular_technology": null,
+                       "last_cloud_backup_date": null,
+                   "is_activation_lock_enabled": null,
+                      "is_cloud_backup_enabled": null,
+                            "location_latitude": null,
+                           "location_longitude": null,
+                            "location_accuracy": null,
+                          "location_updated_at": null
+        },
+        "relationships": {
+            "device_group": {
+                "data": {
+                    "type": "device_group",
+                      "id": 41
+                }
+            }
+        }
+    }
+}
+</code></pre>
+        </div>
+        <p>
+            Creates a new device object in SimpleMDM. The response body includes an enrollment URL that can be used once
+            to enroll a
+            physical device.</p>
+        <h3 id='http-request-54'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices</code>
+        </p>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Argument</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>name</td>
+                <td>The name of the device.</td>
+            </tr>
+            <tr>
+                <td>group_id <span class="badge">deprecated</span></td>
+                <td>For accounts created before Dynamic Groups, the ID of the device_group the device originally belonged to. This corresponds to the legacy_group_id of the associated static group.</td>
+            </tr>
+            <tr>
+                <td>static_group_ids</td>
+                <td>An optional array of static group ids. If provided, the device will be assigned to the static groups with the provided ids.</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <h2 id='update-6'>Update</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID} \
+  -X PATCH \
+  -d name="Ashley's iPad" \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": {
+    "type": "device",
+    "id": 121,
+    "attributes": {
+      "name": "Ashley's iPad",
+      "last_seen_at": "2015-10-01T18:38:47.277-07:00",
+      "last_seen_ip": "203.0.113.0",
+      "status": "enrolled",
+      "device_name": "iPhone",
+      "os_version": "9.3.2",
+      "build_version": "13A452",
+      "model_name": "iPhone 6",
+      "model": "NG4W2LL",
+      "product_name": "iPhone7,2",
+      "serial_number": "DNFJE9DNG5MG",
+      "imei": "35 445506 652132 5",
+      "meid": "35404596608032",
+      "device_capacity": 55.62955093383789,
+      "available_device_capacity": 15.19466781616211,
+      "battery_level": "93%",
+      "modem_firmware_version": "4.02.00",
+      "iccid": "8914 8110 0002 8094 4264",
+      "bluetooth_mac": "f0:db:e2:df:e9:11",
+      "wifi_mac": "f0:db:e2:df:e9:2f",
+      "current_carrier_network": "Verizon",
+      "sim_carrier_network": "Verizon",
+      "subscriber_carrier_network": "Verizon",
+      "carrier_settings_version": "21.1",
+      "phone_number": "5035551234",
+      "voice_roaming_enabled": true,
+      "data_roaming_enabled": false,
+      "is_roaming": false,
+      "subscriber_mcc": "311",
+      "simmnc": "480",
+      "current_mcc": "311",
+      "current_mnc": "480",
+      "hardware_encryption_caps": 3,
+      "passcode_present": true,
+      "passcode_compliant": true,
+      "passcode_compliant_with_profiles": true,
+      "subscriber_mnc": "480",
+      "simmcc": "311",
+      "is_supervised": false,
+      "is_device_locator_service_enabled": true,
+      "is_do_not_disturb_in_effect": false,
+      "personal_hotspot_enabled": true,
+      "itunes_store_account_is_active": true,
+      "cellular_technology": 3,
+      "last_cloud_backup_date": "2015-10-01T15:09:12.000-07:00",
+      "is_activation_lock_enabled": true,
+      "is_cloud_backup_enabled": true,
+      "location_latitude": "75.13421212355",
+      "location_longitude": "-14.313565422",
+      "location_accuracy": "60",
+      "location_updated_at": "2015-10-01T15:09:12.000-07:00"
+    },
+    "relationships": {
+      "device_group": {
+        "data": {
+          "type": "device_group",
+          "id": 37
+        }
+      }
+    }
+  }
+}
+</code></pre>
+        </div>
+        <p>
+            Update the SimpleMDM name or device name of a device object.</p>
+        <h3 id='http-request-55'>HTTP Request</h3>
+        <p>
+            <code>PATCH https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}</code>
+        </p>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Argument</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>name</td>
+                <td>The name of the device within SimpleMDM.</td>
+            </tr>
+            <tr>
+                <td>device_name</td>
+                <td>The name that appears on the device itself. Requires supervision. This operation is asynchronous and
+                    occurs when the device is online.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <h2 id='delete-5'>Delete</h2>
+        <p>
+            Unenroll a device and remove it from the account.</p>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID} \
+  -u ${API_KEY}: \
+  -X DELETE
+
+HTTP/1.1 204
+</code></pre>
+        </div>
+        <h3 id='http-request-56'>HTTP Request</h3>
+        <p>
+            <code>DELETE https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}</code>
+        </p>
+
+        <h2 id='list-profiles'>List profiles</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/profiles \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": [
+    {
+      "type": "custom_configuration_profile",
+      "id": 13,
+      "attributes": {
+        "name": "Disable AFP",
+        "profile_identifier": "com.unwiredmdm.aabc717175a3467b93af177aa5f1992b",
+        "user_scope": false,
+        "attribute_support": false
+      }
+    }
+  ],
+  "has_more": false
+}
+</code></pre>
+        </div>
+        <p>
+            Returns a listing of profiles that are directly assigned to the device. Profiles assigned through groups are
+            not shown.
+            Per-device profiles created through the &quot;Accounts&quot; tab of the UI are not shown. Supports <a
+                href="#pagination">pagination</a>.</p>
+        <h3 id='http-request-57'>HTTP Request</h3>
+        <p>
+            <code>GET https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/profiles</code>
+        </p>
+
+        <h2 id='list-installed-apps'>List installed apps</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/installed_apps \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": [
+    {
+      "type": "installed_app",
+      "id": 578,
+      "attributes": {
+        "name": "1Password",
+        "identifier": "com.agilebits.onepassword-ios",
+        "version": "601004",
+        "short_version": "6.0.1",
+        "bundle_size": 93097984,
+        "dynamic_size": 1056768,
+        "managed": true,
+        "discovered_at": "2015-10-01T18:02:13.611-07:00",
+        "last_seen_at": "2021-12-22T13:00:57.000-08:00"
+      }
+    },
+    {
+      "type": "installed_app",
+      "id": 618,
+      "attributes": {
+        "name": "Airbnb",
+        "identifier": "com.airbnb.app",
+        "version": "485",
+        "short_version": "15.39",
+        "bundle_size": 120823808,
+        "dynamic_size": 27934720,
+        "managed": false,
+        "discovered_at": "2015-10-01T18:02:13.858-07:00",
+        "last_seen_at": "2021-12-22T13:00:57.000-08:00"
+      }
+    },
+    {
+      "type": "installed_app",
+      "id": 587,
+      "attributes": {
+        "name": "Bandsintown",
+        "identifier": "com.bandsintown.bit",
+        "version": "160",
+        "short_version": "4.13.1",
+        "bundle_size": 24756224,
+        "dynamic_size": 18677760,
+        "managed": false,
+        "discovered_at": "2015-10-01T18:02:13.659-07:00",
+        "last_seen_at": "2021-12-22T13:00:57.000-08:00"
+      }
+    },
+
+    ...
+
+  ],
+  "has_more": false
+}
+</code></pre>
+        </div>
+        <p>
+            Returns a listing of the apps installed on a device. Supports <a href="#pagination">pagination</a>.</p>
+        <h3 id='http-request-58'>HTTP Request</h3>
+        <p>
+            <code>GET https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/installed_apps</code>
+        </p>
+
+        <h2 id='list-users'>List Users</h2>
+        <p>
+            <code>GET https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/users</code>
+        </p>
+
+        <p>
+            Returns a listing of the user accounts on a device. Supports <a href="#pagination">pagination</a>.</p>
+
+        <p>
+            Available for macOS devices only.</p>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/users \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": [
+    {
+      "type": "device_user",
+      "id": 5,
+      "attributes": {
+        "username": "userone",
+        "full_name": "User One",
+        "uid": 501,
+        "user_guid": "2DEE464E-0C21-4D0C-8B5B-0F74655ED54E",
+        "data_quota": null,
+        "data_used": null,
+        "data_to_sync": false,
+        "secure_token": true,
+        "logged_in": true,
+        "mobile_account": false
+      }
+    },
+    {
+      "type": "device_user",
+      "id": 6,
+      "attributes": {
+        "username": "usertwo",
+        "full_name": "User Two",
+        "uid": 502,
+        "user_guid": "AABBA42B-8078-48BA-9DA7-2CB6B0BC7272",
+        "data_quota": null,
+        "data_used": null,
+        "data_to_sync": false,
+        "secure_token": true,
+        "logged_in": false,
+        "mobile_account": false
+      }
+    }
+  ],
+  "has_more": false
+}
+</code></pre>
+        </div>
+
+        <h2 id='delete-user'>Delete User</h2>
+        <p>
+            <code>DELETE https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/users/{USER_ID}</code>
+        </p>
+
+        <p>
+            Deletes a user from the device.</p>
+
+        <p>
+            Available for supervised macOS devices only. This command will return <code>HTTP 422 Unprocessable
+            Entity</code> for unsupported
+            devices.</p>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/users/5 \
+  -u ${API_KEY}:
+  -X "DELETE"
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+
+        <h2 id='push-assigned-apps'>Push assigned apps</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/push_apps \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            You can use this method to push all assigned apps to a device that are not already installed.</p>
+        <h3 id='http-request-59'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/push_apps</code>
+        </p>
+
+        <h2 id='refresh'>Refresh</h2>
+        <p>
+            Request a refresh of the device information and app inventory. SimpleMDM will update the inventory
+            information when the
+            device responds to the request.</p>
+
+        <p>
+            This command may return an <code>HTTP 429 Too Many Requests</code> if the API deems the frequency of
+            requests
+            to be excessive.</p>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/refresh \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 202
+</code></pre>
+        </div>
+        <h3 id='http-request-60'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/refresh</code>
+        </p>
+
+        <h2 id='restart'>Restart</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/restart \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            This command sends a restart command to the device.</p>
+        <h3 id='http-request-61'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/restart</code>
+        </p>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Argument</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>rebuild_kernel_cache</td>
+                <td>Optional. Rebuild the kernel cache during restart. Requires macOS 11 or later. Defaults to false
+                </td>
+            </tr>
+            <tr>
+                <td>notify_user</td>
+                <td>Optional. If a user is signed in, prompt them to optionally restart the device. Requires macOS 11.3
+                    or later. Defaults to false.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <h2 id='shut-down'>Shut down</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/shutdown \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            This command sends a shutdown command to the device.</p>
+        <h3 id='http-request-62'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/shutdown</code>
+        </p>
+
+        <h2 id='lock'>Lock</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/lock \
+  -d message="Please call the number provided" \
+  -d phone_number="5035551212" \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            You can use this method to lock a device and optionally display a message and phone number. The device can
+            be
+            unlocked
+            with the existing passcode of the device.</p>
+        <h3 id='http-request-63'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/lock</code>
+        </p>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Argument</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>message</td>
+                <td>Optional. The message to display on the lock screen. Supported on iOS 7.0+ and macOS 10.14+.</td>
+            </tr>
+            <tr>
+                <td>phone_number</td>
+                <td>Optional. The phone number to display on the lock screen.</td>
+            </tr>
+            <tr>
+                <td>pin</td>
+                <td>Required for macOS devices. Not supported by iOS. A 6-digit number that the device will require to
+                    be unlocked.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <h2 id='lost-mode-actions'>Lost mode actions</h2>
+        <p>
+            Refer to <a href="#lost-mode">Lost Mode</a>.</p>
+
+        <h2 id='clear-passcode'>Clear passcode</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/clear_passcode \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            You can use this method to unlock and remove the passcode of a device.</p>
+        <h3 id='http-request-64'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/clear_passcode</code>
+        </p>
+
+        <h2 id='clear-firmware-password'>Clear firmware password</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/clear_firmware_password \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            You can use this method to remove the firmware password from a device. The firmware password must have been
+            originally
+            set using SimpleMDM for this to complete successfully.</p>
+        <h3 id='http-request-65'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/clear_firmware_password</code>
+        </p>
+
+        <h2 id='rotate-firmware-password'>Rotate firmware password</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/rotate_firmware_password \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            You can use this method to rotate the firmware password for a device. The firmware password must have been
+            originally
+            set using SimpleMDM for this to complete successfully.</p>
+        <h3 id='http-request-66'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/rotate_firmware_password</code>
+        </p>
+
+        <h2 id='clear-recovery-lock-password'>Clear recovery lock password</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/clear_recovery_lock_password \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            You can use this method to remove the recovery lock password from a device. The recovery lock password must
+            have been originally
+            set using SimpleMDM for this to complete successfully.</p>
+        <h3 id='http-request-67'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/clear_recovery_lock_password</code>
+        </p>
+
+        <h2 id='clear-the-restrictions-password'>Clear the Restrictions Password</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/clear_restrictions_password \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            This command clears the restrictions password and the restrictions on a device (iOS and iPad only).</p>
+        <h3 id='http-request-68'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/clear_restrictions_password</code>
+        </p>
+
+        <h2 id='rotate-recovery-lock-password'>Rotate recovery lock password</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/rotate_recovery_lock_password \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            You can use this method to rotate the recovery lock password for a device. The recovery lock password must
+            have been originally
+            set using SimpleMDM for this to complete successfully.</p>
+        <h3 id='http-request-69'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/rotate_recovery_lock_password</code>
+        </p>
+
+        <h2 id='rotate-filevault-recovery-key'>Rotate FileVault recovery key</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/rotate_filevault_key \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            You can use this method to rotate the filevault recovery key for a device. SimpleMDM must be aware of the
+            current
+            recovery key or this command will fail.</p>
+        <h3 id='http-request-70'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/rotate_filevault_key</code>
+        </p>
+
+        <h2 id='set-admin-password'>Set Admin Password</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/set_admin_password \
+  -u ${API_KEY}: \
+  -d new_password=AReallyL0ngPasswordW1thNumberzAndSymbols \
+  -X POST
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            You can use this method to set the macOS Auto Admin password for a mac device
+        </p>
+        <h3 id='http-request-71'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/set_admin_password</code>
+        </p>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Argument</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>new_password</td>
+                <td>Required</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <h2 id='rotate-admin-password'>Rotate Admin Password</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/rotate_admin_password \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            You can use this method to rotate the macOS Auto Admin password for a macOS device.</p>
+        <h3 id='http-request-72'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/rotate_admin_password</code>
+        </p>
+
+        <h2 id='wipe'>Wipe</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/wipe \
+  -u ${API_KEY}:
+  -X POST
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            You can use this method to erase all content and settings stored on a device. The device will be unenrolled
+            from
+            SimpleMDM and returned to a factory default configuration.</p>
+        <h3 id='http-request-73'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/wipe</code>
+        </p>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Argument</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>pin</td>
+                <td>Required for macOS devices that do not have the T2 chip. Not supported by iOS or macOS devices with
+                    a T2 chip. A 6-digit number that the device will require to be unlocked.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <h2 id='update-os'>Update OS</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/update_os \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            You can use this method to update a device to the latest OS version. Currently supported by tvOS, iOS and
+            macOS devices.</p>
+        <h3 id='http-request-74'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/update_os</code>
+        </p>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Argument</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>os_update_mode</td>
+                <td>Required for macOS devices and disregarded for iOS. Possible values are &#39;smart_update&#39;,
+                    &#39;download_only&#39;, &#39;notify_only&#39;, &#39;install_asap&#39;, or &#39;force_update&#39;.
+                </td>
+            </tr>
+            <tr>
+                <td>version_type</td>
+                <td>Possible values are &#39;latest_minor_version&#39;, &#39;latest_major_version&#39;. Defaults to
+                    &#39;latest_major_version&#39;.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <h2 id='enable-remote-desktop'>Enable Remote Desktop</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/remote_desktop \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            You can use this method to enable remote desktop. Supported by macOS 10.14.4+ devices only.</p>
+        <h3 id='http-request-75'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/remote_desktop</code>
+        </p>
+
+        <h2 id='disable-remote-desktop'>Disable Remote Desktop</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/remote_desktop \
+  -u ${API_KEY}: \
+  -X DELETE
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            You can use this method to disable remote desktop. Supported by macOS 10.14.4+ devices only.</p>
+        <h3 id='http-request-76'>HTTP Request</h3>
+        <p>
+            <code>DELETE https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/remote_desktop</code>
+        </p>
+
+        <h2 id='enable-bluetooth'>Enable Bluetooth</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/bluetooth \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            You can use this method to enable bluetooth on a device. Available in iOS 11.3 and later for supervised
+            devices and in macOS 10.13.4 and later.</p>
+        <h3 id='http-request-77'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/bluetooth</code>
+        </p>
+
+        <h2 id='disable-bluetooth'>Disable Bluetooth</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/bluetooth \
+  -u ${API_KEY}: \
+  -X DELETE
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            You can use this method to disable bluetooth on a device. Available in iOS 11.3 and later for supervised
+            devices and in macOS 10.13.4 and later.</p>
+        <h3 id='http-request-78'>HTTP Request</h3>
+        <p>
+            <code>DELETE https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/bluetooth</code>
+        </p>
+
+        <h2 id='set-time-zone'>Set Time Zone</h2>
+        <p>
+            You can use this method to configure the local time zone setting on devices. Supported by iOS 14.0+ and tvOS
+            14.0+ devices only.</p>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Argument</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>time_zone</td>
+                <td>Required. <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">TZ Identifier</a>
+                    to be set on the device.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/set_time_zone \
+  -d time_zone="America/Denver" \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 204 No Content
+</code></pre>
+        </div>
+        <h3 id='http-request-79'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/set_time_zone</code>
+        </p>
+
+        <h2 id='unenroll'>Unenroll</h2>
+        <p>
+            You can use this method to unenroll your device.</p>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/unenroll \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <h3 id='http-request-80'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/unenroll</code>
+        </p>
+
+        <h1 id='device-groups'><span class="badge">deprecated</span> Device Groups</h1>
+<p><p class="notice"><span class="badge">deprecated</span> The Device Groups API has been deprecated and is only available for backwards compatibility with existing API integrations. To use this endpoint, you must provide the legacy_device_group_id from a static group that was previously migrated from a legacy device group.</p>
+<h2 id='list-all-7'>List all</h2>
+<p class="notice"><span class="badge">deprecated</span> This endpoint is deprecated. It is recommended that you use the Assignment Groups endpoints to manage groups.</p>
+<div class="highlight">
+    <pre
+            class="highlight shell">
+        <code class="language-bash">curl https://a.simplemdm.com/api/v1/device_groups \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": [
+    {
+      "type": "device_group",
+      "id": 37,
+      "attributes": {
+        "name": "Remote Employees"
+      }
+    },
+    {
+      "type": "device_group",
+      "id": 38,
+      "attributes": {
+        "name": "Executives"
+      }
+    }
+  ],
+  "has_more": false
+}
+</code></pre>
+</div>
+<p>
+    Supports <a href="#pagination">pagination</a>.</p>
+<h3 id='http-request-81'>HTTP Request</h3>
+<p>
+    <code>GET https://a.simplemdm.com/api/v1/device_groups</code>
+</p>
+
+<h2 id='retrieve-one-6'>Retrieve one</h2>
+<p class="notice"><span class="badge">deprecated</span> This endpoint is deprecated. It is recommended that you use the Assignment Groups endpoints to manage groups.</p>
+<div class="highlight">
+    <pre
+            class="highlight shell">
+        <code class="language-bash">curl https://a.simplemdm.com/api/v1/device_groups/37 \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": {
+    "type": "device_group",
+    "id": 37,
+    "attributes": {
+      "name": "Remote Employees"
+    }
+  }
+}
+</code></pre>
+</div>
+<h3 id='http-request-82'>HTTP Request</h3>
+<p>
+    <code>GET https://a.simplemdm.com/api/v1/device_groups/{DEVICE_GROUP_ID}</code>
+</p>
+
+        <h2 id='assign-device-2'>Assign device</h2>
+        <p class="notice"><span class="badge">deprecated</span> This endpoint is deprecated. It is recommended that you use the Assignment Groups endpoints to manage groups.</p>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/device_groups/37/devices/121 \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 202 No Content
+</code></pre>
+        </div>
+        <h3 id='http-request-83'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/device_groups/{DEVICE_GROUP_ID}/devices/{DEVICE_ID}</code>
+        </p>
+
+        <h2 id='clone'>Clone</h2>
+        <p class="notice"><span class="badge">deprecated</span> This endpoint is deprecated. It is recommended that you use the Assignment Groups endpoints to manage groups.</p>
+        <p>
+            Create a copy of a device group with the same configurations as the original. The new device group will not
+            have any
+            devices assigned to it initially.</p>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/device_groups/37/clone \
+  -u ${API_KEY}: \
+  -X POST
+
+{
+  "data": {
+    "type": "device_group",
+    "id": 38,
+    "attributes": {
+      "name": "Remote Employees (1)"
+    },
+    "relationships": {
+      "devices": {
+        "data": []
+      }
+    }
+  }
+}
+</code></pre>
+        </div>
+        <h3 id='http-request-84'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/device_groups/{DEVICE_GROUP_ID}/clone</code>
+        </p>
+
+        <h1 id='enrollments'>Enrollments</h1>
+        <h2 id='list-all-8'>List All</h2>
+        <p>
+            Enrollments provide a means of adding devices to your SimpleMDM account. This endpoint excludes enrollments
+            that use automated methods such as those connected to Apple Business Manager, Apple School Manager.
+            Enrollments with a <code>device</code> relationship represent One-time Enrollments. Account Driven
+            enrollments have a <code>null</code> <code>URL</code> attribute.</p>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/enrollments \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": [
+    {
+      "type": "enrollment",
+      "id": 2,
+      "attributes": {
+        "url": "https://a.simplemdm.com/enroll/?c=12345678",
+        "user_enrollment": false,
+        "welcome_screen": true,
+        "authentication": false
+      },
+      "relationships": {
+        "device_group": {
+          "data": {
+            "type": "device_group",
+            "id": 1
+          }
+        }
+      }
+    },
+    {
+      "type": "enrollment",
+      "id": 3,
+      "attributes": {
+        "url": null,
+        "user_enrollment": false,
+        "welcome_screen": true,
+        "authentication": false
+      },
+      "relationships": {
+        "device_group": {
+          "data": {
+            "type": "device_group",
+            "id": 1
+          }
+        }
+      }
+    },
+    {
+      "type": "enrollment",
+      "id": 4,
+      "attributes": {
+        "url": "https://a.simplemdm.com/enroll/?c=87654321",
+        "user_enrollment": false,
+        "welcome_screen": false,
+        "authentication": true
+      },
+      "relationships": {
+        "device_group": {
+          "data": {
+            "type": "device_group",
+            "id": 1
+          }
+        },
+        "device": {
+          "data": {
+            "type": "device",
+            "id": 2
+          }
+        }
+      }
+    },
+    {
+      "type": "enrollment",
+      "id": 7,
+      "attributes": {
+        "url": "https://a.simplemdm.com/enroll/?c=09876543",
+        "user_enrollment": false,
+        "welcome_screen": false,
+        "authentication": false
+      },
+      "relationships": {
+        "device_group": {
+          "data": {
+            "type": "device_group",
+            "id": 1
+          }
+        },
+        "device": {
+          "data": {
+            "type": "device",
+            "id": 4
+          }
+        }
+      }
+    }
+  ],
+  "has_more": true
+}
+</code></pre>
+        </div>
+        <p>
+            Supports <a href="#pagination">pagination</a>.</p>
+        <h3 id='http-request-85'>HTTP Request</h3>
+        <p>
+            <code>GET https://a.simplemdm.com/api/v1/enrollments</code>
+        </p>
+
+        <h2 id='retrieve-one-7'>Retrieve One</h2>
+        <div class="highlight">
+            <pre
+                    class="highlight shell">
+                <code class="language-bash">curl https://a.simplemdm.com/api/v1/enrollments/2 \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "type": "enrollment",
+  "id": 2,
+  "attributes": {
+    "url": "https://a.simplemdm.com/enroll/?c=12345678",
+    "user_enrollment": false,
+    "welcome_screen": true,
+    "authentication": false
+  },
+  "relationships": {
+    "device_group": {
+      "data": {
+        "type": "device_group",
+        "id": 1
+      }
+    }
+  }
+}
+</code></pre>
+        </div>
+        <h3 id='http-request-86'>HTTP Request</h3>
+        <p>
+            <code>GET https://a.simplemdm.com/api/v1/enrollments/{ENROLLMENT_ID}</code>
+        </p>
+
+        <h2 id='send-invitation'>Send Invitation</h2>
+        <p>
+            Send an enrollment invitation to an email address or phone number. The invitation will contain a link to
+            enroll the device. This endpoint does not support Account Driven enrollments.</p>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Argument</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>contact</td>
+                <td>Required. An email address or phone number. Prefix international numbers with a <code>+</code>.</td>
+            </tr>
+            </tbody>
+        </table>
+        <h3 id='http-request-87'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/enrollments/{ENROLLMENT_ID}/invitations</code>
+        </p>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/enrollments/2/invitiations \
+  -u ${API_KEY}: \
+  -X POST \
+  -d "contact=user@example.com"
+
+HTTP/1.1 200 Success
+</code></pre>
+        </div>
+
+        <h2 id='delete-6'>Delete</h2>
+        <p>
+            Delete an enrollment from your account.</p>
+        <div class="highlight">
+            <pre
+                    class="highlight shell">
+                <code class="language-bash">curl https://a.simplemdm.com/api/v1/enrollments/2 \
+  -u ${API_KEY}: \
+  -X DELETE
+
+HTTP/1.1 204 No Content
+</code></pre>
+        </div>
+        <h3 id='http-request-88'>HTTP Request</h3>
+        <p>
+            <code>DELETE https://a.simplemdm.com/api/v1/enrollments/{ENROLLMENT_ID}</code>
+        </p>
+
+
+        <h1 id='installed-apps'>Installed Apps</h1>
+<p>Installed apps represent apps that are installed and exist on <em>devices</em>.</p>
+        <h2 id='list-for-device'>List for device</h2>
+        <p>
+            Refer to <a href="#list-installed-apps">Device - List installed apps</a>.</p>
+
+        <h2 id='retrieve-one-8'>Retrieve one</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/installed_apps/6632 \
+  -u ${API_KEY}:</code><code class="language-json">{
+    "data": {
+        "type": "installed_app",
+        "id": 6632,
+        "attributes": {
+            "name": "Sunset Run",
+            "identifier": "com.fuilana.SunsetRun",
+            "version": "2.2.1.1",
+            "short_version": "2.2.1",
+            "bundle_size": 15720448,
+            "dynamic_size": 16384,
+            "managed": true,
+            "discovered_at": "2016-10-12T15:54:16.116-07:00",
+            "last_seen_at": "2021-12-22T13:00:57.000-08:00"
+        }
+    }
+}
+</code></pre>
+        </div>
+        <h3 id='http-request-89'>HTTP Request</h3>
+        <p>
+            <code>GET https://a.simplemdm.com/api/v1/installed_apps/{INSTALLED_APP_ID}</code>
+        </p>
+
+        <h2 id='request-management-of-app'>Request management of app</h2>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/installed_apps/6632/request_management \
+  -u ${API_KEY}:
+  -X "POST"
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            Requests management of an unmanaged app installed on a device.</p>
+
+        <p>
+            Available for iOS, tvOS, and macOS (11+) devices.</p>
+        <h3 id='http-request-90'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/installed_apps/{INSTALLED_APP_ID}/request_management</code>
+        </p>
+
+        <h2 id='install-update'>Install update</h2>
+        <div class="highlight">
+            <pre
+                    class="highlight shell">
+                <code class="language-bash">curl https://a.simplemdm.com/api/v1/installed_apps/{INSTALLED_APP_ID}/update \
+  -u ${API_KEY}: \
+  -X POST
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            This submits a request to the device to update the specified app to the latest version. The app must be
+            managed for this
+            request to succeed.</p>
+        <h3 id='http-request-91'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/installed_apps/{INSTALLED_APP_ID}/update</code>
+        </p>
+
+        <h2 id='uninstall'>Uninstall</h2>
+        <div class="highlight">
+            <pre
+                    class="highlight shell">
+                <code class="language-bash">curl https://a.simplemdm.com/api/v1/installed_apps/{INSTALLED_APP_ID} \
+  -u ${API_KEY}: \
+  -X DELETE
+
+HTTP/1.1 202 Accepted
+</code></pre>
+        </div>
+        <p>
+            This submits a request to the device to uninstall the specified app. The app must be managed for this
+            request
+            to
+            succeed.</p>
+        <h3 id='http-request-92'>HTTP Request</h3>
+        <p>
+            <code>DELETE https://a.simplemdm.com/api/v1/installed_apps/{INSTALLED_APP_ID}</code>
+        </p>
+
+        <h1 id='logs'>Logs</h1>
+<p>
+    View Logged events for device and admin interactions.</p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Argument</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>serial_number</td>
+        <td>Limit response to the logs of a single device. An empty argument defaults to returning all logs</td>
+    </tr>
+    </tbody>
+</table>
+        <h2 id='list-all-9'>List All</h2>
+        <p>
+            Retrieve the logs. Supports <a href="#pagination">pagination</a>.</p>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/logs \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": [
+    {
+      "type": "log",
+      "id": "abcde123456",
+      "attributes": {
+        "namespace": "admin",
+        "event_type": "user.signed_in",
+        "level": 0,
+        "source": "admin ui",
+        "at": "11/06/19 18:27:41",
+        "metadata": {},
+        "relationships": {
+          "account": {
+            "data": {
+              "type": "account",
+              "id": 123456
+            }
+          },
+          "user": {
+            "data": {
+              "type": "user",
+              "id": 123456,
+              "email": "support@simplemdm.com"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "has_more": true
+}
+</code></pre>
+        </div>
+        <h3 id='http-request-93'>HTTP Request</h3>
+        <p>
+            <code>GET https://a.simplemdm.com/api/v1/logs</code>
+        </p>
+
+        <h2 id='retrieve-one-9'>Retrieve one</h2>
+        <p>
+            Retrieve a specific log entry.</p>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/logs/964595dfd5be464a82cbb9019f55d82b \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": {
+    "type": "log",
+    "id": "964595dfd5be464a82cbb9019f55d82b",
+    "attributes": {
+      "namespace": "device",
+      "event_type": "script.ran",
+      "level": "info",
+      "source": "device",
+      "at": "06/01/22 11:26:19",
+      "metadata": {
+        "name": "My Script",
+        "job_status": "0",
+        "job_response": "Hello World!\n"
+      },
+      "relationships": {
+        "account": {
+          "data": {
+            "type": "account",
+            "id": 1,
+            "api_key": "Test API"
+          }
+        },
+        "device": {
+          "data": {
+            "type": "device",
+            "serial_number": "ZP9XH0X52C",
+            "udid": "868F7125-B1AF-5139-B71F-99D68768AABB"
+          }
+        }
+      }
+    }
+  }
+}
+</code></pre>
+        </div>
+        <h3 id='http-request-94'>HTTP Request</h3>
+        <p>
+            <code>GET https://a.simplemdm.com/api/v1/logs/{LOG_ID}</code>
+        </p>
+
+        <h1 id='lost-mode'>Lost Mode</h1>
+        <h2 id='enable'>Enable</h2>
+        <p>
+            Activate lost mode on a device.</p>
+        <h3 id='http-request-95'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/lost_mode</code>
+        </p>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Argument</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>message</td>
+                <td>A message to be delivered to the user of the device.</td>
+            </tr>
+            <tr>
+                <td>phone_number</td>
+                <td>A contact number to reach the device&#39;s administrator.</td>
+            </tr>
+            <tr>
+                <td>footnote</td>
+                <td>An additional message to be displayed at the bottom of the device.</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <p>
+            A message or phone number must be added to the request in order to enable lost mode for a device.</p>
+
+        <h2 id='disable'>Disable</h2>
+        <p>
+            Disable lost mode on a device.</p>
+        <h3 id='http-request-96'>HTTP Request</h3>
+        <p>
+            <code>DELETE https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/lost_mode</code>
+        </p>
+
+        <h2 id='play-a-sound'>Play a sound</h2>
+        <p>
+            Request that the device play a sound to assist with locating it.</p>
+        <h3 id='http-request-97'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/lost_mode/play_sound</code>
+        </p>
+
+        <h2 id='update-location'>Update location</h2>
+        <p>
+            Request that the device provide its current, up-to-date location. Location data can be viewed using the <em>devices</em>
+            endpoint.</p>
+        <h3 id='http-request-98'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/devices/{DEVICE_ID}/lost_mode/update_location</code>
+        </p>
+
+        <h1 id='managed-app-configs'>Managed App Configs</h1>
+<p>Create, modify, and remove the managed app configuration associated with an app.</p>
+        <h2 id='get'>Get</h2>
+        <p>
+            Retrieve the managed configs for an app.</p>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/apps/{APP_ID}/managed_configs \
+  -u ${API_KEY}:</code><code class="language-json">{
+    "data": [
+        {
+            "type": "managed_config",
+            "id": 14,
+            "attributes": {
+                "key": "customer_name",
+                "value": "ACME Inc.",
+                "value_type": "string"
+            }
+        },
+        {
+            "type": "managed_config",
+            "id": 32,
+            "attributes": {
+                "key": "User IDs",
+                "value": "1,53,3",
+                "value_type": "integer array"
+            }
+        },
+        {
+            "type": "managed_config",
+            "id": 13,
+            "attributes": {
+                "key": "Device values",
+                "value": "\"$imei\",\"$udid\"",
+                "value_type": "string array"
+            }
+        }
+    ],
+    "has_more": false
+}
+</code></pre>
+        </div>
+        <h3 id='http-request-99'>HTTP Request</h3>
+        <p>
+            <code>GET https://a.simplemdm.com/api/v1/apps/{APP_ID}/managed_configs</code>
+        </p>
+
+        <h2 id='create-6'>Create</h2>
+        <h3 id='http-request-100'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/apps/{APP_ID}/managed_configs</code>
+        </p>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Argument</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>key</td>
+                <td>Required.</td>
+            </tr>
+            <tr>
+                <td>value</td>
+                <td>Valid values are based on the value_type specified. See table below.</td>
+            </tr>
+            <tr>
+                <td>value_type</td>
+                <td>The type of the value. See valid options below.</td>
+            </tr>
+            </tbody>
+        </table>
+        <h3 id='value-types-and-value-formats'>Value Types and Value Formats</h3>
+        <table>
+            <thead>
+            <tr>
+                <th>Value Type</th>
+                <th>Value Format</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>boolean</td>
+                <td>0 or 1</td>
+            </tr>
+            <tr>
+                <td>date</td>
+                <td>Timestamp format with timezone. Most standards should parse correctly. Example:
+                    2017-01-01T12:31:15-07:00
+                </td>
+            </tr>
+            <tr>
+                <td>float</td>
+                <td>Float value. Example: 0.123</td>
+            </tr>
+            <tr>
+                <td>float array</td>
+                <td>Floats separated by commas. Example: 0.123,923.1,42</td>
+            </tr>
+            <tr>
+                <td>integer</td>
+                <td>Integer value. Example: 32</td>
+            </tr>
+            <tr>
+                <td>integer array</td>
+                <td>Integers separated by commas. Example 1,452,-129</td>
+            </tr>
+            <tr>
+                <td>string</td>
+                <td>Example: This is a string</td>
+            </tr>
+            <tr>
+                <td>string array</td>
+                <td>Strings in quotes an dseparated by commas. Example: &quot;First string&quot;,&quot;Second string&quot;</td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="highlight">
+            <pre><code class="language-bash">curl "https://a.simplemdm.com/api/v1/apps/10042/managed_configs" \
+  -X POST \
+  -u ${API_KEY}: \
+  -F key="serverURL" \
+  -F value="http://example.com" \
+  -F value_type="string"
+
+{
+  "data": {
+    "type": "managed_config",
+    "id": 2,
+    "attributes": {
+      "key": "serverURL",
+      "value": "http://example.com",
+      "value_type": "string"
+    }
+  }
+}
+
+</code></pre>
+        </div>
+
+        <h2 id='delete-7'>Delete</h2>
+        <p>
+            <code>DELETE https://a.simplemdm.com/api/v1/apps/{APP_ID}/managed_configs/{MANAGED_CONFIG_ID}</code>
+        </p>
+
+        <h2 id='push-updates'>Push Updates</h2>
+        <p>
+            Push any updates to the managed configurations for an app to all devices. This is not necessary when making
+            managed
+            config changes through the UI. This is necessary after making changes through the API.</p>
+
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/apps/{APP_ID}/managed_configs/push</code>
+        </p>
+
+        <h1 id='profiles'>Profiles</h1>
+<h2 id='list-all-10'>List all</h2>
+        <p>
+            Returns a listing of all profiles in the account. Supports <a href="#pagination">pagination</a>.</p>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Argument</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>search</td>
+                <td>Limit response to profiles with matching profile name or type</td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/profiles \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": [
+    {
+      "type": "apn",
+      "id": 145593,
+      "attributes": {
+        "name": "APN",
+        "profile_identifier": "com.unwiredmdm.5d91d2df438d4e51b4e1efa9a6f18bdb",
+        "user_scope": true,
+        "group_count": 0,
+        "reinstall_after_os_update": false,
+        "device_count": 1
+      },
+      "relationships": {
+        "groups": {
+          "data": []
+        }
+      }
+    },
+    {
+      "type": "app_restrictions",
+      "id": 145594,
+      "attributes": {
+        "name": "App Restriction",
+        "profile_identifier": "com.unwiredmdm.c87dce2487464c19a683263907978cf7",
+        "user_scope": false,
+        "group_count": 1,
+        "device_count": 1
+      },
+      "relationships": {
+        "groups": {
+          "data": [
+            {
+              "type": "group",
+              "id": 123
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "has_more": false
+}
+</code></pre>
+        </div>
+        <h3 id='http-request-101'>HTTP Request</h3>
+        <p>
+            <code>GET https://a.simplemdm.com/api/v1/profiles</code>
+        </p>
+        <p>For older accounts, <code>relationships.device_groups</code> will return the legacy device group IDs of the device groups that the profile was assigned to. <code>relationships.groups</code> will show all dynamic and static groups that the profile is currently assigned to.</p>
+
+<h2 id='retrieve-one-10'>Retrieve one</h2>
+        <div class="highlight">
+            <pre
+                    class="highlight shell">
+                <code class="language-bash">curl https://a.simplemdm.com/api/v1/profiles/145693 \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": {
+    "type": "email",
+    "id": 145693,
+    "attributes": {
+      "name": "Email Account",
+      "profile_identifier": "com.unwiredmdm.f3d2b23b577141eca55d813858daca3d",
+      "user_scope": false,
+      "group_count": 0,
+      "reinstall_after_os_update": false,
+      "device_count": 0
+    },
+    "relationships": {
+      "groups": {
+        "data": []
+      }
+    }
+  }
+}
+</code></pre>
+        </div>
+        <h3 id='http-request-102'>HTTP Request</h3>
+        <p>
+            <code>GET https://a.simplemdm.com/api/v1/profiles/{PROFILE_ID}</code>
+        </p>
+
+<h2 id='assign-to-device-group-2'>Assign to device group</h2>
+<p class="notice"><span class="badge">deprecated</span> This endpoint is deprecated. It is recommended that you use the <a href="#assign-profile">Assignment Groups Assign Profile</a> endpoint instead. To ensure backwards compatibility with accounts created before Dynamic Groups, <code>device_group_id</code> will map to the static group that was created from the original device group.</p>
+<p>
+            This action will cause the profile to push to all devices in the assigned device group.</p>
+        <h3 id='http-request-103'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/profiles/{PROFILE_ID}/device_groups/{DEVICE_GROUP_ID}</code>
+        </p>
+
+<h2 id='unassign-from-device-group-2'>Unassign from device group</h2>
+<p class="notice"><span class="badge">deprecated</span> This endpoint is deprecated. It is recommended that you use the <a href="#unassign-profile">Assignment Groups Unassign Profile</a> endpoint instead. To ensure backwards compatibility for accounts created before Dynamic Groups, <code>device_group_id</code> will map to the static group that was created from the original device group.</p>
+<p>
+            This action will cause the profile to be removed from all devices in the assigned device group.</p>
+        <h3 id='http-request-104'>HTTP Request</h3>
+        <p>
+            <code>DELETE https://a.simplemdm.com/api/v1/profiles/{PROFILE_ID}/device_groups/{DEVICE_GROUP_ID}</code>
+        </p>
+
+        <h2 id='assign-to-device-2'>Assign to device</h2>
+        <p>
+            This action will cause the profile to push to the specified device.</p>
+        <h3 id='http-request-105'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/profiles/{PROFILE_ID}/devices/{DEVICE_ID}</code>
+        </p>
+
+        <h2 id='unassign-from-device-2'>Unassign from device</h2>
+        <p>
+            This action will cause the profile to be removed from the specified device.</p>
+        <h3 id='http-request-106'>HTTP Request</h3>
+        <p>
+            <code>DELETE https://a.simplemdm.com/api/v1/profiles/{PROFILE_ID}/devices/{DEVICE_ID}</code>
+        </p>
+
+
+                <h1 id='push-certificate'>Push Certificate</h1>
+        <p>
+            Methods related to the Apple Push Notification Certificate utilized by the account.</p>
+        <h2 id='show-2'>Show</h2>
+        <p>
+            Show details related to the current push certificate being used.</p>
+        <h3 id='http-request-107'>HTTP Request</h3>
+        <p>
+            <code>GET https://a.simplemdm.com/api/v1/push_certificate</code>
+        </p>
+        <div class="highlight">
+            <pre
+                    class="highlight shell">
+                <code class="language-bash">curl https://a.simplemdm.com/api/v1/push_certificate \
+  -u ${API_KEY}:</code><code class="language-json">{
+    "data": {
+        "type": "push_certificate",
+        "attributes": {
+            "apple_id": "devops@example.org",
+            "expires_at": "2017-09-21T15:28:34.000+00:00"
+        }
+    }
+}
+</code></pre>
+        </div>
+        <h2 id='update-7'>Update</h2>
+        <p>
+            Upload a new certificate and replace the existing certificate for your account.</p>
+        <h3 id='http-request-108'>HTTP Request</h3>
+        <p>
+            <code>PUT https://a.simplemdm.com/api/v1/push_certificate</code>
+        </p>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Argument</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>file</td>
+                <td>Required. The push certificate as provided by Apple. Send as multipart/form-data.</td>
+            </tr>
+            <tr>
+                <td>apple_id</td>
+                <td>Optional. The email address of the apple ID the push certificate was generated with.</td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/push_certificate/scsr \
+  -F file@apns.cert \
+  -F apple_id=admin@example.org \
+  -u ${API_KEY}:</code><code class="language-json">{
+    "data": {
+        "type": "push_certificate",
+        "attributes": {
+            "apple_id": "admin@example.org",
+            "expires_at": "2020-09-21T15:28:34.000+00:00"
+        }
+    }
+}
+</code></pre>
+        </div>
+        <h2 id='get-signed-csr'>Get Signed CSR</h2>
+        <p>
+            Download a signed CSR file. This file is provided to Apple when creating and renewing a push certificate.
+            The
+            API
+            returns a base64 encoded plist for upload to the Apple Push Certificates Portal. The value of the &quot;data&quot;
+            key can be
+            uploaded to Apple as-is.</p>
+        <h3 id='http-request-109'>HTTP Request</h3>
+        <p>
+            <code>GET https://a.simplemdm.com/api/v1/push_certificate/scsr</code>
+        </p>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/push_certificate/scsr \
+  -u ${API_KEY}:</code><code class="language-json">{
+    "data": "VUVRVZ5HSlhkMmRrYlZaNVl6SnNkbUpxTUdsTlV6UjNTV2xDYkdKdFRuWmFS\nMngxV25vd2FWWldVa2RNClZHZHBVSG8wUzFCRFJrVlVNRTVWQ2xkV1FrWkpT\nRUp6WVZoT01FbEdRbFpSYTNoS1VYbEJhVXhUT0haUgpXRUozWWtkVloxRXlP\nWFJaU0ZZd1dsaEpka3d3QmtSa3BwVGxWb2VWWkgKYkRKa01V\nSkVXakJzYjFWclJYWmlhMFpUVGxWNFdWSkdVWGRsYkUxTFdsVTRjbU5FU1RB\nSUlRSM1VWVTFid3BSCmFscDBUVVpz\nUWsxWGFGUlRWMWw2VFcweFlXTlZkRVpVUjFaSlZuazVlVmx0VW5WT01VVTVV\nRkZ2T0V3egpUakJqYld4MVdubzBTMUJET1dzS1lWZE9NRkJuYnpoTU0wSnpZ\nVmhPTUZCbmJ6MEsT\n"
+}
+</code></pre>
+        </div>
+
+        <h1 id='scripts'>Scripts</h1>
+<p>Scripts functionality is not currently available for some subscriptions. For further assistance,
+please <a href="https://simplemdm.com/contact/">contact support</a>.</p>
+        <h2 id='list-all-11'>List all</h2>
+        <p>
+            Returns a listing of all scripts in the account. Supports <a href="#pagination">pagination</a>.</p>
+        <h3 id='http-request-110'>HTTP Request</h3>
+        <p>
+            <code>GET https://a.simplemdm.com/api/v1/scripts</code>
+        </p>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/scripts \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": [
+    {
+      "type": "script",
+      "id": 31,
+      "attributes": {
+        "name": "Say hi",
+        "content": "#!/bin/bash\r\ncurrentUser=$( echo \"show State:/Users/ConsoleUser\" | scutil | awk '/Name :/ { print $3 }' )\r\nuid=$(id -u \"$currentUser\")\r\nlaunchctl asuser $uid say hi",
+        "variable_support": false,
+        "created_at": "2022-01-05T11:33:33.600-08:00",
+        "updated_at": "2022-01-05T11:33:33.600-08:00"
+      }
+    },
+    {
+      "type": "script",
+      "id": 32,
+      "attributes": {
+        "name": "script-8ilpJ",
+        "content": "#!/bin/bash\necho \"Hello!\"",
+        "variable_support": true,
+        "created_at": "2022-05-31T10:56:50.232-07:00",
+        "updated_at": "2022-05-31T10:56:50.232-07:00"
+      }
+    }
+  ],
+  "has_more": false
+}
+</code></pre>
+        </div>
+
+        <h2 id='retrieve-one-11'>Retrieve one</h2>
+        <h3 id='http-request-111'>HTTP Request</h3>
+        <p>
+            <code>GET https://a.simplemdm.com/api/v1/scripts/{SCRIPT_ID}</code>
+        </p>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/scripts/32 \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": {
+    "type": "script",
+    "id": 32,
+    "attributes": {
+      "name": "script-8ilpJ",
+      "content": "#!/bin/bash\necho \"Hello!\"",
+      "variable_support": true,
+      "created_at": "2022-05-31T10:56:50.232-07:00",
+      "updated_at": "2022-05-31T10:56:50.232-07:00"
+    }
+  }
+}
+</code></pre>
+        </div>
+
+        <h2 id='create-7'>Create</h2>
+        <p>
+            You can use this method to upload a new script to your account.</p>
+        <h3 id='http-request-112'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/scripts</code>
+        </p>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Argument</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>name</td>
+                <td>Required. The name for the script. This is how it will appear in the Admin UI.</td>
+            </tr>
+            <tr>
+                <td>variable_support</td>
+                <td>Whether or not to enable variable support in this script. Pass <code>1</code> to enable,
+                    <code>0</code> to disable. Defaults to <code>false</code>
+                </td>
+            </tr>
+            <tr>
+                <td>file</td>
+                <td>Required. A file containing the script content. All scripts must begin with a valid shebang such as
+                    <code>#!/bin/sh</code> to be processed. File should be provided as a string or multipart/form-data.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="highlight">
+            <pre><code class="language-bash">curl "https://a.simplemdm.com/api/v1/scripts" \
+  -X POST \
+  -u ${API_KEY}: \
+  -F name="My New Script" \
+  -F variable_support=1 \
+  -F file=@my_new_script.sh
+
+
+{
+  "data": {
+    "type": "script",
+    "id": 35,
+    "attributes": {
+      "name": "My New Script",
+      "content": "#!/bin/bash\necho \"Hello!\"",
+      "variable_support": true,
+      "created_at": "2022-06-01T12:30:01.590-07:00",
+      "updated_at": "2022-06-01T12:30:01.590-07:00"
+    }
+  }
+}
+</code></pre>
+        </div>
+
+        <h2 id='update-8'>Update</h2>
+        <p>
+            You can use this method to update an existing script in your account. Any existing Script Jobs will not be
+            changed.</p>
+        <h3 id='http-request-113'>HTTP Request</h3>
+        <p>
+            <code>PATCH https://a.simplemdm.com/api/v1/scripts/{SCRIPT_ID}</code>
+        </p>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Argument</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>name</td>
+                <td>The name for the script. This is how it will appear in the Admin UI.</td>
+            </tr>
+            <tr>
+                <td>variable_support</td>
+                <td>Whether or not to enable variable support in this script. Pass <code>1</code> to enable,
+                    <code>0</code> to disable. Defaults to <code>false</code>
+                </td>
+            </tr>
+            <tr>
+                <td>file</td>
+                <td>A file containing the script content. All scripts must begin with a valid shebang such as <code>#!/bin/sh</code>
+                    to be processed. File should be provided as string or multipart/form-data.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="highlight">
+            <pre><code class="language-bash">curl "https://a.simplemdm.com/api/v1/scripts/35" \
+  -X PATCH \
+  -u ${API_KEY}: \
+  -F name="My Renamed Script" \
+  -F variable_support=0 \
+  -F file=@my_updated_script.sh
+
+
+{
+  "data": {
+    "type": "script",
+    "id": 35,
+    "attributes": {
+      "name": "My Renamed Script",
+      "content": "#!/bin/bash\necho \"Goodbye!\"",
+      "variable_support": false,
+      "created_at": "2022-06-01T12:30:01.590-07:00",
+      "updated_at": "2022-06-01T12:30:01.590-07:00"
+    }
+  }
+}
+</code></pre>
+        </div>
+
+        <h2 id='delete-8'>Delete</h2>
+        <p>
+            You can use this method to delete a script from your account. Any existing Script Jobs will not be
+            changed.</p>
+        <h3 id='http-request-114'>HTTP Request</h3>
+        <p>
+            <code>DELETE https://a.simplemdm.com/api/v1/scripts/{SCRIPT_ID}</code>
+        </p>
+        <div class="highlight">
+            <pre><code class="language-bash">curl "https://a.simplemdm.com/api/v1/scripts/35" \
+  -X DELETE \
+
+HTTP/1.1 204 No Content
+</code></pre>
+        </div>
+
+        <h1 id='script-jobs'>Script Jobs</h1>
+<p>Scripts functionality is not currently available for some subscriptions. For further assistance,
+    please <a href="https://simplemdm.com/contact/">contact support</a>.</p>
+        <h2 id='list-all-12'>List all</h2>
+        <p>
+            Jobs represent scripts that have been set to run on a collection of devices. Jobs remain listed for one
+            month.
+            Supports <a href="#pagination">pagination</a>.</p>
+        <h3 id='http-request-115'>HTTP Request</h3>
+        <p>
+            <code>GET https://a.simplemdm.com/api/v1/script_jobs</code>
+        </p>
+        <div class="highlight">
+            <pre><code class="language-bash">curl https://a.simplemdm.com/api/v1/script_jobs \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": [
+    {
+      "type": "script_job",
+      "id": 663,
+      "attributes": {
+        "script_name": "Touch files",
+        "job_name": "API Job",
+        "content": "#!/bin/bash \r\n\r\necho \"Hello!\"\r\n",
+        "job_id": "9ca35",
+        "variable_support": false,
+        "status": "pending",
+        "pending_count": 1,
+        "success_count": 0,
+        "errored_count": 0,
+        "custom_attribute_regex": "\n",
+        "created_by": "API (Test API)",
+        "created_at": "2023-06-22T15:06:21.910-07:00",
+        "updated_at": "2023-06-22T15:06:21.910-07:00"
+      },
+      "relationships": {
+        "device": {
+          "data": [
+            {
+              "type": "device",
+              "id": 17,
+              "status": "pending"
+            }
+          ]
+        },
+        "custom_attribute": {
+          "data": {
+            "type": "custom_attribute",
+            "id": "greeting_attribute"
+          }
+        }
+      }
+    }
+  ],
+  "has_more": true
+}
+</code></pre>
+        </div>
+
+        <h2 id='retrieve-one-12'>Retrieve one</h2>
+        <p>
+            Retrieve details about a specific Script Job, including any results from the associated devices.</p>
+
+        <p>
+            Possible values for the <em>Script Job status</em> are: <code>pending</code>,
+            <code>completed-with-errors</code>, <code>completed</code>, and <code>cancelled</code>.</p>
+
+        <p>
+            Possible values for the <em>Device status</em> are: <code>completed</code>, <code>pending</code>,
+            <code>error</code>, and <code>cancelled</code>.</p>
+        <h3 id='http-request-116'>HTTP Request</h3>
+        <p>
+            <code>GET https://a.simplemdm.com/api/v1/script_jobs/{SCRIPT_JOB_ID}</code>
+        </p>
+        <div class="highlight">
+            <pre
+                    class="highlight shell">
+                <code class="language-bash">curl https://a.simplemdm.com/api/v1/script_jobs/331 \
+  -u ${API_KEY}:</code><code class="language-json">{
+  "data": {
+    "type": "script_job",
+    "id": 331,
+    "attributes": {
+      "script_name": "Say Hi",
+      "content": "#!/bin/bash \r\n\r\necho \"Hello!\"\r\n",
+      "job_id": "826f0",
+      "variable_support": false,
+      "status": "pending",
+      "pending_count": 2,
+      "success_count": 1,
+      "errored_count": 0,
+      "custom_attribute_regex": "\n",
+      "created_by": "API (My API Key)",
+      "created_at": "2022-05-31T11:56:05.043-07:00",
+      "updated_at": "2022-06-01T10:19:38.816-07:00"
+    },
+    "relationships": {
+      "device": {
+        "data": [
+          {
+            "type": "device",
+            "id": 33,
+            "status": "pending",
+            "status_code": null,
+            "response": null
+          },
+          {
+            "type": "device",
+            "id": 28,
+            "status": "completed",
+            "status_code": "0",
+            "response": "Hello!\n"
+          },
+          {
+            "type": "device",
+            "id": 17,
+            "status": "pending",
+            "status_code": null,
+            "response": null
+          }
+        ]
+      },
+      "custom_attribute": {
+        "data": {
+          "type": "custom_attribute",
+          "id": "greeting_attribute"
+        }
+      }
+    }
+  }
+}
+</code></pre>
+        </div>
+
+<h2 id='create-8'>Create</h2>
+        <p>
+            Run a script on a collection of devices. Scripts are supported on macOS only.</p>
+        <h3 id='http-request-117'>HTTP Request</h3>
+        <p>
+            <code>POST https://a.simplemdm.com/api/v1/script_jobs</code>
+        </p>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Argument</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>script_id</td>
+                <td>Required. The ID of the script to be run on the devices</td>
+            </tr>
+            <tr>
+                <td>device_ids</td>
+                <td>A comma separated list of <em>device</em> IDs to run the script on</td>
+            </tr>
+            <tr>
+                <td>group_ids <span class="badge">deprecated</span></td>
+                <td>A comma separated list of <em>group</em> IDs to run the script on. All macOS <em>devices</em> from
+                    these <em>groups</em> will be included. It is recommended that you use <code>assignment_group_ids</code> instead. Accounts created before Dynamic Groups, <code>group_ids</code> will map to the static group that was created from the device group.
+                </td>
+            </tr>
+            <tr>
+                <td>assignment_group_ids</td>
+                <td>A comma separated list of <em>assignment group</em> IDs to run the script on. All macOS
+                    <em>devices</em> from these <em>assignment groups</em> will be included.
+                </td>
+            </tr>
+            <tr>
+                <td>custom_attribute</td>
+                <td>Optional. If provided the output from the script will be stored in this custom attribute on each
+                    device.
+                </td>
+            </tr>
+            <tr>
+                <td>custom_attribute_regex</td>
+                <td>Optional. Used to sanitize the output from the script before storing it in the custom attribute. Can
+                    be left empty but <code>\n</code> is recommended.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <p>
+            At least one of <code>device_ids</code>, <code>group_ids</code>, or <code>assignment_group_ids</code> must
+            be
+            provided.</p>
+
+        <p>
+            Refer to <a href="#retrieve-one-10">Retrieve one</a> for monitoring progress.</p>
+        <div class="highlight">
+            <pre><code class="language-bash">curl "https://a.simplemdm.com/api/v1/script_jobs" \
+  -X POST \
+  -u ${API_KEY}: \
+  -F script_id=35 \
+  -F device_ids=1,2,3 \
+  -F group_ids=4,5 \
+  -F assignment_group_ids=6,7 \
+  -F custom_attribute=greeting_attribute \
+  -F "custom_attribute_regex=\\n"
+
+
+{
+  "data": {
+    "type": "script_job",
+    "id": 341,
+    "attributes": {
+      "script_name": "My Script",
+      "content": "#!/bin/bash\necho \"Hello World!\"",
+      "job_id": "87135",
+      "variable_support": true,
+      "status": "pending",
+      "pending_count": 1,
+      "success_count": 0,
+      "errored_count": 0,
+      "custom_attribute_regex": "\n",
+      "created_by": "API (Test API)",
+      "created_at": "2022-06-01T11:26:10.505-07:00",
+      "updated_at": "2022-06-01T11:26:10.505-07:00"
+    },
+    "relationships": {
+      "device": {
+        "data": [
+          {
+            "type": "device",
+            "id": 33,
+            "status": "pending",
+            "status_code": null,
+            "response": null
+          }
+        ]
+      },
+      "custom_attribute": {
+        "data": {
+          "type": "custom_attribute",
+          "id": "greeting_attribute"
+        }
+      }
+    }
+  }
+}
+</code></pre>
+        </div>
+
+        <h2 id='cancel-job'>Cancel Job</h2>
+        <p>
+            You can use this method delete cancel a job. Jobs can only be canceled before the device has received the
+            command.</p>
+        <h3 id='http-request-118'>HTTP Request</h3>
+        <p>
+            <code>DELETE https://a.simplemdm.com/api/v1/script_jobs/{SCRIPT_ID}</code>
+        </p>
+        <div class="highlight">
+            <pre><code class="language-bash">curl "https://a.simplemdm.com/api/v1/script_jobs/341" \
+  -X DELETE \
+
+HTTP/1.1 204 No Content
+</code></pre>
+        </div>
+
+        <h1 id='webhooks'>Webhooks</h1>
+        <p>
+            Webhooks allow you to receive an HTTP POST to the URL(s) of your choosing when certain events occur in your
+            SimpleMDM
+            account. All of our webhook events contain data serialized as JSON. If you&#39;d like to be notified (with
+            data) every time
+            a device is enrolled, for instance, you&#39;ll want to use webhooks.</p>
+        <div class="highlight">
+            <pre><code class="language-json">{
+  "type": "event.type",
+  "at": "2000-01-01T12:00:00.000-07:00",
+  "data": {}
+}
+</code></pre>
+        </div>
+        <p>
+            Webhook requests include a JSON body which describes the event type, the time of occurrence, and may include
+            additional
+            metadata in the &quot;data&quot; field. This metadata varies depending upon the event type.</p>
+
+        <p>
+            The metadata included with webhook events is purposefully minimal. If additional information in required
+            about related
+            objects, the SimpleMDM API may be queried for additional information.</p>
+<h2 id='events'>Events</h2>
+<p>
+    The current events are currently available:</p>
+
+<ul>
+    <li>device.changed_group</li>
+    <li>device.enrolled</li>
+    <li>device.unenrolled</li>
+    <li>device.lock.enabled</li>
+    <li>abm.device.added</li>
+</ul>
+
+
+
+
+
+
+
+        <div style="height:300px">
+        </div>
+    </div>
+</div>
+</body>
+</html>
