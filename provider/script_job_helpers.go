@@ -57,9 +57,9 @@ type scriptJobDetailsResponse struct {
 			JobID                string `json:"job_id"`
 			VariableSupport      bool   `json:"variable_support"`
 			Status               string `json:"status"`
-			PendingCount         int    `json:"pending_count"`
-			SuccessCount         int    `json:"success_count"`
-			ErroredCount         int    `json:"errored_count"`
+			PendingCount         int64  `json:"pending_count"`
+			SuccessCount         int64  `json:"success_count"`
+			ErroredCount         int64  `json:"errored_count"`
 			CustomAttributeRegex string `json:"custom_attribute_regex"`
 			CreatedBy            string `json:"created_by"`
 			CreatedAt            string `json:"created_at"`
@@ -105,9 +105,9 @@ func fetchScriptJobDetails(ctx context.Context, client *simplemdm.Client, id str
 		JobName:              payload.Data.Attributes.JobName,
 		JobIdentifier:        payload.Data.Attributes.JobID,
 		Status:               payload.Data.Attributes.Status,
-		PendingCount:         int64(payload.Data.Attributes.PendingCount),
-		SuccessCount:         int64(payload.Data.Attributes.SuccessCount),
-		ErroredCount:         int64(payload.Data.Attributes.ErroredCount),
+		PendingCount:         payload.Data.Attributes.PendingCount,
+		SuccessCount:         payload.Data.Attributes.SuccessCount,
+		ErroredCount:         payload.Data.Attributes.ErroredCount,
 		Content:              payload.Data.Attributes.Content,
 		VariableSupport:      payload.Data.Attributes.VariableSupport,
 		CreatedBy:            payload.Data.Attributes.CreatedBy,
@@ -179,10 +179,6 @@ func scriptJobDevicesListValue(ctx context.Context, devices []scriptJobDeviceDet
 	return list, diags
 }
 
-func isNotFoundError(err error) bool {
-	return err != nil && strings.Contains(err.Error(), "404")
-}
-
 type scriptJobResponse struct {
 	Data scriptJobData `json:"data"`
 }
@@ -195,6 +191,7 @@ type scriptJobData struct {
 }
 
 type scriptJobAttributes struct {
+	JobName   string `json:"job_name"`
 	Status    string `json:"status"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
@@ -214,8 +211,9 @@ type scriptJobRelationshipItem struct {
 
 type scriptJobFlat struct {
 	ID                  int
-	ScriptID            *int
-	AssignmentGroupID   *int
+	JobName             string
+	ScriptID            *string
+	AssignmentGroupID   *string
 	AssignmentGroupName string
 	Status              string
 	CreatedAt           string
@@ -273,18 +271,19 @@ func listScriptJobs(ctx context.Context, client *simplemdm.Client, startingAfter
 func flattenScriptJob(response *scriptJobResponse) scriptJobFlat {
 	flat := scriptJobFlat{
 		ID:        response.Data.ID,
+		JobName:   response.Data.Attributes.JobName,
 		Status:    response.Data.Attributes.Status,
 		CreatedAt: response.Data.Attributes.CreatedAt,
 		UpdatedAt: response.Data.Attributes.UpdatedAt,
 	}
 
 	if response.Data.Relationships.Script.Data != nil {
-		scriptID := response.Data.Relationships.Script.Data.ID
+		scriptID := strconv.Itoa(response.Data.Relationships.Script.Data.ID)
 		flat.ScriptID = &scriptID
 	}
 
 	if response.Data.Relationships.AssignmentGroup.Data != nil {
-		groupID := response.Data.Relationships.AssignmentGroup.Data.ID
+		groupID := strconv.Itoa(response.Data.Relationships.AssignmentGroup.Data.ID)
 		flat.AssignmentGroupID = &groupID
 		// Note: We don't have the name in the list response, so it will be empty
 		flat.AssignmentGroupName = ""
