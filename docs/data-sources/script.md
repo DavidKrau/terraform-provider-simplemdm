@@ -32,9 +32,9 @@ resource "simplemdm_scriptjob" "run_maintenance" {
 output "script_details" {
   description = "Details about the maintenance script"
   value = {
-    id              = data.simplemdm_script.maintenance.id
-    name            = data.simplemdm_script.maintenance.name
-    variablesupport = data.simplemdm_script.maintenance.variablesupport
+    id               = data.simplemdm_script.maintenance.id
+    name             = data.simplemdm_script.maintenance.name
+    variable_support = data.simplemdm_script.maintenance.variable_support
   }
 }
 ```
@@ -48,9 +48,8 @@ output "script_details" {
 
 ### Read-Only
 
+- `content` (String) The script content.
 - `created_at` (String) Timestamp when the Script was created.
-- `created_by` (String) User that created the Script in SimpleMDM.
 - `name` (String) The name of the Script.
-- `scriptfile` (String) The script content.
 - `updated_at` (String) Timestamp when the Script was last updated.
-- `variablesupport` (Boolean) Whether variable support is enabled for this script.
+- `variable_support` (Boolean) Whether variable support is enabled for this script.

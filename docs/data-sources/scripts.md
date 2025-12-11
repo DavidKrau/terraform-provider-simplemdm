@@ -33,8 +33,8 @@ output "script_count" {
 
 Read-Only:
 
+- `content` (String) The script content.
 - `created_at` (String) Timestamp when the script was created.
-- `created_by` (String) User that created the script.
 - `id` (String) Script identifier.
 - `name` (String) The name of the script.
 - `updated_at` (String) Timestamp when the script was last updated.
