@@ -385,13 +385,35 @@ func (r *assignment_groupResource) Read(ctx context.Context, req resource.ReadRe
 	}
 
 	//read apps and add them to state
+	// The SimpleMDM API does not return deployment_type and install_type on
+	// assignment group reads, so the provider receives empty strings. Preserve
+	// the value already in state to avoid perpetual plan diffs.
+	// See: https://github.com/DavidKrau/terraform-provider-simplemdm/issues/27
 	if len(assignmentGroup.Data.Relationships.Apps.Data) >= 1 {
+		priorApps := map[string]appModel{}
+		for _, a := range state.Apps {
+			priorApps[a.AppID.ValueString()] = a
+		}
+
 		state.Apps = []appModel{}
 		for _, app := range assignmentGroup.Data.Relationships.Apps.Data {
+			appID := strconv.Itoa(app.ID)
+			deploymentType := app.DeploymnetType
+			installType := app.InstallType
+
+			if prior, ok := priorApps[appID]; ok {
+				if deploymentType == "" {
+					deploymentType = prior.DeploymnetType.ValueString()
+				}
+				if installType == "" {
+					installType = prior.InstallType.ValueString()
+				}
+			}
+
 			state.Apps = append(state.Apps, appModel{
-				AppID:          types.StringValue(strconv.Itoa(app.ID)),
-				DeploymnetType: types.StringValue(app.DeploymnetType),
-				InstallType:    types.StringValue(app.InstallType),
+				AppID:          types.StringValue(appID),
+				DeploymnetType: types.StringValue(deploymentType),
+				InstallType:    types.StringValue(installType),
 			})
 		}
 	} else {
