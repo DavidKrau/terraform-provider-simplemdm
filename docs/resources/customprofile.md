@@ -64,9 +64,15 @@ EOT
 
 ### Optional
 
-- `attributesupport` (Boolean) Optional. A boolean true or false. When enabled, SimpleMDM will process variables in the uploaded profile. Defaults to false
-- `escapeattributes` (Boolean) Optional. A boolean true or false. When enabled, SimpleMDM escape the values of the custom variables in the uploaded profile. Defaults to false
-- `reinstallafterosupdate` (Boolean) Optional. A boolean true or false. When enabled, SimpleMDM will re-install the profile automatically after macOS software updates are detected. Defaults to false
+- `allowed_macos_architecture` (String) Optional. Restricts the profile to a Mac architecture. Valid values: any, x86 (Intel), arm (Apple Silicon). Defaults to any.
+- `allowed_platforms` (Set of String) Optional. An array of operating systems the profile is allowed to be installed on. Valid values: macos, ios, ipados, tvos, visionos. Defaults to all platforms.
+- `attributesupport` (Boolean) Optional. A boolean true or false. When enabled, SimpleMDM will process variables in the uploaded profile. Defaults to false.
+- `auto_renew_scep_based_certificates` (Boolean) Optional. A boolean true or false. When enabled, SimpleMDM will automatically re-issue SCEP based certificates in the profile before they expire. Cannot be enabled when declarative is enabled. Defaults to false.
+- `declarative` (Boolean) Optional. A boolean true or false. When enabled, this profile will be installed using Declarative Management on any device that has Declarative Management enabled. Defaults to false.
+- `escapeattributes` (Boolean) Optional. A boolean true or false. When enabled, SimpleMDM escape the values of the custom variables in the uploaded profile. Defaults to false.
+- `maximum_macos_version` (String) Optional. The maximum macOS version (e.g. 15.0) the profile is allowed to be installed on. Must be greater than or equal to minimum_macos_version. Returns an error if the version is not recognized.
+- `minimum_macos_version` (String) Optional. The minimum macOS version (e.g. 14.0) the profile is allowed to be installed on. Returns an error if the version is not recognized.
+- `reinstallafterosupdate` (Boolean) Optional. A boolean true or false. When enabled, SimpleMDM will re-install the profile automatically after macOS software updates are detected. Defaults to false.
 - `userscope` (Boolean) Optional. A boolean true or false. If false, deploy as a device profile instead of a user profile for macOS devices. Defaults to true.
 
 ### Read-Only
