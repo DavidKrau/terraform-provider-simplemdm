@@ -323,7 +323,7 @@ func TestAccCustomProfileResource_conflictingAttributes(t *testing.T) {
 			auto_renew_scep_based_certificates = true
 		}
 `,
-				ExpectError: regexp.MustCompile("auto_renew_scep_based_certificates cannot be enabled when declarative is enabled"),
+				ExpectError: regexp.MustCompile("Conflicting Attribute Configuration"),
 			},
 		},
 	})
@@ -341,7 +341,7 @@ func TestAccCustomProfileResource_invalidPlatform(t *testing.T) {
 			allowed_platforms = ["macos", "windows"]
 		}
 `,
-				ExpectError: regexp.MustCompile("expected.*to be one of"),
+				ExpectError: regexp.MustCompile("Invalid Attribute Value Match"),
 			},
 		},
 	})
@@ -359,7 +359,7 @@ func TestAccCustomProfileResource_invalidArchitecture(t *testing.T) {
 			allowed_macos_architecture = "powerpc"
 		}
 `,
-				ExpectError: regexp.MustCompile("expected.*to be one of"),
+				ExpectError: regexp.MustCompile("Invalid Attribute Value Match"),
 			},
 		},
 	})
